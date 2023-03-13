@@ -1,3 +1,13 @@
+---
+permalink: /
+title: "academicpages is a ready-to-fork GitHub Pages template for academic personal websites"
+excerpt: "About me"
+author_profile: true
+redirect_from: 
+  - /about/
+  - /about.html
+---
+
 # About me
 
 - My name is Yifei Wang, which is 王翼飞 in Chinese. I am currently a sophomore in Peking University, and is also a member of [the Tong Class](https://tongclass.ac.cn/).
