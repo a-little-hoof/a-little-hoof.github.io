@@ -8,7 +8,6 @@ redirect_from:
   - /about.html
 ---
 
-# About me
 
 - My name is Yifei Wang, which is 王翼飞 in Chinese. I am currently a sophomore in Peking University, and is also a member of [the Tong Class](https://tongclass.ac.cn/).
   
