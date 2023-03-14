@@ -9,3 +9,4 @@ redirect_from:
 
 {% include base_path %}
 
+![](https://github.com/a-little-hoof/a-little-hoof.github.io/tree/master/images/1.jpg)
