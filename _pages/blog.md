@@ -1,7 +1,7 @@
 ---
 layout: archive
 title: "Research Experiences"
-permalink: /Research Experiences/
+permalink: /blog/
 author_profile: true
 redirect_from:
   - /resume
@@ -9,4 +9,3 @@ redirect_from:
 
 {% include base_path %}
 
-To be done
