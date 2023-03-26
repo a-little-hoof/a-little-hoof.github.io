@@ -12,4 +12,4 @@ redirect_from:
   
 - My research interests lie in Natural Language Processing and societal computing.
   
-- Besides my academic life, I am a huge fun of long-distance running. I like to run with my friends in the [BOYA Middle and Long Distance Track Team](https://mp.weixin.qq.com/s/Kg2df2wnqnYab3R-K5GjAA) and share my feelings about running. You can see more in the blog page.
+- Besides my academic life, I am a huge fan of long-distance running. I like to run with my friends in the [BOYA Middle and Long Distance Track Team](https://mp.weixin.qq.com/s/Kg2df2wnqnYab3R-K5GjAA) and share my feelings about running. You can see more in the blog page.
