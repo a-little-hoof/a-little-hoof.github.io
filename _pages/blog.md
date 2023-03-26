@@ -24,7 +24,7 @@ redirect_from:
 
 ### 3.11
 
-<img title="" src="https://a-little-hoof.github.io/images/1.jpg" alt="" data-align="center" width="230">
+<img title="" src="https://a-little-hoof.github.io/images/1.jpg" alt="" data-align="center" width="220">
 
 > 阳康后第一次认真的长距离。跑香山，杨队兔。最长跑步记录被刷新了一点点。从香山跑回来是大下坡，很舒服。但是最后两公里在西苑那块真是跑得想死。
 
@@ -32,7 +32,7 @@ redirect_from:
 
 ### 3.14
 
-![](https://a-little-hoof.github.io/images/2.jpg) 
+<img title="" src="https://a-little-hoof.github.io/images/2.jpg" alt="" data-align="center" width="220"> 
 
 > $\pi$ day快乐，事实证明还是不能中午上强度。
 
@@ -40,7 +40,7 @@ redirect_from:
 
 ### 3.17
 
-![](https://a-little-hoof.github.io/images/3.jpg)
+<img title="" src="https://a-little-hoof.github.io/images/3.jpg" alt="" data-align="center" width="220"> 
 
 > 赛前上一个小强度，恢复果然比训练快。但怎么感觉强度上过了...
 
@@ -48,7 +48,7 @@ redirect_from:
 
 ### 3.19
 
-![](https://a-little-hoof.github.io/images/4.jpg)
+<img title="" src="https://a-little-hoof.github.io/images/4.jpg" alt="" data-align="center" width="220"> 
 
 > 青岛半马！
 > 
@@ -58,7 +58,7 @@ redirect_from:
 
 ### 3.23
 
-![](https://a-little-hoof.github.io/images/5.jpg)
+<img title="" src="https://a-little-hoof.github.io/images/5.jpg" alt="" data-align="center" width="220"> 
 
 > 甲流退烧了来慢跑一会。不得不说，这威力比新冠小多了。
 
@@ -66,7 +66,7 @@ redirect_from:
 
 ### 3.24
 
-![](https://a-little-hoof.github.io/images/6.jpg)
+<img title="" src="https://a-little-hoof.github.io/images/6.jpg" alt="" data-align="center" width="220"> 
 
 > 小上个强度。有点虚，但心率还好
 
@@ -74,7 +74,7 @@ redirect_from:
 
 ### 3.26
 
-![](https://a-little-hoof.github.io/images/7.jpg)
+<img title="" src="https://a-little-hoof.github.io/images/7.jpg" alt="" data-align="center" width="220"> 
 
 > 配速5‘，本来想和霄队一起整个长距离的，但是整个过程就很痛苦。
 > 
