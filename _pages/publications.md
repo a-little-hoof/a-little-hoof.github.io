@@ -5,6 +5,8 @@ permalink: /publications/
 author_profile: true
 ---
 
+{% include base_path %}
+
 [(NeurIPS 2024) An Expectation-Maximization Algorithm for Training Clean Diffusion Models from Corrupted Observations](https://arxiv.org/abs/2407.01014)
 
 Weimin Bai, Yifei Wang, Wenzheng Chen, He Sun.
