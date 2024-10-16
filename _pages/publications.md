@@ -5,12 +5,11 @@ permalink: /publications/
 author_profile: true
 ---
 
-{% if author.googlescholar %}
-  You can also find my articles on <u><a href="{{author.googlescholar}}">my Google Scholar profile</a>.</u>
-{% endif %}
+[(NeurIPS 2024) An Expectation-Maximization Algorithm for Training Clean Diffusion Models from Corrupted Observations](https://arxiv.org/abs/2407.01014)
 
-{% include base_path %}
+Weimin Bai, Yifei Wang, Wenzheng Chen, He Sun.
 
-{% for post in site.publications reversed %}
-  {% include archive-single.html %}
-{% endfor %}
+[(Arxiv preprint) Integrating Amortized Inference with Diffusion Models for Learning Clean Distribution from Corrupted Images](https://arxiv.org/abs/2407.11162)
+
+Yifei Wang, Weimin Bai, Weijian Luo, Wenzheng Chen, He Sun.
+
