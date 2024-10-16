@@ -7,10 +7,10 @@
 
 # Site Settings
 locale                   : "en-US"
-title                    : "Hoof"
+title                    : ""
 title_separator          : "-"
 name                     : &name "Yifei Wang"
-description              : &description "Hi there! I am a sophomore in Peking University, Beijing, China."
+description              : &description "Hi there! I am a senior in Peking University, Beijing, China."
 url                      : https://a-little-hoof.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "a-little-hoof.github.io"
@@ -82,7 +82,7 @@ analytics:
 author:
   name             : "Yifei Wang"
   avatar           : "profile.png"
-  bio              : "Hi there! I am a sophomore in Peking University."
+  bio              : "Hi there! I am a senior in Peking University."
   location         : "Beijing, China"
   employer         :
   pubmed           : #"https://www.ncbi.nlm.nih.gov/pubmed/?term=john+snow"
@@ -111,7 +111,7 @@ author:
   tumblr           :
   twitter          : #"replacethistwitterhandle"
   vine             :
-  weibo            :
+  zhihu            : "https://www.zhihu.com/people/cameron-78-28"
   xing             :
   youtube          :
   wikipedia        :
