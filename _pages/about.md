@@ -8,7 +8,7 @@ redirect_from:
 ---
 
 
-- My name is Yifei Wang. I am currently a senior in Peking University.
+- My name is Yifei Wang. I am currently a senior in Peking University, majoring in artificial intelligence.
   
 - My research interests lie in low level vision and generative models.
   
