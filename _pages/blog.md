@@ -9,7 +9,8 @@ redirect_from:
 
 {% include base_path %}
 
-## Running
+To be done
+<!-- ## Running
 - Here are my PBs.
 | Distance         | Time      |
 | ---------------- | --------- |
@@ -32,7 +33,7 @@ redirect_from:
 ###  AI
 1. Machine learning
 2. Generative models
-3. Natural language processing
+3. Natural language processing -->
 
 ### Math
 1. Stochastic calculus
