@@ -16,10 +16,10 @@ Looking ahead, I am excited to explore cutting-edge developments in generative m
 ## List of publications
 
 - (NeurIPS 2024)**An Expectation-Maximization Algorithm for Training Clean Diffusion Models from Corrupted Observations**
-Weimin Bai, Yifei Wang, Wenzheng Chen and He Sun.
+*Weimin Bai, Yifei Wang, Wenzheng Chen and He Sun*.
 [paper](https://arxiv.org/abs/2407.01014)
 
 - (Arxiv preprint)**Integrating Amortized Inference with Diffusion Models for Learning Clean Distribution from Corrupted Images**
-Yifei Wang, Weimin Bai, Weijian Luo, Wenzheng Chen and He Sun.
+*Yifei Wang, Weimin Bai, Weijian Luo, Wenzheng Chen and He Sun*.
 [paper](https://arxiv.org/abs/2407.11162)
 
