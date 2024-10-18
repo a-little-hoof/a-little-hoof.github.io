@@ -1,7 +1,7 @@
 ---
 layout: archive
-title: "Resources"
-permalink: /Resources/
+title: "Archive"
+permalink: /Archive/
 author_profile: true
 ---
 
