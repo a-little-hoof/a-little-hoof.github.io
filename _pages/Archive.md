@@ -18,3 +18,4 @@ author_profile: true
 ## Other people's work I found inspiring
 - [A introduction to flow matching](https://mlg.eng.cam.ac.uk/blog/2024/01/20/flow-matching.html). High level ideas on flow matching and stochastic interpolants, blog by Tor Fjelde, Emile Mathieu, Vincent Dutordoir.
 - [Step-by-Step Diffusion: An Elementary Tutorial](https://arxiv.org/pdf/2406.08929). A beginner's guide to diffusion models, where the authors start from an ODE perspective and exclude all stochastic elements of diffusion models.
+- [10 easy ways to fail a Ph.D.](https://matt.might.net/articles/ways-to-fail-a-phd/).
