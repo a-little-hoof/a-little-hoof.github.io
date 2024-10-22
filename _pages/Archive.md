@@ -18,7 +18,7 @@ author_profile: true
 - [A introduction to flow matching](https://mlg.eng.cam.ac.uk/blog/2024/01/20/flow-matching.html). High level ideas on flow matching and stochastic interpolants.
 - [Step-by-Step Diffusion: An Elementary Tutorial](https://arxiv.org/pdf/2406.08929). A beginner's guide to diffusion models, where the authors start from an ODE perspective and exclude all stochastic elements of diffusion models.
 - [Deep learning tuning playbook](https://github.com/google-research/tuning_playbook). Tricks for doing deep learning projects.
-- [Learn git branching](https://learngitbranching.js.org/?locale=zh_CN). Version control is important. This website helps you learn git by visualize your git commands.
+- [Learn git branching](https://learngitbranching.js.org/?locale=zh_CN). This website helps you learn git by visualize your git commands.
 
 ## Misc.
 - [How to learn diffusion models](https://www.zhihu.com/question/658056360/answer/3526228476). A list of papers I created for learning diffusion models and the follow-up ODE-based generative models.
