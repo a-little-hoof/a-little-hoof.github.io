@@ -10,9 +10,10 @@ author_profile: true
 > Apart from publishing academic papers, I am passionate about sharing knowledge and practical insights with the wider community. I believe that research can have a broader impact when complemented by open-source projects and technical blogs. That's why I keep things I want to share with other people here.
 
 ## Code
-- [Implementation of Glow](). My implementation of the Glow model.
+- [Implementation of Glow](https://github.com/a-little-hoof/Glow). My implementation of the Glow model in pytorch.
 - [EDM](https://github.com/NVlabs/edm). State-of-the-art diffusion model implementation.
 - [Deep learning notebooks](https://uvadlc-notebooks.readthedocs.io/). A comprehensive guide that provides clear instructions for implementing various deep learning models.
+- [Build GPT2](https://github.com/karpathy/build-nanogpt/commits/master/?after=6104ab1b53920f6e2159749676073ff7d815c1fa+34) Karpathy's step by step implementation of the GPT2 model. A good way to learn how to build a project from scratch.
 
 ## Technical Blog
 - [A introduction to flow matching](https://mlg.eng.cam.ac.uk/blog/2024/01/20/flow-matching.html). High level ideas on flow matching and stochastic interpolants.
