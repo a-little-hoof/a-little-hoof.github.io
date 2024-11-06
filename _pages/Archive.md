@@ -20,6 +20,7 @@ author_profile: true
 - [Step-by-Step Diffusion: An Elementary Tutorial](https://arxiv.org/pdf/2406.08929). A beginner's guide to diffusion models, where the authors start from an ODE perspective and exclude all stochastic elements of diffusion models.
 - [Deep learning tuning playbook](https://github.com/google-research/tuning_playbook). Tricks for doing deep learning projects.
 - [Learn git branching](https://learngitbranching.js.org/?locale=zh_CN). This website helps you learn git by visualize your git commands.
+- [Trouble shooting for installing cuda toolkit on a server that you do not have sudo access.](https://zhuanlan.zhihu.com/p/5388213969)
 
 ## Misc.
 - [How to learn diffusion models](https://www.zhihu.com/question/658056360/answer/3526228476). A list of papers I created for learning diffusion models and the follow-up ODE-based generative models.
