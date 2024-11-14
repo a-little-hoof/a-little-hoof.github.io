@@ -7,7 +7,7 @@ author_profile: true
 
 {% include base_path %}
 
-> Apart from publishing academic papers, I am passionate about sharing knowledge and practical insights with the wider community. I believe that research can have a broader impact when complemented by open-source projects and technical blogs. That's why I keep things I want to share with other people here.
+> Apart from publishing academic papers, I am passionate about sharing knowledge and practical insights with the wider community. I believe that research can have a broader impact when complemented by open-source projects and technical blogs.
 
 ## Code
 - [Implementation of Glow](https://github.com/a-little-hoof/Glow). My implementation of the Glow model in pytorch.
