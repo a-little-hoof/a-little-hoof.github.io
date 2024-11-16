@@ -25,4 +25,5 @@ author_profile: true
 ## Misc.
 - [How to learn diffusion models](https://www.zhihu.com/question/658056360/answer/3526228476). A list of papers I created for learning diffusion models and the follow-up ODE-based generative models.
 - [10 easy ways to fail a Ph.D.](https://matt.might.net/articles/ways-to-fail-a-phd/).
-- [Writing personal statement for graduate school application](https://engineering.purdue.edu/ChanGroup/write_statement.html)
+- [Writing personal statement for graduate school application](https://engineering.purdue.edu/ChanGroup/write_statement.html) (From a professor's perspective)
+- [Writing personal statement for graduate school application](https://eugenielai.github.io/posts/another-annotated-sop.html) (This one has annotated examples.)
