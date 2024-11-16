@@ -13,4 +13,6 @@ redirect_from:
   
 - Besides research, I enjoy hiking and running. I've participated in several marathons, and I once spent an entire summer involved in ecological field research in Saihanba and Xihaigu.
 
+- I actively write blogs on [zhihu](https://www.zhihu.com/people/cameron-78-28).
+
 - I'm applying for PhD positions starting in Fall 2025.[ Here is my CV.](https://a-little-hoof.github.io/files/Resume_Yifei Wang_PKU 2025.pdf)
