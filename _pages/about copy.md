@@ -15,4 +15,4 @@ redirect_from:
 
 - I actively write blogs on [zhihu](https://www.zhihu.com/people/cameron-78-28).
 
-- I'm applying for PhD positions starting in Fall 2025. Here is my [CV](https://a-little-hoof.github.io/files/Resume_Yifei Wang_PKU 2025.pdf) and [SoP](https://docs.google.com/document/d/1m6oJXqblqFdfoi0cMYZ5N1_nY3k6BM65NjxYPlV5dz8/edit?usp=sharing).
+- I'm applying for PhD positions starting in Fall 2025. Here is my [CV](https://a-little-hoof.github.io/files/Resume_Yifei Wang_PKU 2025.pdf).
