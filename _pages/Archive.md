@@ -22,6 +22,11 @@ author_profile: true
 - [Learn git branching](https://learngitbranching.js.org/?locale=zh_CN). This website helps you learn git by visualize your git commands.
 - [Trouble shooting for installing cuda toolkit on a server that you do not have a sudo access.](https://zhuanlan.zhihu.com/p/5388213969)
 
+## Talk
+- [A Unified Framework for Diffusion Models](https://docs.google.com/presentation/d/1sI3cZ0EzWuqMHhuI3bPSnksDKJon9BJy_WCaFB4Kpgo/edit#slide=id.p).
+- [A Path to Human-preferred One-step Text-to-image Generative Models](https://drive.google.com/file/d/1NrhHBKtVcZ8Jf2-I8v_QKz-Xsdvfqof0/view).
+- [Data Ownership and Machine Unlearning](https://mit-6s978.github.io/assets/pdfs/data_ownership_MIT_guest_lecture.pdf).
+
 ## Misc.
 - [How to learn diffusion models](https://www.zhihu.com/question/658056360/answer/3526228476). A list of papers I created for learning diffusion models and the follow-up ODE-based generative models.
 - [10 easy ways to fail a Ph.D.](https://matt.might.net/articles/ways-to-fail-a-phd/).
