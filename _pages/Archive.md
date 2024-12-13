@@ -21,8 +21,8 @@ author_profile: true
 - [Deep learning tuning playbook](https://github.com/google-research/tuning_playbook). Tricks for doing deep learning projects.
 - [Learn git branching](https://learngitbranching.js.org/?locale=zh_CN). This website helps you learn git by visualize your git commands.
 - [Trouble shooting for installing cuda toolkit on a server that you do not have a sudo access.](https://zhuanlan.zhihu.com/p/5388213969)
-- [Flow matching guide and code](https://arxiv.org/pdf/2412.06264)
-- [Diffusion meets flow matching](https://diffusionflow.github.io)
+- [Flow matching guide and code](https://arxiv.org/pdf/2412.06264).
+- [Diffusion meets flow matching](https://diffusionflow.github.io).
 
 ## Talk
 - [A Unified Framework for Diffusion Models](https://docs.google.com/presentation/d/1sI3cZ0EzWuqMHhuI3bPSnksDKJon9BJy_WCaFB4Kpgo/edit#slide=id.p).
