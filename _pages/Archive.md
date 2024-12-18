@@ -28,6 +28,7 @@ author_profile: true
 - [A Unified Framework for Diffusion Models](https://docs.google.com/presentation/d/1sI3cZ0EzWuqMHhuI3bPSnksDKJon9BJy_WCaFB4Kpgo/edit#slide=id.p).
 - [A Path to Human-preferred One-step Text-to-image Generative Models](https://drive.google.com/file/d/1NrhHBKtVcZ8Jf2-I8v_QKz-Xsdvfqof0/view).
 - [Data Ownership and Machine Unlearning](https://mit-6s978.github.io/assets/pdfs/data_ownership_MIT_guest_lecture.pdf).
+- [Generative Modeling meets Optimal Transport](https://drive.google.com/file/d/1eLa3y2Xprtjmq4cIiPD9hxevra-wy9k4/view). Talk from NeurIPS2024.
 
 ## Misc.
 - [How to learn diffusion models](https://www.zhihu.com/question/658056360/answer/3526228476). A list of papers I created for learning diffusion models and the follow-up ODE-based generative models.
