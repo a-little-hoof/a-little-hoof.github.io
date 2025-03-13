@@ -23,6 +23,7 @@ author_profile: true
 - [Trouble shooting](https://zhuanlan.zhihu.com/p/5388213969)  for installing cuda toolkit on a server that you do not have a sudo access.
 - [Flow matching guide and code](https://arxiv.org/pdf/2412.06264).
 - [Diffusion meets flow matching](https://diffusionflow.github.io).
+- [$f$-Divergence](https://zhuanlan.zhihu.com/p/28105464642). My notes.
 
 ## Talk
 - [A Unified Framework for Diffusion Models](https://docs.google.com/presentation/d/1sI3cZ0EzWuqMHhuI3bPSnksDKJon9BJy_WCaFB4Kpgo/edit#slide=id.p).
