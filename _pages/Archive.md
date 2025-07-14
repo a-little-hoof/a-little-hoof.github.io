@@ -14,6 +14,7 @@ author_profile: true
 - [EDM](https://github.com/NVlabs/edm). State-of-the-art diffusion model implementation.
 - [Deep learning notebooks](https://uvadlc-notebooks.readthedocs.io/). A comprehensive guide that provides clear instructions for implementing various deep learning models.
 - [Build GPT2](https://github.com/karpathy/build-nanogpt/commits/master/?after=6104ab1b53920f6e2159749676073ff7d815c1fa+34). Karpathy's step by step implementation of the GPT2 model. A good way to learn how to build a project from scratch.
+- [MeanFlow Implementation](https://github.com/pkulwj1994/easy_meanflow).
 
 ## Technical Blog
 - [A introduction to flow matching](https://mlg.eng.cam.ac.uk/blog/2024/01/20/flow-matching.html). High level ideas on flow matching and stochastic interpolants.
