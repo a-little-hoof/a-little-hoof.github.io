@@ -10,7 +10,7 @@ locale                   : "en-US"
 title                    : ""
 title_separator          : "-"
 name                     : &name "Yifei Wang"
-description              : &description "Senior undergraduate student in Peking University, Beijing, China."
+description              : &description "First year PhD student at Rice University, Houston, Texas."
 url                      : https://a-little-hoof.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "a-little-hoof.github.io"
@@ -82,12 +82,12 @@ analytics:
 author:
   name             : "Yifei Wang"
   avatar           : "profile.png"
-  bio              : "Hi there! I am a senior undergraduate at Peking University."
-  location         : "Beijing, China"
+  bio              : "Hi there! I am a first year PhD student at Rice University."
+  location         : "Houston, Texas"
   employer         :
   pubmed           : #"https://www.ncbi.nlm.nih.gov/pubmed/?term=john+snow"
   googlescholar    : #"http://yourfullgooglescholarurl.com"
-  email            : mailto:wyf181030@stu.pku.edu.cn
+  email            : mailto:yw251@rice.edu
   researchgate     :  # example: "https://www.researchgate.net/profile/yourprofile"
   uri              :
   bitbucket        :
