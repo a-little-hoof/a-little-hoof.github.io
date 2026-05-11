@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Taming Outlier Tokens in Diffusion Transformers — Dual-Stage Registers (DSR) for both the representation encoder and the diffusion generator." />
+  <meta property="og:title" content="Taming Outlier Tokens in Diffusion Transformers" />
+  <meta property="og:description" content="Dual-Stage Registers (DSR) suppress outlier tokens in both ViT encoders and diffusion transformers, improving ImageNet and text-to-image generation." />
+  <meta property="og:image" content="static/images/framework.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <title>Taming Outlier Tokens in Diffusion Transformers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/main.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container inner">
+    <a class="home" href="/">← Yifei Wang</a>
+    <span class="venue">Preprint · 2026</span>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="container">
+    <h1>Taming Outlier Tokens in Diffusion Transformers</h1>
+
+    <div class="authors">
+      <span class="author">Xiaoyu Wu<sup>1*</sup></span>
+      <span class="author">Yifei Wang<sup>1*</sup></span>
+      <span class="author">Tsu-Jui Fu<sup>2</sup></span>
+      <span class="author">Liang-Chieh Chen<sup>2</sup></span>
+      <span class="author">Zhe Gan<sup>2</sup></span>
+      <span class="author">Chen Wei<sup>1</sup></span>
+    </div>
+    <div class="affil"><sup>1</sup>Rice University &nbsp;&nbsp; <sup>2</sup>Apple</div>
+    <div class="equal"><sup>*</sup>Equal contribution</div>
+
+    <div class="links">
+      <a class="link-btn" href="https://arxiv.org/abs/2605.05206" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        arXiv
+      </a>
+      <a class="link-btn" href="https://arxiv.org/pdf/2605.05206" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        PDF
+      </a>
+      <a class="link-btn ghost" href="#" aria-disabled="true" title="Coming soon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+        Code (coming soon)
+      </a>
+      <a class="link-btn ghost" href="#bibtex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        BibTeX
+      </a>
+    </div>
+
+    <div class="teaser">
+      <img src="static/images/framework.png" alt="DSR framework overview" />
+      <div class="caption">
+        <b>Dual-Stage Registers (DSR).</b> We patch <em>both</em> sides of the diffusion pipeline with register tokens:
+        a test-time register in the ViT encoder, and 36 trained registers in the diffusion transformer.
+        Encoder and diffusion register outputs are discarded before downstream use, leaving only patch tokens.
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<section id="tldr">
+  <h2>TL;DR</h2>
+  <p class="lead">
+    Outlier tokens — a handful of high-norm patch tokens that absorb attention but carry little local information —
+    are not just a ViT recognition phenomenon. They also appear in the encoders <em>and</em> the denoisers of modern
+    RAE-style diffusion pipelines, and they hurt generation quality.
+  </p>
+  <div class="callout">
+    <b>DSR</b> introduces register tokens at <b>both</b> stages — the ViT-based tokenizer and the diffusion transformer.
+    It cuts ImageNet-256 FID for RAE-DiT-XL (SigLIP2-B) from <b>5.89 → 4.58</b> at 80 epochs and raises GenEval on a
+    large-scale text-to-image task from <b>0.426 → 0.466</b>, with consistent gains across SiT, JiT, and RAE designs.
+  </div>
+</section>
+
+<section id="abstract">
+  <h2>Abstract</h2>
+  <p>
+    We study outlier tokens in Diffusion Transformers (DiTs) for image generation. Prior work has shown that
+    Vision Transformers (ViTs) can produce a small number of high-norm tokens that attract disproportionate attention
+    while carrying limited local information, but their role in generative models remains underexplored. We show that
+    this phenomenon appears in both the encoder and denoiser of modern Representation Autoencoder (RAE)-DiT pipelines:
+    pretrained ViT encoders can produce outlier representations, and DiTs themselves can develop internal outlier
+    tokens, especially in intermediate layers. Moreover, simply masking high-norm tokens does <em>not</em> improve
+    performance, indicating that the problem is not only caused by a few extreme values, but is more closely related to
+    corrupted local patch semantics. To address this issue, we introduce <em>Dual-Stage Registers (DSR)</em>, a
+    register-based intervention for both components: trained registers when available, recursive test-time registers
+    otherwise, and diffusion registers for the denoiser. Across ImageNet and large-scale text-to-image generation,
+    these interventions consistently reduce outlier artifacts and improve generation quality.
+  </p>
+</section>
+
+<section id="observation">
+  <h2>Where do outlier tokens hide in a DiT pipeline?</h2>
+  <p>
+    A modern RAE-style pipeline has two transformer stages — a ViT encoder that produces the latent representation,
+    and a diffusion transformer that denoises in that space. We observe outlier tokens in <b>both</b>, but with
+    distinct patterns.
+  </p>
+
+  <figure class="figure">
+    <img src="static/images/encoder_outlier_2.jpg" alt="Outlier tokens in the SigLIP2-B encoder" />
+    <figcaption>
+      <b>Outliers in the ViT encoder.</b> Token-norm maps across layers of SigLIP2-B. Severe high-norm tokens emerge
+      in the last few layers; the penultimate layer shows the strongest pattern, while the final output is somewhat
+      more stable — likely a side-effect of SigLIP2's reconstruction-flavored objective.
+    </figcaption>
+  </figure>
+
+  <figure class="figure">
+    <img src="static/images/norm_map_noise.jpg" alt="Outlier tokens in the diffusion transformer across noise levels and layers" />
+    <figcaption>
+      <b>Outliers in the diffusion transformer.</b> Norm maps of RAE-DiT (SigLIP2-B) across diffusion noise scales
+      and DiT layers. Unlike standard ViTs, high-norm tokens concentrate in <em>intermediate</em> layers, and their
+      severity drops as the noise level increases — suggesting that encoder anomalies are amplified by the denoising
+      objective.
+    </figcaption>
+  </figure>
+
+  <h3>Why masking the loss doesn't fix it</h3>
+  <p>
+    A natural hypothesis is that the issue is just a few extreme-loss tokens. We tested this with a token-level loss
+    mask that drops tokens whose representation norms exceed a threshold. As shown below, masking <b>does not</b>
+    improve generation. We take this as evidence that outliers are a <em>symptom</em> of corrupted local patch
+    semantics, not the root cause.
+  </p>
+
+  <table class="results">
+    <thead>
+      <tr>
+        <th class="left">Training strategy</th>
+        <th>% tokens filtered</th>
+        <th>FID ↓</th>
+        <th>IS ↑</th>
+        <th>Prec ↑</th>
+        <th>Rec ↑</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">RAE-DiT-XL (SigLIP2-B)</td><td>0%</td><td>5.89</td><td>156.54</td><td>0.686</td><td>0.562</td></tr>
+      <tr><td class="left">&nbsp; + loss masking (τ = 100)</td><td>0.1%</td><td>6.06</td><td>152.72</td><td>0.686</td><td>0.562</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="method">
+  <h2>Dual-Stage Registers (DSR)</h2>
+  <p>
+    If outliers reflect degraded local patch semantics, then we want a mechanism that <em>absorbs</em> global,
+    sink-like behavior without contaminating patch tokens. Register tokens do exactly that — and we apply them on
+    both sides of the pipeline.
+  </p>
+
+  <h3>Encoder-side registers</h3>
+  <p>
+    When trained registers are available (e.g. DINOv2 with registers), we use them directly. They visibly suppress
+    high-norm artifacts and consistently improve downstream DiT generation:
+  </p>
+
+  <figure class="figure">
+    <img src="static/images/reg_vis_updated_dino.jpg" alt="Norm maps with and without trained DINOv2 registers" />
+    <figcaption>
+      <b>Trained encoder registers cleanly remove outliers.</b> RAE-DiT (DINOv2-B) with and without trained
+      registers, at a fixed diffusion timestep <em>t</em> = 0.5. Registers consistently suppress high-norm tokens and
+      improve patch-level representations.
+    </figcaption>
+  </figure>
+
+  <p>
+    For encoders <em>without</em> trained registers (e.g. SigLIP2), we use <em>test-time registers</em> (TTR) —
+    extra tokens appended at inference time. For SigLIP2-So400, where we find <em>two</em> distinct outlier
+    populations, we apply TTR <em>recursively</em>: stabilize the encoder, then apply TTR again on the resulting
+    representation.
+  </p>
+
+  <table class="results">
+    <thead>
+      <tr><th class="left">Strategy</th><th>FID ↓</th><th>IS ↑</th><th>Prec ↑</th><th>Rec ↑</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">RAE-DiT-XL (SigLIP2-B)</td><td>5.89</td><td>156.54</td><td>0.686</td><td>0.562</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + test-time register</td><td><b>4.63</b></td><td>177.20</td><td>0.748</td><td>0.542</td></tr>
+      <tr><td class="left">RAE-DiT-XL (SigLIP2-So400)</td><td>7.04</td><td>167.01</td><td>0.682</td><td>0.515</td></tr>
+      <tr><td class="left">&nbsp; + test-time register</td><td>6.66</td><td>166.88</td><td>0.687</td><td>0.527</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + recursive test-time register</td><td><b>6.48</b></td><td>163.35</td><td>0.684</td><td>0.531</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Diffusion-side registers</h3>
+  <p>
+    Even after fixing the encoder, the DiT itself still develops outlier tokens in its intermediate layers. We add
+    a small number of <em>trainable diffusion registers</em> — learned jointly with the generator and discarded at
+    inference. With them, internal outliers largely disappear and PCA structure becomes cleaner:
+  </p>
+
+  <figure class="figure">
+    <img src="static/images/norm_map_2.jpg" alt="Norm maps for baseline, encoder-only DSR, and full DSR" />
+    <figcaption>
+      <b>Outliers are only fully suppressed when both sides are patched.</b> Baseline vs. encoder-only test-time
+      registers vs. full DSR (encoder + diffusion registers).
+    </figcaption>
+  </figure>
+
+  <figure class="figure">
+    <img src="static/images/pca_map_2.jpg" alt="PCA maps for baseline, encoder-only DSR, and full DSR" />
+    <figcaption>
+      <b>PCA maps.</b> Encoder-side TTR already produces a visible cleanup in PCA structure; adding diffusion
+      registers brings a further small improvement.
+    </figcaption>
+  </figure>
+</section>
+
+<section id="results">
+  <h2>Results</h2>
+
+  <h3>Diffusion registers help across input spaces</h3>
+  <p>
+    Diffusion registers improve <em>every</em> input-space variant we tried — pixel-space (JiT), VAE latents (SiT),
+    and multiple representation encoders. The gain is not tied to any particular tokenizer family.
+  </p>
+
+  <table class="results">
+    <thead>
+      <tr><th class="left">Method</th><th>FID ↓</th><th>IS ↑</th><th>Prec ↑</th><th>Rec ↑</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">RAE-DiT-XL (DINOv2-B, w/ encoder reg)</td><td>4.11</td><td>226.44</td><td>0.775</td><td>0.529</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + diffusion reg</td><td><b>3.92</b></td><td>226.92</td><td>0.773</td><td>0.542</td></tr>
+      <tr><td class="left">RAE-DiT-XL (SigLIP2-B)</td><td>5.89</td><td>156.54</td><td>0.686</td><td>0.562</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + diffusion reg</td><td><b>5.33</b></td><td>166.20</td><td>0.702</td><td>0.556</td></tr>
+      <tr><td class="left">RAE-DiT-XL (SigLIP2-B, w/ TTR)</td><td>4.63</td><td>177.20</td><td>0.748</td><td>0.542</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + diffusion reg</td><td><b>4.58</b></td><td>165.99</td><td>0.725</td><td>0.560</td></tr>
+      <tr><td class="left">VAE-SiT-XL</td><td>16.05</td><td>70.11</td><td>0.550</td><td>0.647</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + diffusion reg</td><td><b>14.47</b></td><td>78.50</td><td>0.554</td><td>0.651</td></tr>
+      <tr><td class="left">JiT-H</td><td>30.34</td><td>22.34</td><td>0.424</td><td>0.621</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + diffusion reg</td><td><b>23.14</b></td><td>26.36</td><td>0.475</td><td>0.611</td></tr>
+    </tbody>
+  </table>
+
+  <h3>ImageNet-256: class-conditional generation</h3>
+  <p>
+    Headline numbers on ImageNet-1K at 256×256. DSR consistently improves <em>RAE-DiT</em> and, when combined with
+    the DDT head, reaches strong competitive numbers at a fraction of the training budget.
+  </p>
+
+  <table class="results">
+    <thead>
+      <tr>
+        <th class="left">Method</th>
+        <th>Epochs</th>
+        <th>#Params</th>
+        <th>gFID ↓ (no CFG)</th>
+        <th>gFID ↓ (w/ CFG)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="group"><td colspan="5">Pixel diffusion</td></tr>
+      <tr><td class="left">ADM</td><td>400</td><td>554M</td><td>10.94</td><td>3.94</td></tr>
+      <tr><td class="left">JiT-H/16</td><td>600</td><td>953M</td><td>—</td><td>1.86</td></tr>
+
+      <tr class="group"><td colspan="5">Latent diffusion (VAE)</td></tr>
+      <tr><td class="left">SiT-XL</td><td>1400</td><td>675M</td><td>8.61</td><td>2.06</td></tr>
+      <tr><td class="left">REPA</td><td>800</td><td>675M</td><td>5.78</td><td>1.29</td></tr>
+      <tr><td class="left">REPA-E</td><td>800</td><td>675M</td><td>1.70</td><td>1.15</td></tr>
+      <tr><td class="left">RAE-DiT<sup>DH</sup>-XL (DINOv2-B)</td><td>800</td><td>839M</td><td>1.51</td><td>1.13</td></tr>
+
+      <tr class="group"><td colspan="5">Latent diffusion with multimodal encoder (SigLIP2-B)</td></tr>
+      <tr><td class="left">RAE-DiT-XL</td><td>80</td><td>676M</td><td>5.89</td><td>—</td></tr>
+      <tr><td class="left">RAE-DiT-XL</td><td>800</td><td>676M</td><td>3.85</td><td>3.58</td></tr>
+      <tr class="row-ours"><td class="left"><b>RAE-DiT-XL + DSR</b></td><td>80</td><td>676M</td><td><b>4.58</b></td><td>—</td></tr>
+      <tr class="row-ours"><td class="left"><b>RAE-DiT-XL + DSR</b></td><td>800</td><td>676M</td><td><b>3.26</b></td><td><b>2.97</b></td></tr>
+      <tr><td class="left">RAE-DiT<sup>DH</sup>-XL</td><td>800</td><td>839M</td><td>2.91</td><td>2.77</td></tr>
+      <tr class="row-ours"><td class="left"><b>RAE-DiT<sup>DH</sup>-XL + DSR</b></td><td>800</td><td>839M</td><td><b>2.72</b></td><td><b>2.62</b></td></tr>
+    </tbody>
+  </table>
+
+  <div class="figure">
+    <img src="static/images/fid_vs_epoch_dsr_legend.png" alt="FID vs. training epoch — DSR reaches the baseline quality with 4× fewer epochs" style="max-width: 720px;" />
+    <figcaption><b>DSR also trains faster.</b> FID vs. epoch on ImageNet-256 — DSR reaches comparable quality with 4× fewer epochs than the RAE baseline.</figcaption>
+  </div>
+
+  <h3>Scaling across model sizes</h3>
+  <p>DSR improves gFID at every DiT scale we tried, with only ~10% added GFLOPs.</p>
+  <table class="results">
+    <thead>
+      <tr><th class="left">Model</th><th>FID ↓</th><th>IS ↑</th><th>Prec ↑</th><th>Rec ↑</th><th>GFLOPs</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">RAE-DiT-S (SigLIP2-B)</td><td>28.03</td><td>66.15</td><td>0.277</td><td>0.302</td><td>12.4</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + DSR</td><td><b>23.93</b></td><td>63.86</td><td>0.498</td><td>0.470</td><td>13.7</td></tr>
+      <tr><td class="left">RAE-DiT-B (SigLIP2-B)</td><td>20.36</td><td>78.76</td><td>0.539</td><td>0.493</td><td>46.6</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + DSR</td><td><b>9.81</b></td><td>110.23</td><td>0.637</td><td>0.543</td><td>51.2</td></tr>
+      <tr><td class="left">RAE-DiT-XL (SigLIP2-B)</td><td>5.89</td><td>156.54</td><td>0.686</td><td>0.562</td><td>238.1</td></tr>
+      <tr class="row-ours"><td class="left">&nbsp; + DSR</td><td><b>4.58</b></td><td>165.99</td><td>0.725</td><td>0.560</td><td>262.9</td></tr>
+    </tbody>
+  </table>
+  <div class="table-note">All rows trained for 100k iterations under matched protocol.</div>
+
+  <h3>Text-to-image (Scale-RAE)</h3>
+  <p>
+    On Scale-RAE — a SigLIP2-B + MetaQuery T2I pipeline trained on 24.7M FLUX.1-schnell synthetic images — DSR also
+    delivers a clean improvement on both GenEval and DPG-Bench.
+  </p>
+  <table class="results">
+    <thead>
+      <tr><th class="left">Model</th><th>GenEval ↑</th><th>DPG-Bench ↑</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">Baseline (Scale-RAE)</td><td>42.6</td><td>74.3</td></tr>
+      <tr class="row-ours"><td class="left"><b>Ours (Scale-RAE + DSR)</b></td><td><b>46.6</b></td><td><b>75.4</b></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="qualitative">
+  <h2>Qualitative samples (text-to-image)</h2>
+  <p>
+    Same prompt, same seed grid, baseline (left) vs. DSR (right). DSR's improvements tend to show up as cleaner
+    composition, more consistent object identity, and fewer texture artifacts.
+  </p>
+
+  <div class="qual-prompt">"a photo of a cow"</div>
+  <div class="qual-row">
+    <div class="col"><div class="label">Baseline</div><img src="static/images/t2i_00001_baseline.jpg" alt="baseline samples for: a photo of a cow" /></div>
+    <div class="col"><div class="label">DSR (ours)</div><img src="static/images/t2i_00001_ttr.jpg" alt="DSR samples for: a photo of a cow" /></div>
+  </div>
+
+  <div class="qual-prompt">"a photo of a white toilet and a red apple"</div>
+  <div class="qual-row">
+    <div class="col"><div class="label">Baseline</div><img src="static/images/t2i_00402_baseline.jpg" alt="baseline samples" /></div>
+    <div class="col"><div class="label">DSR (ours)</div><img src="static/images/t2i_00402_ttr.jpg" alt="DSR samples" /></div>
+  </div>
+
+  <div class="qual-prompt">
+    "A vibrant Moebius- and Shinkai-inspired cityscape: neon streets, glossy rain-slicked pavement, towering skyscrapers
+    against a starless night sky."
+  </div>
+  <div class="qual-row">
+    <div class="col"><div class="label">Baseline</div><img src="static/images/t2i_00300_baseline.jpg" alt="baseline samples" /></div>
+    <div class="col"><div class="label">DSR (ours)</div><img src="static/images/t2i_00300_ttr.jpg" alt="DSR samples" /></div>
+  </div>
+
+  <div class="qual-prompt">
+    "An expansive iridescent palace at the heart of a fantastical realm, with exotic flowers and a radiant sun overhead."
+  </div>
+  <div class="qual-row">
+    <div class="col"><div class="label">Baseline</div><img src="static/images/t2i_00538_baseline.jpg" alt="baseline samples" /></div>
+    <div class="col"><div class="label">DSR (ours)</div><img src="static/images/t2i_00538_ttr.jpg" alt="DSR samples" /></div>
+  </div>
+</section>
+
+<section id="bibtex">
+  <h2>BibTeX</h2>
+  <div class="bib">@article{wu2026dsr,
+  title         = {Taming Outlier Tokens in Diffusion Transformers},
+  author        = {Wu, Xiaoyu and Wang, Yifei and Fu, Tsu-Jui and Chen, Liang-Chieh and Gan, Zhe and Wei, Chen},
+  year          = {2026},
+  eprint        = {2605.05206},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2605.05206},
+}</div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    Page template adapted from common academic project pages · last updated May 2026 ·
+    <a href="/">Yifei Wang</a>
+  </div>
+</footer>
+
+</body>
+</html>

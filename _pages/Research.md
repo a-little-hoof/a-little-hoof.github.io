@@ -13,6 +13,10 @@ Looking ahead, I am excited to explore cutting-edge developments in generative m
 
 ## List of publications
 
+- (Preprint 2026) **Taming Outlier Tokens in Diffusion Transformers**
+*Xiaoyu Wu\*, Yifei Wang\*, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan and Chen Wei*.
+[paper](https://arxiv.org/abs/2605.05206) | [project page](/dit-register/)
+
 - (NeurIPS 2024) **An Expectation-Maximization Algorithm for Training Clean Diffusion Models from Corrupted Observations**
 *Weimin Bai, Yifei Wang, Wenzheng Chen and He Sun*.
 [paper](https://arxiv.org/abs/2407.01014)
