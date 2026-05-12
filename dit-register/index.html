@@ -57,14 +57,6 @@
       </a>
     </div>
 
-    <div class="teaser">
-      <img src="static/images/framework.png" alt="DSR framework overview" />
-      <div class="caption">
-        <b>Dual-Stage Registers (DSR).</b> We patch <em>both</em> sides of the diffusion pipeline with register tokens:
-        a test-time register in the ViT encoder, and 36 trained registers in the diffusion transformer.
-        Encoder and diffusion register outputs are discarded before downstream use, leaving only patch tokens.
-      </div>
-    </div>
   </div>
 </header>
 
@@ -82,23 +74,6 @@
     It cuts ImageNet-256 FID for RAE-DiT-XL (SigLIP2-B) from <b>5.89 → 4.58</b> at 80 epochs and raises GenEval on a
     large-scale text-to-image task from <b>0.426 → 0.466</b>, with consistent gains across SiT, JiT, and RAE designs.
   </div>
-</section>
-
-<section id="abstract">
-  <h2>Abstract</h2>
-  <p>
-    We study outlier tokens in Diffusion Transformers (DiTs) for image generation. Prior work has shown that
-    Vision Transformers (ViTs) can produce a small number of high-norm tokens that attract disproportionate attention
-    while carrying limited local information, but their role in generative models remains underexplored. We show that
-    this phenomenon appears in both the encoder and denoiser of modern Representation Autoencoder (RAE)-DiT pipelines:
-    pretrained ViT encoders can produce outlier representations, and DiTs themselves can develop internal outlier
-    tokens, especially in intermediate layers. Moreover, simply masking high-norm tokens does <em>not</em> improve
-    performance, indicating that the problem is not only caused by a few extreme values, but is more closely related to
-    corrupted local patch semantics. To address this issue, we introduce <em>Dual-Stage Registers (DSR)</em>, a
-    register-based intervention for both components: trained registers when available, recursive test-time registers
-    otherwise, and diffusion registers for the denoiser. Across ImageNet and large-scale text-to-image generation,
-    these interventions consistently reduce outlier artifacts and improve generation quality.
-  </p>
 </section>
 
 <section id="observation">
@@ -161,6 +136,15 @@
     sink-like behavior without contaminating patch tokens. Register tokens do exactly that — and we apply them on
     both sides of the pipeline.
   </p>
+
+  <figure class="figure">
+    <img src="static/images/framework.png" alt="DSR framework overview" />
+    <figcaption>
+      <b>Dual-Stage Registers (DSR).</b> We patch <em>both</em> sides of the diffusion pipeline with register tokens:
+      a test-time register in the ViT encoder, and 36 trained registers in the diffusion transformer. Encoder and
+      diffusion register outputs are discarded before downstream use, leaving only patch tokens.
+    </figcaption>
+  </figure>
 
   <h3>Encoder-side registers</h3>
   <p>
