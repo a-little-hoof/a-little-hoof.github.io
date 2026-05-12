@@ -263,7 +263,7 @@ redirect_from:
     their training.
   </p>
   <p>
-    Outside the lab, I run and hike a lot. I've finished several marathons, and once spent a summer doing
+    Outside the lab, I run and hike a lot. I've finished several half marathons, and once spent a summer doing
     ecological field research in Saihanba and Xihaigu. I also write Chinese-language blogs on
     <a href="https://www.zhihu.com/people/cameron-78-28">Zhihu</a>.
   </p>
