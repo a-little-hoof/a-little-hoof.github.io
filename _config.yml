@@ -82,7 +82,7 @@ analytics:
 author:
   name             : "Yifei Wang"
   avatar           : "profile.png"
-  bio              : "Second-year PhD @ Rice University."
+  bio              :
   location         : "Houston, Texas"
   employer         :
   pubmed           : #"https://www.ncbi.nlm.nih.gov/pubmed/?term=john+snow"
