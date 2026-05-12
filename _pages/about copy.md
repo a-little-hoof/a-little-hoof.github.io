@@ -183,11 +183,11 @@ redirect_from:
     </li>
     <li>
       <time>May 2026</time>
-      <span><span class="badge">new</span> Released <a href="/dit-register/">DSR</a> (with Apple) — a Dual-Stage Register fix for ViT-based RAE-DiT pipelines.</span>
+      <span><span class="badge">new</span> Released <a href="/dit-register/">DSR</a> (with Apple).</span>
     </li>
     <li>
       <time>Sep 2025</time>
-      <span><a href="/uni-instruct/">Uni-Instruct</a> accepted to <b>NeurIPS 2025</b>.</span>
+      <span><a href="/uni-instruct/">Uni-Instruct</a> (with Xiaohongshu Inc.) accepted to <b>NeurIPS 2025</b>.</span>
     </li>
     <li>
       <time>Aug 2025</time>
