@@ -40,6 +40,66 @@
     @media (max-width: 760px) {
       .hero-pair { grid-template-columns: 1fr; }
     }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin: 22px 0 8px;
+    }
+    @media (max-width: 800px) { .app-grid { grid-template-columns: 1fr; } }
+    .app-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--rad);
+      padding: 22px 22px 18px;
+    }
+    .app-card h3 {
+      margin: 0 0 10px;
+      padding-right: 40px;
+      font-size: 1.05rem;
+    }
+    .app-card p { font-size: 0.95rem; }
+    .app-num {
+      position: absolute;
+      top: 16px; right: 18px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--fg);
+      color: #fff;
+      display: grid; place-items: center;
+      font-size: 0.85rem; font-weight: 600;
+    }
+    .app-cols {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      margin-top: 10px;
+    }
+    @media (max-width: 480px) { .app-cols { grid-template-columns: 1fr; } }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.02em;
+      margin-bottom: 8px;
+    }
+    .pill-blue { background: #e0ecff; color: #1e40af; }
+    .pill-green { background: #dcfce7; color: #166534; }
+    .app-card ul.tight { margin: 0; padding-left: 18px; }
+    .app-card ul.tight li { margin: 3px 0; font-size: 0.92rem; }
+    .hint { color: var(--fg-muted); font-size: 0.85rem; }
+    .app-eq {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: "JetBrains Mono", Menlo, monospace;
+      font-size: 0.82rem;
+      margin: 10px 0;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -136,22 +196,40 @@
     <code>Grad(SIM)</code> (the score branch). Existing methods sit at specific corners of this family.
   </p>
 
-  <table class="results">
+  <p>The full picture: every row below is a prior method, and the third column shows the divergence inside Uni-Instruct that recovers it.</p>
+
+  <div style="overflow-x:auto;">
+  <table class="results" style="font-size:.86rem; min-width: 760px;">
     <thead>
       <tr>
         <th class="left">Method</th>
-        <th>Family</th>
+        <th>Loss</th>
         <th>Div. in UI</th>
+        <th>Task</th>
         <th>Gradient</th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="left">Diff-Instruct, DMD, <em>f</em>-distill, SDS, VSD, …</td><td>KL</td><td>χ²</td><td>Grad(DI)</td></tr>
-      <tr><td class="left">SiD, SIM, SiDA, SiD-LSG</td><td>score</td><td>RKL</td><td>Grad(SIM)</td></tr>
-      <tr class="row-ours"><td class="left"><b>Uni-Instruct (ours)</b></td><td><b>all f-div.</b></td><td><b>all</b></td><td>λ<sub>f</sub><sup>DI</sup>·Grad(DI) + λ<sub>f</sub><sup>SIM</sup>(x)·Grad(SIM) + GAN</td></tr>
+      <tr><td class="left">Diff-Instruct (DI)</td><td>IKL</td><td>χ²</td><td>One-step diffusion</td><td>Grad(DI)</td></tr>
+      <tr><td class="left">DI++</td><td>IKL + reward</td><td>χ²</td><td>Human-aligned diffusion</td><td>Grad(DI) + ∇<sub>θ</sub>ℒ<sub>reward</sub></td></tr>
+      <tr><td class="left">DI*</td><td>KL + reward</td><td>RKL</td><td>Human-aligned diffusion</td><td>Grad(SIM) + ∇<sub>θ</sub>ℒ<sub>reward</sub></td></tr>
+      <tr><td class="left">SDS</td><td>IKL</td><td>χ²</td><td>Text-to-3D</td><td>Grad(DI)</td></tr>
+      <tr><td class="left">DDS</td><td>IKL</td><td>χ²</td><td>Image editing</td><td>Grad(DI)</td></tr>
+      <tr><td class="left">VSD</td><td>IKL</td><td>χ²</td><td>Text-to-3D</td><td>Grad(DI)</td></tr>
+      <tr><td class="left">DMD</td><td>IKL + regression</td><td>χ²</td><td>One-step diffusion</td><td>Grad(DI) + ∇<sub>θ</sub>MSE</td></tr>
+      <tr><td class="left">RedDiff</td><td>IKL + data fidelity</td><td>χ²</td><td>Inverse problems</td><td>Grad(DI) + ∇<sub>θ</sub>MSE</td></tr>
+      <tr><td class="left">DMD2</td><td>IKL + GAN</td><td>χ²</td><td>One-step diffusion</td><td>Grad(DI) + ∇<sub>θ</sub>ℒ<sub>adv</sub></td></tr>
+      <tr><td class="left">SwiftBrush</td><td>IKL</td><td>χ²</td><td>One-step diffusion</td><td>Grad(DI)</td></tr>
+      <tr><td class="left">SIM</td><td>general KL</td><td>RKL</td><td>One-step diffusion</td><td>Grad(SIM)</td></tr>
+      <tr><td class="left">SiD</td><td>KL</td><td>RKL</td><td>One-step diffusion</td><td>Grad(SIM)</td></tr>
+      <tr><td class="left">SiDA</td><td>KL + GAN</td><td>RKL</td><td>One-step diffusion</td><td>Grad(SIM) + ∇<sub>θ</sub>ℒ<sub>adv</sub></td></tr>
+      <tr><td class="left">SiD-LSG</td><td>KL</td><td>RKL</td><td>One-step diffusion</td><td>Grad(SIM)</td></tr>
+      <tr><td class="left"><em>f</em>-distill</td><td>I-<em>f</em> + GAN</td><td>χ²</td><td>One-step diffusion</td><td>λ<sub>f</sub>·Grad(DI) + ∇<sub>θ</sub>ℒ<sub>adv</sub></td></tr>
+      <tr class="row-ours"><td class="left"><b>Uni-Instruct (ours)</b></td><td><b><em>f</em>-div. + GAN</b></td><td><b>all</b></td><td><b>all of the above</b></td><td>λ<sub>f</sub><sup>DI</sup>·Grad(DI) + λ<sub>f</sub><sup>SIM</sup>(x)·Grad(SIM) + ∇<sub>θ</sub>ℒ<sub>adv</sub></td></tr>
     </tbody>
   </table>
-  <div class="table-note">A condensed view of the unification table — see paper Table 1 for all 13 unified methods.</div>
+  </div>
+  <div class="table-note">Reproduced from paper Table 1. "Div. in UI" = the f-divergence inside Uni-Instruct that recovers each prior method.</div>
 </section>
 
 <section id="method">
@@ -271,23 +349,95 @@
   </table>
 </section>
 
-<section id="samples">
-  <h2>Generated samples</h2>
+<section id="unify-apps">
+  <h2>Why this matters: unifying prior work across four applications</h2>
+  <p>
+    The same Uni-Instruct framework recovers existing methods from <em>four different application areas</em> just
+    by picking a divergence and adding (or omitting) an auxiliary loss. Below is a guided tour of how each prior
+    method drops out as a special case — adapted from Appendix D of the paper.
+  </p>
 
-  <figure class="figure">
-    <img src="static/images/cifar10_uncond.jpg" alt="CIFAR-10 unconditional samples from Uni-Instruct" />
-    <figcaption><b>CIFAR-10 (unconditional)</b> — one-step samples from Uni-Instruct (JKL, FID = 1.46).</figcaption>
-  </figure>
+  <div class="app-grid">
 
-  <figure class="figure">
-    <img src="static/images/cifar10_cond.jpg" alt="CIFAR-10 conditional samples from Uni-Instruct" />
-    <figcaption><b>CIFAR-10 (conditional)</b> — one-step samples from Uni-Instruct (FKL longer training, FID = 1.38).</figcaption>
-  </figure>
+    <div class="app-card">
+      <div class="app-num">1</div>
+      <h3>One-step diffusion distillation</h3>
+      <p>
+        Picking <b>χ²</b> inside Uni-Instruct kills the SIM weighting (λ<sub>f</sub><sup>SIM</sup> = 0) and leaves
+        a pure Grad(DI). Picking <b>RKL</b> does the opposite — Grad(SIM) only. Two camps fall out cleanly.
+      </p>
+      <div class="app-cols">
+        <div>
+          <div class="pill pill-blue">χ² branch · Grad(DI)</div>
+          <ul class="tight">
+            <li>Diff-Instruct</li>
+            <li>DMD <span class="hint">(+ regression)</span></li>
+            <li>DMD2 <span class="hint">(+ GAN)</span></li>
+            <li>SwiftBrush</li>
+            <li><em>f</em>-distill <span class="hint">(weighted χ²)</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="pill pill-green">RKL branch · Grad(SIM)</div>
+          <ul class="tight">
+            <li>SiD</li>
+            <li>SIM</li>
+            <li>SiDA <span class="hint">(+ GAN)</span></li>
+            <li>SiD-LSG <span class="hint">(text-to-image)</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
-  <figure class="figure">
-    <img src="static/images/imagenet64.jpg" alt="ImageNet 64x64 conditional samples from Uni-Instruct" />
-    <figcaption><b>ImageNet 64×64 (conditional)</b> — one-step samples from Uni-Instruct (FKL longer training, FID = 1.02 vs. teacher 1.36 at 511 NFE).</figcaption>
-  </figure>
+    <div class="app-card">
+      <div class="app-num">2</div>
+      <h3>Text-to-3D (NeRF distillation)</h3>
+      <p>
+        DreamFusion's <b>SDS</b> and ProlificDreamer's <b>VSD</b> both minimise integral KL between a NeRF-rendered
+        distribution and a frozen text-to-image diffusion. Using Corollary 1 with the right weighting W(t), this
+        is exactly the <b>χ² (Grad(DI))</b> instance of Uni-Instruct.
+      </p>
+      <div class="app-eq">
+        ∫ w(t) D<sub>KL</sub>(p<sub>θ,t</sub>(x|c,y) ‖ q<sub>t</sub>(x|y<sup>c</sup>)) dt
+        &nbsp;⇒&nbsp; <b>Uni-Instruct (χ²)</b>
+      </div>
+      <p class="hint">
+        Plugging Uni-Instruct (FKL) into ProlificDreamer's NeRF pipeline + a U-Net-encoder discriminator gives
+        the 3D-vase results below.
+      </p>
+    </div>
+
+    <div class="app-card">
+      <div class="app-num">3</div>
+      <h3>Solving inverse problems</h3>
+      <p>
+        RedDiff approximates the posterior p(x|y) by minimising KL to a variational q(x), then expands the KL
+        along the diffusion trajectory with weight w(t):
+      </p>
+      <div class="app-eq">
+        ∫ w(t) D<sub>KL</sub>(p<sub>θ,t</sub>(x<sub>t</sub>|y) ‖ q<sub>t</sub>(x<sub>t</sub>)) dt
+        &nbsp;=&nbsp; ∫ ½ g²(t) W(t) 𝔼 ‖s<sub>p<sub>θ,t</sub></sub>(x|y) − s<sub>q<sub>t</sub></sub>(x)‖² dt
+      </div>
+      <p>So <b>RedDiff = Uni-Instruct (RKL) + a tractable data-fidelity term.</b></p>
+    </div>
+
+    <div class="app-card">
+      <div class="app-num">4</div>
+      <h3>Human-preference alignment (RLHF for diffusion)</h3>
+      <p>
+        RLHF for diffusion adds a KL regulariser to a reference distribution and a reward term. Two recent
+        instantiations fall out as different f's:
+      </p>
+      <ul class="tight">
+        <li><b>DI++</b> uses integral KL — recovers <b>χ² Uni-Instruct + reward</b>.</li>
+        <li><b>DI*</b> uses score-based KL — recovers <b>RKL Uni-Instruct + reward</b>.</li>
+      </ul>
+      <p class="hint">
+        Both methods are special cases of the same template: pick f, optionally add reward / GAN / regression.
+      </p>
+    </div>
+
+  </div>
 </section>
 
 <section id="text-to-3d">
