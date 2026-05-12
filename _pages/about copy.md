@@ -128,10 +128,9 @@ redirect_from:
   .pub-card h3 a { color: #1f2328; }
   .pub-card h3 a:hover { color: #1d4ed8; }
   .pub-card .venue {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
     margin: 0 0 8px;
   }
   .pub-card .desc {
