@@ -27,5 +27,5 @@ Looking ahead, I am excited to explore cutting-edge developments in generative m
 
 - (NeurIPS 2025) **Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction**
 *Yifei Wang, Weimin Bai, Colin Zhang, Debing Zhang, Weijian Luo and He Sun*.
-[paper](https://arxiv.org/abs/2505.20755)
+[paper](https://arxiv.org/abs/2505.20755) | [project page](/uni-instruct/) | [code](https://github.com/a-little-hoof/Uni_Instruct)
 

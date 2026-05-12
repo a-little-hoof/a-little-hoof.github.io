@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Uni-Instruct unifies more than 10 one-step diffusion distillation approaches and sets new SoTA one-step FID on CIFAR10 and ImageNet 64x64." />
+  <meta property="og:title" content="Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction" />
+  <meta property="og:description" content="A theory-driven framework that unifies KL- and score-based one-step diffusion distillation, with new SoTA one-step FID of 1.02 on ImageNet 64x64." />
+  <meta property="og:image" content="static/images/uni_instruct_overview.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <title>Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/main.css" />
+  <style>
+    .vase-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .vase-grid img { width: 100%; display: block; border-radius: 6px; }
+    .vase-block { margin: 18px 0; }
+    .vase-block .vase-label {
+      font-size: 0.85rem; font-weight: 600; color: var(--fg-soft);
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;
+    }
+    @media (max-width: 640px) {
+      .vase-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .hero-pair {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 24px;
+      align-items: center;
+      margin: 24px 0 8px;
+    }
+    .hero-pair img { width: 100%; display: block; }
+    @media (max-width: 760px) {
+      .hero-pair { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container inner">
+    <a class="home" href="/">← Yifei Wang</a>
+    <span class="venue">NeurIPS · 2025</span>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="container">
+    <h1>Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction</h1>
+
+    <div class="authors">
+      <span class="author">Yifei Wang<sup>1,5</sup></span>
+      <span class="author">Weimin Bai<sup>1,2,3</sup></span>
+      <span class="author">Colin Zhang<sup>4</sup></span>
+      <span class="author">Debing Zhang<sup>4</sup></span>
+      <span class="author"><b>Weijian Luo</b><sup>4†</sup></span>
+      <span class="author"><b>He Sun</b><sup>1,2,3</sup></span>
+    </div>
+    <div class="affil">
+      <sup>1</sup>College of Future Technology, Peking University &nbsp;
+      <sup>2</sup>National Biomedical Imaging Center, PKU &nbsp;
+      <sup>3</sup>Academy for Advanced Interdisciplinary Studies, PKU
+      <br/>
+      <sup>4</sup>hi-lab, Xiaohongshu Inc &nbsp;
+      <sup>5</sup>Yuanpei College, PKU
+    </div>
+    <div class="equal"><sup>†</sup>Corresponding author</div>
+
+    <div class="links">
+      <a class="link-btn" href="https://arxiv.org/abs/2505.20755" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        arXiv
+      </a>
+      <a class="link-btn" href="https://arxiv.org/pdf/2505.20755" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        PDF
+      </a>
+      <a class="link-btn" href="https://github.com/a-little-hoof/Uni_Instruct" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+        Code
+      </a>
+      <a class="link-btn ghost" href="#bibtex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        BibTeX
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<section id="tldr">
+  <h2>TL;DR</h2>
+  <p class="lead">
+    One-step diffusion distillation has split into two camps: KL-based methods (Diff-Instruct, DMD, <em>f</em>-distill) and
+    score-based methods (SiD, SIM, SiDA). <b>Uni-Instruct</b> shows these are all special cases of a single object —
+    the diffusion expansion of the <em>f</em>-divergence family — and turns it into a tractable training loss.
+  </p>
+  <div class="callout">
+    <b>New SoTA one-step FID:</b> <b>1.46</b> on CIFAR10 unconditional, <b>1.38</b> on CIFAR10 conditional,
+    and <b>1.02</b> on ImageNet&nbsp;64×64 — beating the 79-step EDM teacher (2.35) by a wide margin.
+  </div>
+
+  <div class="hero-pair">
+    <img src="static/images/uni_instruct_overview.png" alt="Uni-Instruct conceptual overview" />
+    <img src="static/images/fid_bubbles.png" alt="FID comparison on ImageNet 64x64" />
+  </div>
+  <p style="font-size: .92rem; color: var(--fg-muted);">
+    <b>Left:</b> Uni-Instruct unifies &gt;10 distillation methods under one <em>f</em>-divergence framework.
+    <b>Right:</b> One-step FID on ImageNet&nbsp;64×64 — Uni-Instruct (FKL, long training) reaches 1.02 NFE=1.
+  </p>
+</section>
+
+<section id="motivation">
+  <h2>Two camps, one framework</h2>
+  <p>
+    Most one-step diffusion distillation methods can be put in one of two boxes:
+  </p>
+  <ul>
+    <li><b>KL-based</b> — Diff-Instruct, DMD, <em>f</em>-distill, SwiftBrush. Fast to converge, but mode-seeking
+      and prone to mode collapse.</li>
+    <li><b>Score-based</b> — SiD, SIM, SiDA, SiD-LSG. Strong sample quality, but slower convergence and sometimes
+      sub-optimal fidelity.</li>
+  </ul>
+  <p>
+    The natural question: can we unify them so we get the best of both? Uni-Instruct answers <em>yes</em>, by
+    proving a <b>diffusion expansion of the f-divergence family</b>. The expansion gives a continuous family of
+    losses whose gradients decompose into a weighted combination of <code>Grad(DI)</code> (the KL branch) and
+    <code>Grad(SIM)</code> (the score branch). Existing methods sit at specific corners of this family.
+  </p>
+
+  <table class="results">
+    <thead>
+      <tr>
+        <th class="left">Method</th>
+        <th>Family</th>
+        <th>Div. in UI</th>
+        <th>Gradient</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">Diff-Instruct, DMD, <em>f</em>-distill, SDS, VSD, …</td><td>KL</td><td>χ²</td><td>Grad(DI)</td></tr>
+      <tr><td class="left">SiD, SIM, SiDA, SiD-LSG</td><td>score</td><td>RKL</td><td>Grad(SIM)</td></tr>
+      <tr class="row-ours"><td class="left"><b>Uni-Instruct (ours)</b></td><td><b>all f-div.</b></td><td><b>all</b></td><td>λ<sub>f</sub><sup>DI</sup>·Grad(DI) + λ<sub>f</sub><sup>SIM</sup>(x)·Grad(SIM) + GAN</td></tr>
+    </tbody>
+  </table>
+  <div class="table-note">A condensed view of the unification table — see paper Table 1 for all 13 unified methods.</div>
+</section>
+
+<section id="method">
+  <h2>What's actually new</h2>
+
+  <h3>1. Diffusion expansion of f-divergences</h3>
+  <p>
+    We start from the standard <em>f</em>-divergence D<sub>f</sub>(q‖p) and consider the diffusion expansion that
+    matches not just the data distribution but the entire forward-noise marginals (q<sub>t</sub>, p<sub>θ,t</sub>)
+    for t ∈ [0, T]. This expansion is what gives one-step distillation its supervisory signal — but the resulting
+    objective is intractable for general f.
+  </p>
+
+  <h3>2. Tractable equivalent loss via gradient-equivalence theorems</h3>
+  <p>
+    We prove that the gradient of the expanded f-divergence is gradient-equivalent to a closed-form expression
+    involving the teacher score and the student's implicit score. Concretely, for any valid f, the gradient
+    decomposes into two terms that we already know how to compute (Grad(DI) and Grad(SIM)), with f-specific
+    weighting functions λ<sub>f</sub>. This unblocks training for the whole f-divergence family — including
+    Forward-KL, Reverse-KL, Jensen-KL (JKL), χ², JS — without needing density ratios.
+  </p>
+
+  <h3>3. Flexible recipes: RKL → FKL warm-up</h3>
+  <p>
+    The framework makes it trivial to swap or combine divergences. We find a particularly clean two-stage recipe:
+    train with RKL until convergence, then continue with FKL. RKL gives strong mode-seeking convergence; FKL
+    follows up with mode-covering to fix tail behavior. This is what produces our best ImageNet 64×64 number.
+  </p>
+</section>
+
+<section id="results">
+  <h2>Results</h2>
+
+  <h3>CIFAR-10 (unconditional)</h3>
+  <table class="results">
+    <thead>
+      <tr><th class="left">Family</th><th class="left">Model</th><th>NFE</th><th>FID ↓</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">Teacher</td><td class="left">VP-EDM</td><td>35</td><td>1.97</td></tr>
+      <tr><td class="left">Consistency</td><td class="left">sCT / ECT / iCT</td><td>2</td><td>2.06 / 2.11 / 2.46</td></tr>
+      <tr><td class="left">One-step</td><td class="left">Diff-Instruct</td><td>1</td><td>4.53</td></tr>
+      <tr><td class="left">One-step</td><td class="left">DMD</td><td>1</td><td>3.77</td></tr>
+      <tr><td class="left">One-step</td><td class="left">SiD</td><td>1</td><td>1.92</td></tr>
+      <tr><td class="left">One-step</td><td class="left">SiDA</td><td>1</td><td>1.52</td></tr>
+      <tr><td class="left">One-step</td><td class="left">SiD²A</td><td>1</td><td>1.50</td></tr>
+      <tr class="row-ours"><td class="left">One-step</td><td class="left"><b>Uni-Instruct (RKL, F.S.)</b></td><td>1</td><td>1.52</td></tr>
+      <tr class="row-ours"><td class="left">One-step</td><td class="left"><b>Uni-Instruct (FKL, F.S.)</b></td><td>1</td><td>1.52</td></tr>
+      <tr class="row-ours"><td class="left">One-step</td><td class="left"><b>Uni-Instruct (FKL, L.T.)</b></td><td>1</td><td>1.48</td></tr>
+      <tr class="row-ours"><td class="left">One-step</td><td class="left"><b>Uni-Instruct (JKL, F.S.)</b></td><td>1</td><td><b>1.46</b></td></tr>
+    </tbody>
+  </table>
+  <div class="table-note">F.S. = from scratch · L.T. = resumed and longer training.</div>
+
+  <h3>CIFAR-10 (class-conditional)</h3>
+  <table class="results">
+    <thead>
+      <tr><th class="left">Family</th><th class="left">Model</th><th>NFE</th><th>FID ↓</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">Teacher</td><td class="left">VP-EDM</td><td>35</td><td>1.79</td></tr>
+      <tr><td class="left">One-step</td><td class="left">Diff-Instruct</td><td>1</td><td>4.19</td></tr>
+      <tr><td class="left">One-step</td><td class="left">SIM</td><td>1</td><td>1.96</td></tr>
+      <tr><td class="left">One-step</td><td class="left">SiD</td><td>1</td><td>1.71</td></tr>
+      <tr><td class="left">One-step</td><td class="left">SiDA / SiD²A</td><td>1</td><td>1.44 / 1.40</td></tr>
+      <tr><td class="left">One-step</td><td class="left"><em>f</em>-distill</td><td>1</td><td>1.92</td></tr>
+      <tr class="row-ours"><td class="left">One-step</td><td class="left"><b>Uni-Instruct (RKL, F.S.)</b></td><td>1</td><td>1.44</td></tr>
+      <tr class="row-ours"><td class="left">One-step</td><td class="left"><b>Uni-Instruct (JKL, F.S.)</b></td><td>1</td><td>1.42</td></tr>
+      <tr class="row-ours"><td class="left">One-step</td><td class="left"><b>Uni-Instruct (FKL, F.S.)</b></td><td>1</td><td>1.43</td></tr>
+      <tr class="row-ours"><td class="left">One-step</td><td class="left"><b>Uni-Instruct (FKL, L.T.)</b></td><td>1</td><td><b>1.38</b></td></tr>
+    </tbody>
+  </table>
+
+  <h3>ImageNet 64×64 (class-conditional)</h3>
+  <table class="results">
+    <thead>
+      <tr><th class="left">Family</th><th class="left">Model</th><th>NFE</th><th>FID ↓</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">Teacher</td><td class="left">VP-EDM</td><td>511</td><td>1.36</td></tr>
+      <tr><td class="left">Diffusion</td><td class="left">ADM</td><td>250</td><td>2.07</td></tr>
+      <tr><td class="left">Diffusion</td><td class="left">DiT-L/2</td><td>250</td><td>2.91</td></tr>
+      <tr><td class="left">Consistency</td><td class="left">ECT</td><td>1</td><td>2.49</td></tr>
+      <tr><td class="left">Few-step</td><td class="left">DMD2 (longer)</td><td>1</td><td>1.28</td></tr>
+      <tr><td class="left">Few-step</td><td class="left">SiD</td><td>1</td><td>1.71</td></tr>
+      <tr><td class="left">Few-step</td><td class="left">SiDA / SiD²A</td><td>1</td><td>1.35 / 1.10</td></tr>
+      <tr><td class="left">Few-step</td><td class="left"><em>f</em>-distill</td><td>1</td><td>1.16</td></tr>
+      <tr class="row-ours"><td class="left">Few-step</td><td class="left"><b>Uni-Instruct (RKL, F.S.)</b></td><td>1</td><td>1.35</td></tr>
+      <tr class="row-ours"><td class="left">Few-step</td><td class="left"><b>Uni-Instruct (JKL, F.S.)</b></td><td>1</td><td>1.28</td></tr>
+      <tr class="row-ours"><td class="left">Few-step</td><td class="left"><b>Uni-Instruct (FKL, F.S.)</b></td><td>1</td><td>1.34</td></tr>
+      <tr class="row-ours"><td class="left">Few-step</td><td class="left"><b>Uni-Instruct (FKL, L.T.)</b></td><td>1</td><td><b>1.02</b></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Ablation: divergence × GAN × init</h3>
+  <p>
+    Switching divergence inside the same framework changes FID by &gt;3×. JKL is the best stand-alone choice;
+    GAN loss helps every divergence; warm-starting from a converged RKL run further improves all variants.
+  </p>
+  <table class="results">
+    <thead>
+      <tr><th class="left">Divergence</th><th>SiD init.</th><th>GAN</th><th>FID ↓</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">none (GAN only)</td><td>—</td><td>✓</td><td>8.21</td></tr>
+      <tr><td class="left">χ²</td><td>—</td><td>✓</td><td>4.37</td></tr>
+      <tr><td class="left">JS</td><td>—</td><td>✓</td><td>5.23</td></tr>
+      <tr class="row-ours"><td class="left">JKL</td><td>—</td><td>✓</td><td><b>1.46</b></td></tr>
+      <tr><td class="left">RKL</td><td>—</td><td>—</td><td>1.92</td></tr>
+      <tr><td class="left">FKL</td><td>—</td><td>—</td><td>1.88</td></tr>
+      <tr><td class="left">RKL</td><td>—</td><td>✓</td><td>1.52</td></tr>
+      <tr><td class="left">FKL</td><td>—</td><td>✓</td><td>1.52</td></tr>
+      <tr><td class="left">RKL</td><td>✓</td><td>✓</td><td>1.50</td></tr>
+      <tr><td class="left">FKL</td><td>✓</td><td>✓</td><td>1.48</td></tr>
+      <tr><td class="left">JKL</td><td>✓</td><td>✓</td><td>1.50</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="samples">
+  <h2>Generated samples</h2>
+
+  <figure class="figure">
+    <img src="static/images/cifar10_uncond.jpg" alt="CIFAR-10 unconditional samples from Uni-Instruct" />
+    <figcaption><b>CIFAR-10 (unconditional)</b> — one-step samples from Uni-Instruct (JKL, FID = 1.46).</figcaption>
+  </figure>
+
+  <figure class="figure">
+    <img src="static/images/cifar10_cond.jpg" alt="CIFAR-10 conditional samples from Uni-Instruct" />
+    <figcaption><b>CIFAR-10 (conditional)</b> — one-step samples from Uni-Instruct (FKL longer training, FID = 1.38).</figcaption>
+  </figure>
+
+  <figure class="figure">
+    <img src="static/images/imagenet64.jpg" alt="ImageNet 64x64 conditional samples from Uni-Instruct" />
+    <figcaption><b>ImageNet 64×64 (conditional)</b> — one-step samples from Uni-Instruct (FKL longer training, FID = 1.02 vs. teacher 1.36 at 511 NFE).</figcaption>
+  </figure>
+</section>
+
+<section id="text-to-3d">
+  <h2>Bonus: text-to-3D</h2>
+  <p>
+    Because Uni-Instruct subsumes SDS/VSD, it plugs straight into a ProlificDreamer-style text-to-3D pipeline.
+    Adding a discriminator head on the U-Net encoder and distilling for ~400 epochs with FKL gives 3D vases with
+    visibly more diversity and crisper surface detail than ProlificDreamer.
+  </p>
+  <div class="qual-prompt">"A refined vase with artistic patterns."</div>
+  <div class="vase-block">
+    <div class="vase-label">ProlificDreamer (baseline)</div>
+    <div class="vase-grid">
+      <img src="static/images/prolific-vase1.jpg" alt="" />
+      <img src="static/images/prolific-vase2.jpg" alt="" />
+      <img src="static/images/prolific-vase3.jpg" alt="" />
+      <img src="static/images/prolific-vase4.jpg" alt="" />
+    </div>
+  </div>
+  <div class="vase-block">
+    <div class="vase-label">Uni-Instruct (FKL)</div>
+    <div class="vase-grid">
+      <img src="static/images/vase1.jpg" alt="" />
+      <img src="static/images/vase2.jpg" alt="" />
+      <img src="static/images/vase3.jpg" alt="" />
+      <img src="static/images/vase4.jpg" alt="" />
+    </div>
+  </div>
+</section>
+
+<section id="bibtex">
+  <h2>BibTeX</h2>
+  <div class="bib">@inproceedings{wang2025uniinstruct,
+  title         = {Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction},
+  author        = {Wang, Yifei and Bai, Weimin and Zhang, Colin and Zhang, Debing and Luo, Weijian and Sun, He},
+  booktitle     = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year          = {2025},
+  eprint        = {2505.20755},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2505.20755},
+}</div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    Page template adapted from common academic project pages · last updated May 2026 ·
+    <a href="/">Yifei Wang</a>
+  </div>
+</footer>
+
+</body>
+</html>
