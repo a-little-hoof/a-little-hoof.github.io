@@ -179,7 +179,7 @@ redirect_from:
   <ul>
     <li>
       <time>May 2026</time>
-      <span><span class="badge">new</span> Joining <a href="https://www.cs.jhu.edu/~ayuille/">Prof. Alan Yuille</a>'s lab at JHU as a visiting student for the summer.</span>
+      <span><span class="badge">new</span> Joining <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at JHU as a visiting student for the summer.</span>
     </li>
     <li>
       <time>May 2026</time>
@@ -256,7 +256,7 @@ redirect_from:
   <p>
     I'm a second-year PhD student at Rice University, where I am working with
     <a href="https://weichen582.github.io/">Chen Wei</a>. In May 2026 I'll be visiting
-    <a href="https://www.cs.jhu.edu/~ayuille/">Prof. Alan Yuille</a>'s lab at Johns Hopkins University.
+    <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at Johns Hopkins University.
     Before Rice I received my B.S. from Peking University, advised by
     <a href="https://ai4imaging.github.io/">Prof. He Sun</a>. My research focuses on generative modeling —
     primarily diffusion models — with an emphasis on the theory and the practical bottlenecks that govern
