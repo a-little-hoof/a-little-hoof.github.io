@@ -178,12 +178,12 @@ redirect_from:
   <h2>News</h2>
   <ul>
     <li>
-      <time>Summer 2026</time>
+      <time>May 2026</time>
       <span><span class="badge">new</span> Joining <a href="https://www.cs.jhu.edu/~ayuille/">Prof. Alan Yuille</a>'s lab at JHU as a visiting student for the summer.</span>
     </li>
     <li>
       <time>May 2026</time>
-      <span><span class="badge">new</span> Released <a href="/dit-register/">Taming Outlier Tokens in Diffusion Transformers</a> (with Apple) — a Dual-Stage Register fix for ViT-based RAE-DiT pipelines.</span>
+      <span><span class="badge">new</span> Released <a href="/dit-register/">DSR</a> (with Apple) — a Dual-Stage Register fix for ViT-based RAE-DiT pipelines.</span>
     </li>
     <li>
       <time>Sep 2025</time>
@@ -191,7 +191,7 @@ redirect_from:
     </li>
     <li>
       <time>Aug 2025</time>
-      <span>Started PhD at Rice University, advised by <a href="https://weichen582.github.io/">Prof. Chen Wei</a>.</span>
+      <span>Started PhD at Rice University, working with <a href="https://weichen582.github.io/">Chen Wei</a>.</span>
     </li>
     <li>
       <time>Sep 2024</time>
@@ -210,7 +210,7 @@ redirect_from:
         <img src="/dit-register/static/images/pca_map_2.jpg" alt="DSR PCA map visualization" />
       </a>
       <div class="body">
-        <h3><a href="/dit-register/">Taming Outlier Tokens in Diffusion Transformers</a></h3>
+        <h3><a href="/dit-register/">DSR</a></h3>
         <p class="venue">Preprint · 2026</p>
         <p class="authors">Xiaoyu Wu*, <b>Yifei Wang*</b>, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan, Chen Wei</p>
         <p class="desc">
@@ -254,8 +254,8 @@ redirect_from:
 <div class="home-section home-about">
   <h2>About</h2>
   <p>
-    I'm a second-year PhD student at Rice University, where I am advised by
-    <a href="https://weichen582.github.io/">Prof. Chen Wei</a>. In summer 2026 I'll be visiting
+    I'm a second-year PhD student at Rice University, where I am working with
+    <a href="https://weichen582.github.io/">Chen Wei</a>. In May 2026 I'll be visiting
     <a href="https://www.cs.jhu.edu/~ayuille/">Prof. Alan Yuille</a>'s lab at Johns Hopkins University.
     Before Rice I received my B.S. from Peking University, advised by
     <a href="https://ai4imaging.github.io/">Prof. He Sun</a>. My research focuses on generative modeling —
