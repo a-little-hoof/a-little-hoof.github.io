@@ -118,9 +118,8 @@ a:hover { text-decoration: underline; }
 }
 .teaser img {
   max-width: 100%;
-  border-radius: var(--rad);
-  border: 1px solid var(--border);
-  background: #fff;
+  display: block;
+  margin: 0 auto;
 }
 .teaser .caption {
   font-size: 0.92rem;
@@ -153,9 +152,8 @@ section .lead { font-size: 1.04rem; color: var(--fg-soft); }
 }
 .figure img {
   max-width: 100%;
-  border-radius: var(--rad);
-  border: 1px solid var(--border);
-  background: #fff;
+  display: block;
+  margin: 0 auto;
 }
 .figure figcaption {
   font-size: 0.92rem;
