@@ -1,7 +1,7 @@
 ---
 permalink: /
 title: "Yifei Wang"
-excerpt: "Yifei Wang — first-year PhD student at Rice University, working on generative models."
+excerpt: "Yifei Wang — second-year PhD student at Rice University, working on generative models."
 author_profile: true
 redirect_from: 
   - /About/
@@ -162,7 +162,7 @@ redirect_from:
 
 <div class="home-hero">
   <h1>Hi, I'm Yifei Wang</h1>
-  <p class="role">First-year PhD student · Rice University</p>
+  <p class="role">Second-year PhD student · Rice University &nbsp;·&nbsp; Summer 2026 visiting student @ JHU</p>
   <p class="lead">
     I work on generative models — diffusion, flow matching, and the building blocks that make them more
     efficient and more controllable.
@@ -172,6 +172,10 @@ redirect_from:
 <div class="home-section home-news">
   <h2>News</h2>
   <ul>
+    <li>
+      <time>Summer 2026</time>
+      <span><span class="badge">soon</span> Joining <a href="https://www.cs.jhu.edu/~ayuille/">Prof. Alan Yuille</a>'s lab at JHU as a visiting student for the summer.</span>
+    </li>
     <li>
       <time>May 2026</time>
       <span><span class="badge">new</span> Released <a href="/dit-register/">Taming Outlier Tokens in Diffusion Transformers</a> (with Apple) — a Dual-Stage Register fix for ViT-based RAE-DiT pipelines.</span>
@@ -241,12 +245,14 @@ redirect_from:
 <div class="home-section home-about">
   <h2>About</h2>
   <p>
-    I'm a first-year PhD student at Rice University, where I am advised by
+    I'm a second-year PhD student at Rice University, where I am advised by
     <a href="https://weichen582.github.io/">Prof. Chen Wei</a> and
-    <a href="https://pkulwj1994.github.io/">Dr. Weijian Luo</a>. Before that, I received my B.S. from
-    Peking University, advised by <a href="https://ai4imaging.github.io/">Prof. He Sun</a>. My research focuses
-    on generative modeling — primarily diffusion models — with an emphasis on the theory and the practical
-    bottlenecks that govern their training.
+    <a href="https://pkulwj1994.github.io/">Dr. Weijian Luo</a>. In summer 2026 I'll be visiting
+    <a href="https://www.cs.jhu.edu/~ayuille/">Prof. Alan Yuille</a>'s lab at Johns Hopkins University.
+    Before Rice I received my B.S. from Peking University, advised by
+    <a href="https://ai4imaging.github.io/">Prof. He Sun</a>. My research focuses on generative modeling —
+    primarily diffusion models — with an emphasis on the theory and the practical bottlenecks that govern
+    their training.
   </p>
   <p>
     Outside the lab, I run and hike a lot. I've finished several marathons, and once spent a summer doing
