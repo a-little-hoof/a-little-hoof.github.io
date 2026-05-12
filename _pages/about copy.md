@@ -86,12 +86,16 @@ redirect_from:
   }
 
   /* Pub cards */
-  .pub-card {
+  .pub-cards {
     display: grid;
-    grid-template-columns: 220px 1fr;
-    gap: 18px;
-    padding: 16px;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
     margin: 14px 0;
+  }
+  .pub-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     background: #fafbfc;
@@ -102,16 +106,18 @@ redirect_from:
     box-shadow: 0 2px 12px rgba(15, 23, 42, .05);
   }
   .pub-card .thumb {
-    width: 220px;
-    height: 130px;
-    overflow: hidden;
-    border-radius: 8px;
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 1;
     background: #fff;
-    border: 1px solid #e5e7eb;
-    display: grid; place-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    overflow: hidden;
   }
   .pub-card .thumb img {
     width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .pub-card .body {
+    padding: 14px 16px 16px;
   }
   .pub-card h3 {
     margin: 0 0 6px;
@@ -149,8 +155,7 @@ redirect_from:
     color: #1d4ed8;
   }
   @media (max-width: 600px) {
-    .pub-card { grid-template-columns: 1fr; }
-    .pub-card .thumb { width: 100%; height: 160px; }
+    .pub-cards { grid-template-columns: 1fr; }
     .home-news li { grid-template-columns: 90px 1fr; gap: 10px; }
   }
 
@@ -198,45 +203,49 @@ redirect_from:
 <div class="home-section">
   <h2>Selected work</h2>
 
-  <div class="pub-card">
-    <a class="thumb" href="/dit-register/">
-      <img src="/dit-register/static/images/framework.png" alt="DSR framework figure" />
-    </a>
-    <div>
-      <h3><a href="/dit-register/">Taming Outlier Tokens in Diffusion Transformers</a></h3>
-      <p class="venue">Preprint · 2026</p>
-      <p class="authors">Xiaoyu Wu*, <b>Yifei Wang*</b>, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan, Chen Wei</p>
-      <p class="desc">
-        We show that outlier tokens — high-norm patch tokens that absorb attention — appear in both the ViT
-        encoder and the diffusion transformer of RAE-DiT pipelines. Our <em>Dual-Stage Registers</em> fix both
-        sides and improve ImageNet-256 FID from 5.89 → 4.58 at 80 epochs.
-      </p>
-      <div class="pub-links">
-        <a href="https://arxiv.org/abs/2605.05206">arXiv</a>
-        <a href="/dit-register/">project page</a>
-      </div>
-    </div>
-  </div>
+  <div class="pub-cards">
 
-  <div class="pub-card">
-    <a class="thumb" href="/uni-instruct/">
-      <img src="/uni-instruct/static/images/uni_instruct_overview.png" alt="Uni-Instruct overview" />
-    </a>
-    <div>
-      <h3><a href="/uni-instruct/">Uni-Instruct: One-step Diffusion through Unified Divergence Instruction</a></h3>
-      <p class="venue">NeurIPS · 2025</p>
-      <p class="authors"><b>Yifei Wang</b>, Weimin Bai, Colin Zhang, Debing Zhang, Weijian Luo, He Sun</p>
-      <p class="desc">
-        A single <em>f</em>-divergence framework that subsumes 10+ one-step diffusion distillation methods
-        (Diff-Instruct, DMD, SiD, SIM, <em>f</em>-distill, …) — and a new SoTA one-step FID of <b>1.02</b> on
-        ImageNet&nbsp;64×64, beating the 35-NFE EDM teacher.
-      </p>
-      <div class="pub-links">
-        <a href="https://arxiv.org/abs/2505.20755">arXiv</a>
-        <a href="/uni-instruct/">project page</a>
-        <a href="https://github.com/a-little-hoof/Uni_Instruct">code</a>
+    <div class="pub-card">
+      <a class="thumb" href="/dit-register/">
+        <img src="/dit-register/static/images/pca_map_2.jpg" alt="DSR PCA map visualization" />
+      </a>
+      <div class="body">
+        <h3><a href="/dit-register/">Taming Outlier Tokens in Diffusion Transformers</a></h3>
+        <p class="venue">Preprint · 2026</p>
+        <p class="authors">Xiaoyu Wu*, <b>Yifei Wang*</b>, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan, Chen Wei</p>
+        <p class="desc">
+          Outlier patch tokens hurt both ViT encoders and diffusion transformers in RAE-DiT pipelines.
+          Our <em>Dual-Stage Registers</em> patch both sides and improve ImageNet-256 FID from
+          5.89&nbsp;→&nbsp;4.58 at 80 epochs.
+        </p>
+        <div class="pub-links">
+          <a href="https://arxiv.org/abs/2605.05206">arXiv</a>
+          <a href="/dit-register/">project page</a>
+        </div>
       </div>
     </div>
+
+    <div class="pub-card">
+      <a class="thumb" href="/uni-instruct/">
+        <img src="/uni-instruct/static/images/uni_instruct_overview.png" alt="Uni-Instruct overview" />
+      </a>
+      <div class="body">
+        <h3><a href="/uni-instruct/">Uni-Instruct: One-step Diffusion through Unified Divergence Instruction</a></h3>
+        <p class="venue">NeurIPS · 2025</p>
+        <p class="authors"><b>Yifei Wang</b>, Weimin Bai, Colin Zhang, Debing Zhang, Weijian Luo, He Sun</p>
+        <p class="desc">
+          A single <em>f</em>-divergence framework that subsumes 10+ one-step diffusion distillation methods
+          (Diff-Instruct, DMD, SiD, SIM, …) — and a new SoTA one-step FID of <b>1.02</b> on ImageNet&nbsp;64×64,
+          beating the 35-NFE EDM teacher.
+        </p>
+        <div class="pub-links">
+          <a href="https://arxiv.org/abs/2505.20755">arXiv</a>
+          <a href="/uni-instruct/">project page</a>
+          <a href="https://github.com/a-little-hoof/Uni_Instruct">code</a>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <a class="see-all" href="/Research/">See all publications →</a>
