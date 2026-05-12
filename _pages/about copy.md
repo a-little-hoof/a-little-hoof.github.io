@@ -210,7 +210,7 @@ redirect_from:
         <img src="/dit-register/static/images/pca_map_2.jpg" alt="DSR PCA map visualization" />
       </a>
       <div class="body">
-        <h3><a href="/dit-register/">DSR</a></h3>
+        <h3><a href="/dit-register/">Taming Outlier Tokens in Diffusion Transformers</a></h3>
         <p class="venue">Preprint · 2026</p>
         <p class="authors">Xiaoyu Wu*, <b>Yifei Wang*</b>, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan, Chen Wei</p>
         <p class="desc">
