@@ -190,12 +190,12 @@ redirect_from:
       <span><a href="/uni-instruct/">Uni-Instruct</a> accepted to <b>NeurIPS 2025</b>.</span>
     </li>
     <li>
-      <time>Sep 2025</time>
-      <span><a href="https://arxiv.org/abs/2407.01014">EM-Diffusion</a> accepted to <b>NeurIPS 2024</b>.</span>
-    </li>
-    <li>
       <time>Aug 2025</time>
       <span>Started PhD at Rice University, advised by <a href="https://weichen582.github.io/">Prof. Chen Wei</a>.</span>
+    </li>
+    <li>
+      <time>Sep 2024</time>
+      <span><a href="https://arxiv.org/abs/2407.01014">EM-Diffusion</a> accepted to <b>NeurIPS 2024</b>.</span>
     </li>
   </ul>
 </div>
