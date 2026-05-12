@@ -167,7 +167,7 @@ redirect_from:
 
 <div class="home-hero">
   <h1>Hi, I'm Yifei Wang</h1>
-  <p class="role">Second-year PhD student · Rice University &nbsp;·&nbsp; Summer 2026 visiting student @ JHU</p>
+  <p class="role">Second-year PhD student · Rice University</p>
   <p class="lead">
     I work on generative models — diffusion, flow matching, and the building blocks that make them more
     efficient and more controllable.
