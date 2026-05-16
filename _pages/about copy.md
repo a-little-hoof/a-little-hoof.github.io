@@ -220,6 +220,7 @@ redirect_from:
         <div class="pub-links">
           <a href="https://arxiv.org/abs/2605.05206">arXiv</a>
           <a href="/dit-register/">project page</a>
+          <a href="https://github.com/a-little-hoof/DSR">code</a>
         </div>
       </div>
     </div>

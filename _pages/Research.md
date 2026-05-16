@@ -15,7 +15,7 @@ Looking ahead, I am excited to explore cutting-edge developments in generative m
 
 - (Preprint 2026) **Taming Outlier Tokens in Diffusion Transformers**
 *Xiaoyu Wu\*, Yifei Wang\*, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan and Chen Wei*.
-[paper](https://arxiv.org/abs/2605.05206) | [project page](/dit-register/)
+[paper](https://arxiv.org/abs/2605.05206) | [project page](/dit-register/) | [code](https://github.com/a-little-hoof/DSR)
 
 - (NeurIPS 2025) **Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction**
 *Yifei Wang, Weimin Bai, Colin Zhang, Debing Zhang, Weijian Luo and He Sun*.
