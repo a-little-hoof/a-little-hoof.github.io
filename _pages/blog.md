@@ -46,10 +46,24 @@ redirect_from:
     margin-bottom: 6px;
     font-variant-numeric: tabular-nums;
   }
-  .post-item .post-meta .read-time::before {
+  .post-item .post-meta .read-time::before,
+  .post-item .post-meta .kind::before {
     content: "·";
     margin-right: 10px;
     color: #c4c8ce;
+  }
+  .post-item .post-meta .kind {
+    color: #1d4ed8;
+    background: #eff5ff;
+    border: 1px solid #dbe7ff;
+    border-radius: 999px;
+    padding: 0 9px;
+    font-size: 0.75rem;
+    letter-spacing: 0.01em;
+  }
+  .post-item .post-meta .kind::before {
+    content: "";
+    margin: 0;
   }
   .post-item h2 {
     margin: 0 0 6px;
@@ -99,8 +113,44 @@ redirect_from:
 
 {% assign visible_posts = site.posts | where_exp: "post", "post.hidden != true" %}
 
-{% if visible_posts.size > 0 %}
 <ul class="post-list">
+
+  <!-- Project page: DSR -->
+  <li class="post-item">
+    <div class="post-meta">
+      <time datetime="2026-05-01">May 2026</time>
+      <span class="kind">Project page</span>
+    </div>
+    <h2><a href="/dit-register/">Taming Outlier Tokens in Diffusion Transformers</a></h2>
+    <p class="post-excerpt">
+      Outlier patch tokens hurt both ViT encoders and diffusion transformers in RAE-DiT pipelines. Our
+      Dual-Stage Registers (DSR) patch both sides and improve ImageNet-256 FID from 5.89 → 4.58 at 80 epochs.
+    </p>
+    <div class="tags">
+      <span class="tag">diffusion</span>
+      <span class="tag">DiT</span>
+      <span class="tag">registers</span>
+    </div>
+  </li>
+
+  <!-- Project page: Uni-Instruct -->
+  <li class="post-item">
+    <div class="post-meta">
+      <time datetime="2025-09-01">Sep 2025</time>
+      <span class="kind">Project page</span>
+    </div>
+    <h2><a href="/uni-instruct/">Uni-Instruct: One-step Diffusion through Unified Divergence Instruction</a></h2>
+    <p class="post-excerpt">
+      A single <em>f</em>-divergence framework that subsumes 10+ one-step diffusion distillation methods —
+      and a new SoTA one-step FID of 1.02 on ImageNet 64×64. NeurIPS 2025.
+    </p>
+    <div class="tags">
+      <span class="tag">diffusion</span>
+      <span class="tag">distillation</span>
+      <span class="tag">NeurIPS 2025</span>
+    </div>
+  </li>
+
   {% for post in visible_posts %}
   <li class="post-item">
     <div class="post-meta">
@@ -118,11 +168,7 @@ redirect_from:
     {% endif %}
   </li>
   {% endfor %}
+
 </ul>
-{% else %}
-<div class="empty-state">
-  No posts yet. The first one is on its way.
-</div>
-{% endif %}
 
 </div>
