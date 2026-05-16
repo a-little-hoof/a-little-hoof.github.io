@@ -163,6 +163,43 @@ hidden: false
     color: #1d4ed8;
     font-size: 0.92rem;
   }
+
+  /* Footnote citations */
+  sup.footnote-ref a {
+    font-size: 0.72em;
+    vertical-align: super;
+    line-height: 0;
+    margin-left: 1px;
+    text-decoration: none;
+    color: #1d4ed8;
+  }
+  sup.footnote-ref a:hover { text-decoration: underline; }
+  .footnotes {
+    margin-top: 42px;
+    padding-top: 16px;
+    border-top: 1px solid #eef0f3;
+    font-size: 0.92rem;
+    color: #4b5563;
+  }
+  .footnotes h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin: 0 0 8px;
+  }
+  .footnotes ol { padding-left: 22px; margin: 0; }
+  .footnotes li { margin: 8px 0; line-height: 1.6; }
+  .footnotes li[id]:target,
+  sup[id]:target a { background: #fff7cc; border-radius: 4px; padding: 1px 4px; }
+  .footnote-back {
+    text-decoration: none;
+    margin-left: 6px;
+    color: #9aa1a8;
+    font-size: 0.95em;
+  }
+  .footnote-back:hover { color: #1d4ed8; }
 </style>
 
 <article class="post-wrap">
@@ -204,8 +241,8 @@ hidden: false
 </p>
 
 <p>
-  We benchmark three diffusion models that span the typical input-space spectrum — JiT (pixel space), SiT
-  (latent space), and RAE (representation space) — and for each one we run a full EMA sweep:
+  We benchmark three diffusion models that span the typical input-space spectrum — JiT<sup class="footnote-ref" id="fnref:jit"><a href="#fn:jit">1</a></sup> (pixel space), SiT<sup class="footnote-ref" id="fnref:sit"><a href="#fn:sit">2</a></sup>
+  (latent space), and RAE<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">3</a></sup> (representation space) — and for each one we run a full EMA sweep:
   <code>{0.5, 0.9, 0.99, 0.999, 0.9993, 0.9995, 0.9997, 0.9999, 0.99999, 0.999999}</code>, plus the raw
   online checkpoint, at multiple training stages. Same training pipeline, same sampling protocol; only the
   decay changes.
@@ -222,9 +259,9 @@ hidden: false
   <thead>
     <tr>
       <th class="left">EMA decay</th>
-      <th>FID ↓</th>
-      <th>IS ↑</th>
-      <th>Precision ↑</th>
+      <th>FID<sup class="footnote-ref" id="fnref:fid"><a href="#fn:fid">4</a></sup> ↓</th>
+      <th>IS<sup class="footnote-ref" id="fnref:is"><a href="#fn:is">5</a></sup> ↑</th>
+      <th>Precision<sup class="footnote-ref" id="fnref:pr"><a href="#fn:pr">6</a></sup> ↑</th>
       <th>Recall ↑</th>
     </tr>
   </thead>
@@ -306,7 +343,7 @@ hidden: false
 
 <p>
   To make the effect visible, we ran a controlled experiment on a 2D tree-structured Gaussian mixture (from
-  autoguidance). The ground truth is a hierarchical tree of branches; some branches are dense and "popular,"
+  autoguidance<sup class="footnote-ref" id="fnref:autoguidance"><a href="#fn:autoguidance">7</a></sup>). The ground truth is a hierarchical tree of branches; some branches are dense and "popular,"
   others are sparse "tail" branches. We trained a small MLP score model, then compared the raw model with
   EMA versions at decays <code>0.99 / 0.997 / 0.998 / 0.999</code>.
 </p>
@@ -386,6 +423,52 @@ hidden: false
   The paper has the full results, including the per-stage EMA sensitivity curves and the inter-model ranking
   flips. We'll link the arXiv version here once it's up.
 </p>
+
+<section class="footnotes">
+  <h3>References</h3>
+  <ol>
+    <li id="fn:jit">
+      Li &amp; He. <em>Back to Basics: Let Denoising Generative Models Denoise.</em> arXiv 2025.
+      <a href="https://arxiv.org/abs/2511.13720">arXiv:2511.13720</a>.
+      <a href="#fnref:jit" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:sit">
+      Ma, Goldstein, Albergo, Boffi, Vanden-Eijnden, &amp; Xie.
+      <em>SiT: Exploring Flow- and Diffusion-based Generative Models with Scalable Interpolant Transformers.</em>
+      ECCV 2024.
+      <a href="#fnref:sit" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:rae">
+      Zheng, Ma, Tong, &amp; Xie. <em>Diffusion Transformers with Representation Autoencoders.</em> arXiv 2025.
+      <a href="https://arxiv.org/abs/2510.11690">arXiv:2510.11690</a>.
+      <a href="#fnref:rae" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:fid">
+      Heusel, Ramsauer, Unterthiner, Nessler, &amp; Hochreiter.
+      <em>GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium.</em>
+      NeurIPS 2017. (FID.)
+      <a href="#fnref:fid" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:is">
+      Salimans, Goodfellow, Zaremba, Cheung, Radford, &amp; Chen.
+      <em>Improved Techniques for Training GANs.</em>
+      NeurIPS 2016. (Inception Score.)
+      <a href="#fnref:is" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:pr">
+      Kynkäänniemi, Karras, Laine, Lehtinen, &amp; Aila.
+      <em>Improved Precision and Recall Metric for Assessing Generative Models.</em>
+      NeurIPS 2019.
+      <a href="#fnref:pr" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:autoguidance">
+      Karras, Aittala, Kynkäänniemi, Lehtinen, Aila, &amp; Laine.
+      <em>Guiding a Diffusion Model with a Bad Version of Itself.</em>
+      NeurIPS 2024.
+      <a href="#fnref:autoguidance" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+  </ol>
+</section>
 
 <a class="post-back" href="/blog/">← Back to blog</a>
 
