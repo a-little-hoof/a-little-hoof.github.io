@@ -10,19 +10,19 @@ main:
     url: /Research/
 
   - title: "Archive"
-    url: /Archive/    
+    url: /Archive/
+
+  - title: "Blog"
+    url: /blog/
 
   # - title: "Teaching"
-  #   url: /teaching/    
-    
+  #   url: /teaching/
+
   # - title: "Portfolio"
   #   url: /portfolio/
-        
+
   # - title: "Blog Posts"
   #   url: /year-archive/
-    
-  # - title: "Blog"
-  #   url: /blog/
 
   # - title: "CV"
   #   url: /cv/
