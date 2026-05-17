@@ -239,6 +239,10 @@ This issue is especially important for intermediate evaluations. Many recent pap
 </p>
 
 <p>
+Add a figrue of the convergence between different ema scale.
+</p>
+
+<p>
 For fair comparison, EMA decay should be searched and reported, especially when comparing methods before convergence.
 </p>
 
@@ -312,6 +316,9 @@ A practical difficulty is that many intermediate-checkpoint comparisons are hard
 <p>
 This table is not meant to claim that any particular result is invalid. Rather, it highlights a reporting issue: when EMA decay is not searched or clearly reported, an intermediate FID can reflect both the convergence of the method and the choice of EMA decay.
 </p>
+
+<h2>A controlled EMA sweep</h2>
+
 <p>
   We benchmark three diffusion models that span the typical input-space spectrum — JiT<sup class="footnote-ref" id="fnref:jit"><a href="#fn:jit">1</a></sup> (pixel space), SiT<sup class="footnote-ref" id="fnref:sit"><a href="#fn:sit">2</a></sup>
   (latent space), and RAE<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">3</a></sup> (representation space) — and for each one we run a full EMA sweep:
@@ -456,20 +463,6 @@ This table is not meant to claim that any particular result is invalid. Rather, 
   configurations quietly disappear.
 </p>
 
-<h2>A mechanistic intuition</h2>
-
-<p>
-  EMA averages weights over time, which means it preferentially retains structures that are <em>stable</em>
-  over time. Frequent, high-density modes are reinforced; rare, fine-grained, still-evolving structures get
-  attenuated. Pair that with a long horizon (large decay) and a non-stationary optimization trajectory, and
-  you get soft over-concentration almost by construction.
-</p>
-
-<p>
-  Phrased that way, the precision–recall tradeoff and the soft mode collapse are two views of the same
-  phenomenon, not two independent effects.
-</p>
-
 <h2>What about post-hoc EMA?</h2>
 
 <p>
@@ -480,20 +473,6 @@ This table is not meant to claim that any particular result is invalid. Rather, 
   non-stationary (early training, learning rare structures), the approximation is noticeably worse than the
   corresponding online EMA. The accuracy of post-hoc EMA is, ironically, controlled by exactly the same
   non-stationarity that makes choosing online EMA difficult in the first place.
-</p>
-
-<h2>What we'd like to see going forward</h2>
-
-<ul>
-  <li><b>Report EMA decay</b> in diffusion-model papers, the way we report learning rate and batch size.</li>
-  <li><b>Sweep EMA per method</b> when running a benchmark, or at the very least include raw-checkpoint numbers.</li>
-  <li><b>Pair quality metrics with coverage metrics.</b> FID alone hides the recall side of the tradeoff.</li>
-  <li><b>Treat EMA as stage-dependent</b>, not as a fixed convention inherited from upstream papers.</li>
-</ul>
-
-<p>
-  The paper has the full results, including the per-stage EMA sensitivity curves and the inter-model ranking
-  flips. We'll link the arXiv version here once it's up.
 </p>
 
 <section class="footnotes">
