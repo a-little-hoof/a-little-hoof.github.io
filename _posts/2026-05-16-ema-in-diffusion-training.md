@@ -217,10 +217,12 @@ hidden: false
 </header>
 
 <p class="lead">
+  We argue in this blogpost that the "best" EMA in diffusion model training needs carefully searched. 
   Almost every modern diffusion-model paper uses an exponential moving average of the weights and reports numbers
-  from the EMA checkpoint. Almost none of them tune the EMA decay — they just inherit <code>0.9999</code> from
-  whichever paper they were forked from. We dug into this default and found that it's quietly trading recall for
-  precision, and that the "best" EMA depends heavily on which training stage you're at.
+  from the EMA checkpoint. Almost none of them tune the EMA decay — they just inherit the EMA scale from
+  whichever codebase they were forked from. We dug into this default and found that adjusting EMA scale has a large influence on
+  the model's performance at early stage of training. We further sweep the EMA scale and reveal that it's quietly trading recall for
+  precision.
 </p>
 
 <div class="callout">
