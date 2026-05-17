@@ -217,7 +217,7 @@ hidden: false
 </header>
 
 <p class="lead">
-  Almost every modern diffusion-model paper uses an exponential moving average of the weights and reports results from the EMA checkpoint. However, the EMA decay is often treated as an implementation detail: inherited from a previous codebase or chosen once, but rarely studied systematically. This matters because many recent papers compare intermediate checkpoints to demonstrate faster convergence, with 80-epoch results becoming a common evaluation setting. Our experiments show that EMA decay can strongly affect performance at this stage. As a result, an apparent improvement at 80 epochs may partly reflect a better EMA choice rather than a genuinely faster-converging model. For fair comparison, EMA decay should be searched and reported as part of the experimental protocol.
+  Almost every modern diffusion-model paper uses an exponential moving average of the weights and reports results from the EMA checkpoint. However, the EMA decay is often treated as an implementation detail: inherited from a previous codebase or chosen once, but rarely studied systematically. This matters because many recent papers compare intermediate checkpoints to demonstrate faster convergence, with 20-80 epoch results becoming a common evaluation setting. Our experiments show that EMA decay can strongly affect performance at this stage. As a result, an apparent improvement at 80 epochs may partly reflect a better EMA choice rather than a genuinely faster-converging model. For fair comparison, EMA decay should be searched and reported as part of the experimental protocol.
 </p>
 
 <div class="callout">
@@ -235,23 +235,83 @@ Almost every modern diffusion-model paper reports results from an EMA checkpoint
 <h3>Intermediate-checkpoint comparisons make this more serious</h3>
 
 <p>
-This issue is especially important for intermediate evaluations. Many recent papers report results at 80 epochs to demonstrate faster convergence. But at this stage, EMA decay can strongly affect the reported performance. An apparent improvement at 80 epochs may therefore partly reflect a better EMA choice rather than a genuinely faster-converging model.
+This issue is especially important for intermediate evaluations. Many recent papers report results at 20-80 epochs to demonstrate faster convergence. But at this stage, EMA decay can strongly affect the reported performance. An apparent improvement at 20-80 epochs may therefore partly reflect a better EMA choice rather than a genuinely faster-converging model.
 </p>
 
 <p>
 For fair comparison, EMA decay should be searched and reported, especially when comparing methods before convergence.
 </p>
 
-<h3>A concrete example: method rankings can change after EMA tuning</h3>
+<h3>EMA settings are often hard to audit</h3>
 
 <p>
-To see why this matters, consider an 80-epoch comparison between different diffusion training methods. If each method is evaluated with its inherited or default EMA decay, the reported ranking appears to measure which method converges faster. However, after sweeping the EMA decay for each method, the picture changes: some methods gain substantially more from EMA tuning than others, and the relative gaps between methods can shrink, grow, or even reverse.
+A practical difficulty is that many intermediate-checkpoint comparisons are hard to audit. Some methods inherit their training code from a parent codebase, some choose a fixed EMA decay, and some do not clearly report whether the EMA decay was tuned. Since our experiments show that EMA decay can strongly affect early-stage FID, this makes intermediate comparisons difficult to interpret.
 </p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Parent codebase</th>
+      <th>Reported EMA decay</th>
+      <th>20 epochs FID</th>
+      <th>40 epochs FID</th>
+      <th>80 epochs FID</th>
+      <th>Reproducible?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DiT</td>
+      <td>None</td>
+      <td>0.9999</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Yes / No / Partial</td>
+    </tr>
+    <tr>
+      <td>SiT</td>
+      <td>None</td>
+      <td>0.9999</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Yes / No / Partial</td>
+    </tr>
+    <tr>
+      <td>LighteningDiT</td>
+      <td>None</td>
+      <td>0.9999</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Yes / No / Partial</td>
+    </tr>
+    <tr>
+      <td>RAE</td>
+      <td>None</td>
+      <td>0.9999</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Yes / No / Partial</td>
+    </tr>
+    <tr>
+      <td>ADM</td>
+      <td>None</td>
+      <td>0.9999</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Yes / No / Partial</td>
+    </tr>
+  </tbody>
+</table>
 
 <p>
-This means that an 80-epoch number is not only a property of the model or training objective. It is also a property of the EMA decay used to report the checkpoint. Without an EMA sweep, a method can look better simply because its chosen EMA decay is better matched to that training stage.
+This table is not meant to claim that any particular result is invalid. Rather, it highlights a reporting issue: when EMA decay is not searched or clearly reported, an intermediate FID can reflect both the convergence of the method and the choice of EMA decay.
 </p>
-
 <p>
   We benchmark three diffusion models that span the typical input-space spectrum — JiT<sup class="footnote-ref" id="fnref:jit"><a href="#fn:jit">1</a></sup> (pixel space), SiT<sup class="footnote-ref" id="fnref:sit"><a href="#fn:sit">2</a></sup>
   (latent space), and RAE<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">3</a></sup> (representation space) — and for each one we run a full EMA sweep:
