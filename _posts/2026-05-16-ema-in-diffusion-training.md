@@ -217,19 +217,11 @@ hidden: false
 </header>
 
 <p class="lead">
-  We argue in this blogpost that the "best" EMA in diffusion model training needs carefully searched. 
-  Almost every modern diffusion-model paper uses an exponential moving average of the weights and reports numbers
-  from the EMA checkpoint. Almost none of them tune the EMA decay — they just inherit the EMA scale from
-  whichever codebase they were forked from. We dug into this default and found that adjusting EMA scale has a large influence on
-  the model's performance at early stage of training. We further sweep the EMA scale and reveal that it's quietly trading recall for
-  precision.
+  Almost every modern diffusion-model paper uses an exponential moving average of the weights and reports results from the EMA checkpoint. However, the EMA decay is often treated as an implementation detail: inherited from a previous codebase or chosen once, but rarely studied systematically. This matters because many recent papers compare intermediate checkpoints to demonstrate faster convergence, with 80-epoch results becoming a common evaluation setting. Our experiments show that EMA decay can strongly affect performance at this stage. As a result, an apparent improvement at 80 epochs may partly reflect a better EMA choice rather than a genuinely faster-converging model. For fair comparison, EMA decay should be searched and reported as part of the experimental protocol.
 </p>
 
 <div class="callout">
-  <b>TL;DR.</b> EMA decay isn't just a smoother. It's a knob that shifts the model along a precision–recall
-  tradeoff. A larger decay sharpens samples but suppresses rare modes (a soft kind of mode collapse). The
-  decay that's optimal at 80 epochs is not the one that's optimal at 800. The community-default
-  <code>0.9999</code> is rarely the right choice, especially when methods are compared partway through training.
+  <b>TL;DR.</b> EMA decay is not just a smoother. It is a distribution-shaping knob that moves the model along a precision–recall tradeoff. Larger decays often improve precision while suppressing recall, producing a soft form of mode collapse. The optimal decay also changes over training: what works best at 80 epochs may not work best at 800. Therefore, the community-default 0.9999 is not a neutral choice, especially when comparing models before convergence.
 </div>
 
 <h2>Why care about EMA decay at all?</h2>
