@@ -221,17 +221,35 @@ hidden: false
 </p>
 
 <div class="callout">
-  <b>TL;DR.</b> EMA decay is not just a smoother. It is a distribution-shaping knob that moves the model along a precision–recall tradeoff. Larger decays often improve precision while suppressing recall, producing a soft form of mode collapse. The optimal decay also changes over training: what works best at 80 epochs may not work best at 800. Therefore, the community-default 0.9999 is not a neutral choice, especially when comparing models before convergence.
+  <b>TL;DR.</b> EMA decay is not just a smoother. It is a distribution-shaping knob that moves the model along a precision–recall tradeoff. Larger decays often improve precision while suppressing recall, producing a soft form of mode collapse. Since different decays correspond to different points on this tradeoff, fixing one decay implicitly favors one kind of model behavior. Therefore, the community-default 0.9999 is not a neutral choice, especially when comparing models before convergence.
 </div>
 
 <h2>Why care about EMA decay at all?</h2>
 
+<h3>EMA decay is part of the evaluation protocol</h3>
+
 <p>
-  Diffusion models are expensive, so most empirical comparisons happen <em>before</em> full convergence — at
-  80 epochs, 100k iterations, "results so far." In that regime, the choice of EMA decay isn't a finishing touch;
-  it's part of the measurement instrument. If two methods get different decays "by convention," the ranking
-  you read off the table partly reflects how each model interacted with that decay, not just the underlying
-  training objective.
+Almost every modern diffusion-model paper reports results from an EMA checkpoint. This means the reported number is not determined only by the model architecture, training objective, optimizer, or training budget. It also depends on the EMA decay used to construct the checkpoint. If this decay is inherited, fixed, or chosen differently across methods, then EMA becomes an implicit part of the evaluation protocol.
+</p>
+
+<h3>Intermediate-checkpoint comparisons make this more serious</h3>
+
+<p>
+This issue is especially important for intermediate evaluations. Many recent papers report results at 80 epochs to demonstrate faster convergence. But at this stage, EMA decay can strongly affect the reported performance. An apparent improvement at 80 epochs may therefore partly reflect a better EMA choice rather than a genuinely faster-converging model.
+</p>
+
+<p>
+For fair comparison, EMA decay should be searched and reported, especially when comparing methods before convergence.
+</p>
+
+<h3>A concrete example: method rankings can change after EMA tuning</h3>
+
+<p>
+To see why this matters, consider an 80-epoch comparison between different diffusion training methods. If each method is evaluated with its inherited or default EMA decay, the reported ranking appears to measure which method converges faster. However, after sweeping the EMA decay for each method, the picture changes: some methods gain substantially more from EMA tuning than others, and the relative gaps between methods can shrink, grow, or even reverse.
+</p>
+
+<p>
+This means that an 80-epoch number is not only a property of the model or training objective. It is also a property of the EMA decay used to report the checkpoint. Without an EMA sweep, a method can look better simply because its chosen EMA decay is better matched to that training stage.
 </p>
 
 <p>
