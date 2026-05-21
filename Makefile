@@ -1,7 +1,10 @@
-.PHONY: preview serve build install help
+.PHONY: preview serve build install help publish status
 
 # Default port for the local dev server
 PORT ?= 4000
+
+# Commit message for `make publish`. Override with: make publish M="my message"
+M ?= update site
 
 # jekyll-sass-converter 1.5.2 (shipped with jekyll 3.10) breaks on UTF-8 SCSS
 # files unless the default locale is UTF-8. Force it for every target so
@@ -29,3 +32,19 @@ serve: ## Local preview without drafts (what visitors will see)
 
 build: ## One-off site build into _site/ (no server)
 	bundle exec jekyll build --config _config.yml
+
+status: ## Show pending changes that `make publish` would push
+	@git status --short || true
+
+publish: ## Stage tracked + new files, commit, and push to master (override message: M="...")
+	@if [ -z "$$(git status --porcelain)" ]; then \
+	  echo "Nothing to publish — working tree is clean."; exit 0; \
+	fi
+	@echo "About to publish:"
+	@git status --short
+	@echo ""
+	git add -A
+	git commit -m "$(M)"
+	git push origin master
+	@echo ""
+	@echo "Pushed. GitHub Pages will rebuild in ~30-60s."

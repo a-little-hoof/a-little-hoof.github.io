@@ -4,3 +4,5 @@ vendor/
 Gemfile.lock
 .jekyll-cache/
 .jekyll-metadata
+.claude/
+.DS_Store
