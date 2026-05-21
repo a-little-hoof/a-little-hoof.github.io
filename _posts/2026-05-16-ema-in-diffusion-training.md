@@ -1,5 +1,5 @@
 ---
-title: "Your EMA decay is a hyperparameter, not a convention"
+title: "Cheating at diffusion benchmarks with one hyperparameter"
 date: 2026-05-16
 permalink: /blog/2026/05/ema-in-diffusion-training/
 excerpt: "We benchmark EMA decay across pixel-, latent-, and representation-space diffusion models and show that the popular 0.9999 default silently trades recall for precision, and can quietly re-order leaderboards in convergence-speed comparisons."
@@ -218,7 +218,7 @@ window.MathJax = {
 <article class="post-wrap">
 
 <header class="post-header">
-  <h1>Your EMA decay is a hyperparameter, not a convention</h1>
+  <h1>Cheating at diffusion benchmarks with one hyperparameter</h1>
   <div class="post-tags">
     <span class="tag">diffusion</span>
     <span class="tag">training-dynamics</span>
