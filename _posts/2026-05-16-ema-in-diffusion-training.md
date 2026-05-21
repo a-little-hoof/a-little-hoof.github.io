@@ -234,7 +234,7 @@ window.MathJax = {
 </p>
 
 <figure class="post-figure">
-  <img src="/images/blog/ema/ema_sweep_curves.png" alt="gFID vs EMA decay at 40 and 80 epochs for RAE-DiT (DINOv2)" />
+  <img src="/images/blog/ema/ema_sweep_curves.png" alt="gFID vs EMA decay at 80 epochs for RAE-DiT (DINOv2-B), with horizontal references for raw, LightningDiT, and the published RAE number" />
   <figcaption>
     <b>Same model architecture, same data, same 80-epoch training run — only the EMA decay
     changes.</b> RAE-DiT<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">1</a></sup> (DINOv2) on ImageNet 256. The RAE paper reports its 80-epoch number
