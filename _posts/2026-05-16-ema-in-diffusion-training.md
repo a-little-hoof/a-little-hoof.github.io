@@ -237,15 +237,16 @@ window.MathJax = {
   <img src="/images/blog/ema/ema_sweep_curves.png" alt="gFID vs EMA decay at 80 epochs for RAE-DiT (DINOv2-B), with horizontal references for raw, LightningDiT, and the published RAE number" />
   <figcaption>
     <b>Same model architecture, same data, same 80-epoch training run — only the EMA decay
-    changes.</b> RAE-DiT<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">1</a></sup> (DINOv2) on ImageNet 256. The RAE paper reports its 80-epoch number
-    at the <em>unusual</em> EMA decay \(\beta = 0.9995\) (FID \(\approx\) <b>3.29</b>), and compares it to
-    LightningDiT at the community-default \(\beta = 0.9999\) (FID = <b>4.29</b>) — a
-    <b>~1.00 FID</b> apparent improvement. But our sweep shows that simply switching RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup>
-    to the same 0.9999 collapses it to FID = <b>4.14</b> — essentially tied with LightningDiT
-    (\(\Delta \approx\) <b>0.15</b>). So most of the headline "improvement" is bought by an EMA decay that
-    isn't shared between the two methods, not by anything in the underlying RAE algorithm.
-    Pick the right column and you "converge faster" than the previous SOTA without changing
-    anything that should matter.
+    changes.</b> RAE-DiT-XL<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">1</a></sup> (DINOv2-B) on ImageNet 256.
+    At the community-default \(\beta = 0.9999\), our sweep gives <b>FID = 4.14</b> (the RAE paper
+    reports <b>4.28</b> for the same configuration) — essentially tied with LightningDiT's
+    <b>4.29</b> at the same \(\beta\).
+    The interesting case is the same paper's <b>DiT-DH</b> variant, which they report at
+    <b>FID = 2.16</b> using a <em>non-default</em> \(\beta = 0.9995\). Our DiT-XL sweep shows
+    that switching from \(\beta = 0.9999\) to \(\beta = 0.9995\) alone is worth about a full
+    FID point at this training stage (4.14 → 3.29 in our sweep), so a meaningful slice of the
+    DiT-DH headline is likely bought by the EMA-decay change rather than the DH architecture
+    itself.
   </figcaption>
 </figure>
 
@@ -685,13 +686,14 @@ This table is not meant to claim that any particular result is invalid. Rather, 
 <p>
   Because the precision–recall tradeoff is real, two models that look essentially tied under their raw
   checkpoints can <em>separate</em> once you apply different EMA decays — and vice versa. Conversely, a method
-  that looks "best" under <code>0.9999</code> may stop being best when you sweep the decay. We've already seen
-  one example of this at the top of the post: RAE-DiT vs LightningDiT shows a <b>~1.00</b> FID gap when each
-  method uses its own EMA decay (\(\beta = 0.9995\) vs \(\beta = 0.9999\)), but the gap shrinks to just
-  <b>~0.15</b> once both are evaluated at the same \(\beta = 0.9999\). The "improvement" was an EMA artefact,
-  not an architecture or objective advantage. The lesson generalizes: if a benchmark fixes EMA to 0.9999 for
-  everyone — or worse, leaves it inherited and undocumented — part of the resulting ordering is an EMA
-  artefact too.
+  that looks "best" under one decay may stop being best when you sweep. The hero figure at the top of the
+  post shows the mechanism at work: the same RAE-DiT-XL training run moves from FID <b>3.21</b> (\(\beta
+  = 0.999\)) to <b>4.14</b> (\(\beta = 0.9999\)) — a ~1 FID swing that is purely about the decay. So when the
+  same paper's <em>DiT-DH</em> variant reports <b>2.16</b> using \(\beta = 0.9995\) and is compared to
+  LightningDiT's <b>4.29</b> at \(\beta = 0.9999\), part of the headline gap is the architecture and part is
+  the EMA-decay change — and without a matched-EMA sweep we can't tell how much. The lesson generalizes: if
+  a benchmark allows each method to pick its own EMA decay — or worse, leaves it inherited and undocumented —
+  part of the resulting ordering is an EMA artefact, not an architecture or objective advantage.
 </p>
 
 <p>
