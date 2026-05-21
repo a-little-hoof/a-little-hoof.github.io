@@ -178,6 +178,10 @@ redirect_from:
   <ul>
     <li>
       <time>May 2026</time>
+      <span><span class="badge">new</span> New blog post: <a href="/blog/2026/05/ema-in-diffusion-training/">Your EMA decay is a hyperparameter, not a convention</a> — benchmarking the often-ignored EMA decay across diffusion models.</span>
+    </li>
+    <li>
+      <time>May 2026</time>
       <span><span class="badge">new</span> Joining <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at JHU as a visiting student for the summer.</span>
     </li>
     <li>
