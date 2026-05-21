@@ -10,50 +10,87 @@ tags:
 hidden: false
 ---
 
+<!-- Open Sans for body text — matches the samacquaviva.com flow-evals aesthetic -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
   /* Hide the default academicpages page title — we render our own header below */
   .page__title { display: none; }
 
-  .post-wrap { max-width: 720px; }
-  .post-wrap p,
-  .post-wrap li {
-    color: #2f3338;
-    line-height: 1.75;
-    font-size: 1.02rem;
-  }
-  .post-wrap h2 {
-    font-size: 1.35rem;
-    font-weight: 700;
-    margin: 36px 0 10px;
-    letter-spacing: -0.005em;
-  }
-  .post-wrap h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 24px 0 8px;
+  /* Color tokens (mirrors flow-evals) */
+  :root {
+    --fg: #1a1a1a;
+    --fg-muted: #666;
+    --accent: #c44b25;
+    --rule: #ddd;
+    --rule-soft: #e6e5e0;
+    --code-bg: #f5f4f0;
+    --highlight: #fdf6e3;
   }
 
-  .post-header { margin-bottom: 22px; }
+  /* Core layout */
+  .post-wrap {
+    max-width: 760px;
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 16.5px;
+    line-height: 1.7;
+    color: var(--fg);
+  }
+  .post-wrap p,
+  .post-wrap li {
+    color: var(--fg);
+    line-height: 1.7;
+    font-size: 16.5px;
+  }
+  .post-wrap a { color: var(--accent); text-decoration: none; }
+  .post-wrap a:hover { text-decoration: underline; }
+  .post-wrap strong, .post-wrap b { font-weight: 600; color: var(--fg); }
+
+  /* Headings — H2 has a thin top rule, acting as section divider */
+  .post-wrap h2 {
+    font-family: inherit;
+    font-size: 1.55rem;
+    font-weight: 600;
+    margin: 3.5rem 0 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    color: var(--fg);
+    letter-spacing: -0.005em;
+    scroll-margin-top: 1.25rem;
+  }
+  .post-wrap h3 {
+    font-family: inherit;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 2rem 0 0.7rem;
+    color: var(--fg);
+    scroll-margin-top: 1.25rem;
+  }
+
+  /* Post header (h1 + tags) */
+  .post-header { margin-bottom: 1.5rem; }
   .post-header .meta {
-    color: #6b7280;
+    color: var(--fg-muted);
     font-size: 0.88rem;
-    letter-spacing: 0.02em;
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
   }
   .post-header h1 {
-    margin: 0 0 10px;
-    font-size: clamp(1.7rem, 1.8vw + 1rem, 2.3rem);
+    font-family: inherit;
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.5rem, 1.2vw + 0.9rem, 2rem);
     font-weight: 700;
     line-height: 1.2;
-    letter-spacing: -0.01em;
-    color: #1f2328;
+    letter-spacing: -0.015em;
+    color: var(--fg);
   }
   .post-header .post-tags {
     display: flex; flex-wrap: wrap; gap: 6px;
-    margin-top: 6px;
+    margin-top: 0.5rem;
   }
   .post-header .post-tags .tag {
-    background: #f1f4f8;
+    background: var(--code-bg);
     color: #4b5563;
     border-radius: 999px;
     padding: 2px 9px;
@@ -61,46 +98,54 @@ hidden: false
   }
 
   .post-wrap .lead {
-    font-size: 1.12rem;
-    color: #2f3338;
-    line-height: 1.65;
+    font-size: 1.1rem;
+    color: var(--fg);
+    line-height: 1.6;
   }
 
+  /* Blockquote — subtle tinted background, no border-radius corner-cut */
   .post-wrap blockquote {
-    border-left: 3px solid #d4d8de;
-    padding: 4px 16px;
-    color: #4b5563;
-    margin: 18px 0;
-    background: #fafbfc;
-    border-radius: 0 6px 6px 0;
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    background: var(--code-bg);
+    border-left: 4px solid #9a9a92;
+    border-radius: 6px;
+    color: #333;
+    font-size: 0.95rem;
   }
 
+  /* Inline code — tinted box, mono */
   .post-wrap code {
-    background: #f1f4f8;
-    color: #1f2328;
-    padding: 1px 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+    background: var(--code-bg);
+    color: var(--fg);
+    padding: 0.15em 0.4em;
     border-radius: 4px;
-    font-size: 0.92em;
+    font-size: 0.88em;
   }
 
+  /* Figures */
   .post-figure {
-    margin: 22px 0;
+    margin: 1.5rem 0;
     text-align: center;
   }
-  .post-figure img {
-    max-width: 100%;
-  }
+  .post-figure img { max-width: 100%; }
   .post-figure figcaption {
-    color: #6b7280;
+    color: var(--fg-muted);
     font-size: 0.88rem;
+    line-height: 1.55;
     margin-top: 8px;
     text-align: left;
   }
+  .post-figure figcaption b,
+  .post-figure figcaption strong { color: var(--fg); }
+
+  /* Paired figures (toy example side-by-side) */
   .pair-figure {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin: 22px 0 6px;
+    margin: 1.5rem 0 0.5rem;
   }
   .pair-figure .col { text-align: center; }
   .pair-figure img { max-width: 100%; }
@@ -110,7 +155,7 @@ hidden: false
     margin-bottom: 4px;
   }
   .pair-figure + figcaption {
-    color: #6b7280;
+    color: var(--fg-muted);
     font-size: 0.88rem;
     margin-top: 0;
     text-align: left;
@@ -119,87 +164,144 @@ hidden: false
     .pair-figure { grid-template-columns: 1fr; }
   }
 
-  /* Result table */
+  /* Tables — minimal: bold header underlined, faint inter-row rules, no row-color blocks */
   table.ema-sweep {
     width: 100%;
     border-collapse: collapse;
-    margin: 14px 0;
-    font-size: 0.93rem;
+    margin: 1.2rem 0;
+    font-size: 0.92rem;
   }
   table.ema-sweep th, table.ema-sweep td {
-    padding: 7px 10px;
-    border-bottom: 1px solid #eef0f3;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule-soft);
     text-align: center;
   }
   table.ema-sweep th {
-    background: #f6f7f9;
+    background: transparent;
+    border-bottom: 2px solid var(--fg);
     font-weight: 600;
-    color: #1f2328;
-    font-size: 0.85rem;
-    letter-spacing: 0.01em;
+    color: var(--fg);
+    font-size: 0.86rem;
   }
   table.ema-sweep td.left, table.ema-sweep th.left { text-align: left; }
-  table.ema-sweep tr.row-best td { background: #f3f8ff; font-weight: 600; }
-  table.ema-sweep tr.row-default td { background: #fff7ed; }
-  table.ema-sweep tr.row-collapse td { color: #b91c1c; }
-  .legend-note { font-size: 0.82rem; color: #6b7280; margin-top: -4px; }
+  /* Row classes — keep the markup, drop the colored blocks; signal via subtler cues */
+  table.ema-sweep tr.row-best td { font-weight: 600; }
+  table.ema-sweep tr.row-default td { color: var(--accent); }
+  table.ema-sweep tr.row-collapse td { color: #999; font-style: italic; }
+  .legend-note { font-size: 0.82rem; color: var(--fg-muted); margin-top: -4px; }
 
+  /* TL;DR / callout — left-border treatment, no coloured box */
   .callout {
-    background: #eff5ff;
-    border: 1px solid #dbe7ff;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 18px 0;
-    color: #1f2328;
-    font-size: 0.97rem;
+    max-width: 720px;
+    margin: 1.4rem 0 1.5rem;
+    padding: 0.15rem 0 0.15rem 1.1rem;
+    background: transparent;
+    border: none;
+    border-left: 4px solid #9a9a92;
+    border-radius: 0;
+    color: var(--fg);
+    font-size: 1rem;
   }
-  .callout b { color: #1d4ed8; }
+  .callout b { color: var(--fg); font-weight: 600; }
 
+  /* Back-to-blog link */
   .post-back {
     display: inline-block;
-    margin-top: 36px;
-    padding-top: 18px;
-    border-top: 1px solid #eef0f3;
-    color: #1d4ed8;
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+    color: var(--accent);
     font-size: 0.92rem;
   }
 
-  /* Footnote citations */
+  /* Footnote citations — dotted underline on the cite, no colored superscript box */
   sup.footnote-ref a {
     font-size: 0.72em;
     vertical-align: super;
     line-height: 0;
     margin-left: 1px;
     text-decoration: none;
-    color: #1d4ed8;
+    color: var(--accent);
   }
   sup.footnote-ref a:hover { text-decoration: underline; }
   .footnotes {
-    margin-top: 42px;
-    padding-top: 16px;
-    border-top: 1px solid #eef0f3;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
     font-size: 0.92rem;
-    color: #4b5563;
+    color: var(--fg-muted);
   }
   .footnotes h3 {
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #6b7280;
-    margin: 0 0 8px;
+    color: var(--fg-muted);
+    margin: 0 0 0.5rem;
+    border-top: none;
+    padding-top: 0;
   }
   .footnotes ol { padding-left: 22px; margin: 0; }
-  .footnotes li { margin: 8px 0; line-height: 1.6; }
+  .footnotes li { margin: 0.5rem 0; line-height: 1.6; }
   .footnotes li[id]:target,
-  sup[id]:target a { background: #fff7cc; border-radius: 4px; padding: 1px 4px; }
+  sup[id]:target a { background: var(--highlight); border-radius: 4px; padding: 1px 4px; }
   .footnote-back {
     text-decoration: none;
     margin-left: 6px;
-    color: #9aa1a8;
+    color: #999;
     font-size: 0.95em;
   }
-  .footnote-back:hover { color: #1d4ed8; }
+  .footnote-back:hover { color: var(--accent); }
+
+  /* Right-side fixed table of contents — visible only on wide screens */
+  #toc {
+    display: none;  /* hidden by default; the media query below shows it on ≥1180px */
+    position: fixed;
+    top: 140px;
+    /* Anchor just to the right of the article column (760px wide, centered),
+       with a small gap. Falls back to a viewport-edge offset on narrow screens. */
+    left: max(24px, calc(50% + 380px + 24px));
+    width: 200px;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 5;
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 0 4px;
+  }
+  @media (min-width: 1180px) {
+    #toc { display: flex; }
+  }
+  #toc .toc-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    padding: 0 10px 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  #toc a {
+    display: block;
+    padding: 3px 10px;
+    border-left: 2px solid transparent;
+    color: var(--fg-muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  #toc a:hover {
+    color: var(--fg);
+    text-decoration: none;
+  }
+  #toc a.toc-active {
+    color: var(--fg);
+    border-left-color: var(--fg);
+    font-weight: 600;
+  }
 </style>
 
 <!-- MathJax: enables LaTeX math via $$...$$ (display) and \(...\) (inline). Loaded only on this post. -->
@@ -214,6 +316,10 @@ window.MathJax = {
 };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" async></script>
+
+<nav id="toc" aria-label="Table of contents">
+  <div class="toc-title">Contents</div>
+</nav>
 
 <article class="post-wrap">
 
@@ -260,7 +366,7 @@ window.MathJax = {
 </p>
 
 <div class="callout">
-  <b>TL;DR.</b> EMA decay matters far more than the community treats it. On the same 80-epoch RAE-DiT run, sweeping decay alone moves gFID from <b>3.21</b> to <b>4.14</b> — a swing larger than the gap between most "SOTA" diffusion-model claims. More fundamentally, EMA decay is not just a smoother: it is a distribution-shaping knob that moves the model along a precision–recall tradeoff. Larger decays often improve precision while suppressing recall, producing a soft form of mode collapse. Since different decays correspond to different points on this tradeoff, fixing one decay implicitly favors one kind of model behavior — and using <em>different</em> decays per method can silently re-order a leaderboard. The community-default 0.9999 is therefore not a neutral choice.
+  <b>TL;DR.</b> EMA decay matters far more than the community treats it. On the same 80-epoch RAE-DiT run, sweeping decay alone moves gFID from <b>3.21</b> to <b>4.14</b> — a swing larger than the gap between most "SOTA" diffusion-model claims. A deeper investigation finds that EMA scale corresponds to a precision–recall trade-off.
 </div>
 
 <h2>Background: what is EMA?</h2>
@@ -535,7 +641,7 @@ decay on the precision–recall tradeoff at the training stage where the thresho
 This table is not meant to claim that any particular result is invalid. Rather, it highlights a reporting issue: when EMA decay is not searched or clearly reported, an intermediate FID can reflect both the convergence of the method and the choice of EMA decay.
 </p>
 
-<h2>A controlled EMA sweep</h2>
+<h2>A controlled EMA sweep: EMA causes precision-recall trade-off</h2>
 
 <p>
   So that's the headline: EMA decay alone can re-order a leaderboard. The rest of this post
@@ -554,7 +660,7 @@ This table is not meant to claim that any particular result is invalid. Rather, 
   repo's provided sampling strategy.
 </p>
 
-<h2>Finding 1: EMA decay slides you along a precision–recall curve</h2>
+<h2 data-toc-skip="true">Finding 1: EMA decay slides you along a precision–recall curve</h2>
 
 <p>
   Here's what the RAE sweep looks like at 80 epochs. Every row uses the <em>same</em> checkpoint — they only
@@ -681,7 +787,7 @@ This table is not meant to claim that any particular result is invalid. Rather, 
 </table>
 <p class="legend-note">For SiT, the community-default \(0.9999\) ties the FID-best entry (\(0.99993\)) — but recall continues to fall as \(\beta\) increases, so the precision–recall tradeoff is still active even though the default happens to be near-optimal on FID here.</p>
 
-<h2>Finding 2: EMA changes the ranking, not just the score</h2>
+<h2 data-toc-skip="true">Finding 2: EMA changes the ranking, not just the score</h2>
 
 <p>
   Because the precision–recall tradeoff is real, two models that look essentially tied under their raw
@@ -835,3 +941,56 @@ That single question, asked routinely, would already remove a large fraction of 
 <a class="post-back" href="/blog/">← Back to blog</a>
 
 </article>
+
+<script>
+// Auto-build the right-side TOC from h2 headings in the post, and add a
+// scroll-spy that highlights the current section.
+(function () {
+  const article = document.querySelector('.post-wrap');
+  const toc = document.querySelector('#toc');
+  if (!article || !toc) return;
+
+  const headings = Array.from(article.querySelectorAll('h2'))
+    .filter(h => h.dataset.tocSkip !== 'true');
+  if (headings.length === 0) {
+    toc.style.display = 'none';
+    return;
+  }
+
+  // Slug helper
+  const slugify = s => s
+    .toLowerCase()
+    .replace(/[^a-z0-9 \-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 60);
+
+  const linkByHeading = new Map();
+  headings.forEach((h, i) => {
+    if (!h.id) h.id = slugify(h.textContent) || ('sec-' + (i + 1));
+    const a = document.createElement('a');
+    a.href = '#' + h.id;
+    a.textContent = h.textContent;
+    a.addEventListener('click', e => {
+      // smooth-scroll handled by html { scroll-behavior } in browsers;
+      // we set the active class proactively for snappier feedback
+      document.querySelectorAll('#toc a').forEach(l => l.classList.remove('toc-active'));
+      a.classList.add('toc-active');
+    });
+    toc.appendChild(a);
+    linkByHeading.set(h, a);
+  });
+
+  // Scroll-spy
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('#toc a').forEach(l => l.classList.remove('toc-active'));
+        linkByHeading.get(entry.target).classList.add('toc-active');
+      }
+    });
+  }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+
+  headings.forEach(h => observer.observe(h));
+})();
+</script>

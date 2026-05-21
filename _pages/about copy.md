@@ -178,7 +178,7 @@ redirect_from:
   <ul>
     <li>
       <time>May 2026</time>
-      <span><span class="badge">new</span> New blog post: <a href="/blog/2026/05/ema-in-diffusion-training/">Cheating at diffusion benchmarks with one hyperparameter</a> — benchmarking the often-ignored EMA decay across diffusion models.</span>
+      <span><span class="badge">new</span> New blog post: <a href="/blog/2026/05/ema-in-diffusion-training/">Cheating at diffusion benchmarks with one hyperparameter</a>.</span>
     </li>
     <li>
       <time>May 2026</time>
