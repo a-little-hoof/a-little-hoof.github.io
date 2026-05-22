@@ -382,8 +382,8 @@ window.MathJax = {
   visible and to bring EMA decay into the community's attention as a first-class hyperparameter. 
   Almost every modern diffusion-model paper uses an exponential moving average (EMA) of the weights and reports
   results from the EMA checkpoint, yet the decay value is usually inherited from a parent
-  codebase rather than tuned or even reported. This blog shows this matters more than the
-  field acknowledges.
+  codebase rather than tuned or even reported. This post shows that the choice matters more than
+  the field acknowledges.
 </p>
 
 <div class="callout">
@@ -451,7 +451,7 @@ controlled, it becomes an implicit part of the evaluation protocol.
 <h3>Convergence-speed comparisons are EMA-dependent</h3>
 
 <p>
-The way of comparing diffusion model performance has changed from converged model FID score to convergence speed. Previous way to argue "method X is better than method Y" in diffusion papers is to compare FID until converged. This comparison is impractical not only because training diffusion models takes weeks to converged, but also provide limited signal with incremental improvements in the absolute FID value when every method can achieve FID score lower than 2. What we actually care about is how much training the method needs to be useful.
+The way of comparing diffusion model performance has changed from converged model FID score to convergence speed. The previous way to argue "method X is better than method Y" in diffusion papers was to compare FID until convergence. This comparison is impractical not only because training diffusion models takes weeks to converge, but also because it provides limited signal: incremental improvements in absolute FID value mean little when every method can achieve an FID score lower than 2. What we actually care about is how much training the method needs to be useful.
 </p>
 
 <p>
@@ -606,7 +606,7 @@ decay on the precision–recall tradeoff at the training stage where the thresho
     </tr>
     <tr>
       <td>RAE</td>
-      <td>LighteningDiT</td>
+      <td>LightningDiT</td>
       <td>0.9995</td>
       <td>6.7</td>
       <td>4.3</td>
@@ -697,16 +697,16 @@ This table is not meant to claim that any particular result is invalid. Rather, 
     <tr><td class="left">0.5</td><td>4.38</td><td>160.0</td><td>0.680</td><td>0.611</td></tr>
     <tr><td class="left">0.9</td><td>3.88</td><td>164.3</td><td>0.687</td><td><b>0.615</b></td></tr>
     <tr><td class="left">0.99</td><td>3.33</td><td>179.3</td><td>0.709</td><td>0.604</td></tr>
-    <tr class="row-best"><td class="left">0.999</td><td><b>3.20</b></td><td>200.0</td><td>0.741</td><td>0.585</td></tr>
+    <tr class="row-best"><td class="left">0.999</td><td><b>3.21</b></td><td>200.0</td><td>0.741</td><td>0.585</td></tr>
     <tr><td class="left">0.9993</td><td>3.24</td><td>204.5</td><td>0.744</td><td>0.586</td></tr>
-    <tr><td class="left">0.9995</td><td>3.28</td><td>207.6</td><td>0.749</td><td>0.579</td></tr>
+    <tr><td class="left">0.9995</td><td>3.29</td><td>207.6</td><td>0.749</td><td>0.579</td></tr>
     <tr><td class="left">0.9997</td><td>3.38</td><td>212.3</td><td>0.758</td><td>0.569</td></tr>
-    <tr class="row-default"><td class="left">0.9999 <small>(community default)</small></td><td>4.16</td><td><b>234.8</b></td><td><b>0.787</b></td><td>0.531</td></tr>
+    <tr class="row-default"><td class="left">0.9999 <small>(community default)</small></td><td>4.14</td><td>234.8</td><td>0.787</td><td>0.531</td></tr>
     <tr class="row-collapse"><td class="left">0.99999</td><td>444.78</td><td>1.23</td><td>0.000</td><td>0.000</td></tr>
     <tr class="row-collapse"><td class="left">0.999999</td><td>328.03</td><td>1.22</td><td>0.000</td><td>0.000</td></tr>
   </tbody>
 </table>
-<p class="legend-note">Bold = best FID. Orange = the community-default \(\beta = 0.9999\). Italic grey = full collapse.</p>
+<p class="legend-note">Bold = best FID (\(\beta = 0.999\)) and best recall (\(\beta = 0.9\)). Orange = the community-default \(\beta = 0.9999\). Grey = full collapse.</p>
 
 <p>
   Three things jump out:
@@ -730,15 +730,14 @@ This table is not meant to claim that any particular result is invalid. Rather, 
 
 <p>
   In other words: EMA isn't only smoothing optimization noise. It's also dialing the model along a
-  fidelity–coverage tradeoff. Reporting only quality-flavored metrics (FID, IS, precision) systematically
-  hides half of what EMA is doing.
+  fidelity–coverage tradeoff.
 </p>
 
 <h3>The same pattern holds in pixel and latent spaces</h3>
 
 <p>
   RAE is not a special case. The same precision-up / recall-down trajectory shows up in
-  <em>pixel-space</em> (JiT) and <em>latent-space</em> (SiT) diffusion, and the same collapse
+  pixel-space (JiT) and latent-space (SiT) diffusion, and the same collapse
   cliff appears at very large decays. What differs across models is <em>where on the curve</em>
   the community-default \(0.9999\) lands: sub-optimal for RAE and JiT, near-optimal for SiT
   at this training stage. The point isn't that \(0.9999\) is universally wrong; it's that
@@ -759,8 +758,8 @@ This table is not meant to claim that any particular result is invalid. Rather, 
     </tr>
   </thead>
   <tbody>
-    <tr><td class="left">raw (no EMA)</td><td>13.10</td><td>40.06</td><td>0.520</td><td><b>0.528</b></td></tr>
-    <tr><td class="left">0.5</td><td>12.59</td><td>40.54</td><td>0.527</td><td><b>0.528</b></td></tr>
+    <tr><td class="left">raw (no EMA)</td><td>13.10</td><td>40.06</td><td>0.520</td><td>0.528</td></tr>
+    <tr><td class="left">0.5</td><td>12.59</td><td>40.54</td><td>0.527</td><td>0.528</td></tr>
     <tr><td class="left">0.9</td><td>11.51</td><td>41.29</td><td>0.550</td><td>0.522</td></tr>
     <tr><td class="left">0.99</td><td>10.08</td><td>42.96</td><td>0.582</td><td>0.503</td></tr>
     <tr><td class="left">0.999</td><td>8.73</td><td>44.20</td><td>0.614</td><td>0.494</td></tr>
@@ -772,7 +771,7 @@ This table is not meant to claim that any particular result is invalid. Rather, 
     <tr class="row-collapse"><td class="left">0.999999</td><td>422.26</td><td>1.03</td><td>0.000</td><td>0.000</td></tr>
   </tbody>
 </table>
-<p class="legend-note">Bold = best FID (\(\beta = 0.9997\)). Orange = community-default \(\beta = 0.9999\). Italic grey = full collapse. As with RAE, the default is <em>not</em> FID-optimal here.</p>
+<p class="legend-note">Bold = best FID (\(\beta = 0.9997\)), which also wins precision. Orange = community-default \(\beta = 0.9999\). Italic grey = full collapse. As with RAE, the default is <em>not</em> FID-optimal here.</p>
 
 <p><b>SiT (latent space) at 90 epochs (classifier-free guidance scale 1.5).</b></p>
 
@@ -787,17 +786,17 @@ This table is not meant to claim that any particular result is invalid. Rather, 
     </tr>
   </thead>
   <tbody>
-    <tr><td class="left">raw (no EMA)</td><td>6.93</td><td>136.73</td><td>0.634</td><td><b>0.573</b></td></tr>
+    <tr><td class="left">raw (no EMA)</td><td>6.93</td><td>136.73</td><td>0.634</td><td>0.573</td></tr>
     <tr><td class="left">0.999</td><td>5.73</td><td>152.28</td><td>0.674</td><td>0.563</td></tr>
     <tr><td class="left">0.9993</td><td>5.58</td><td>154.54</td><td>0.676</td><td>0.563</td></tr>
     <tr><td class="left">0.9995</td><td>5.55</td><td>154.65</td><td>0.684</td><td>0.564</td></tr>
     <tr><td class="left">0.9997</td><td>5.41</td><td>156.62</td><td>0.690</td><td>0.558</td></tr>
     <tr><td class="left">0.9998</td><td>5.24</td><td>160.88</td><td>0.698</td><td>0.549</td></tr>
-    <tr class="row-default"><td class="left">0.9999 <small>(community default)</small></td><td><b>5.17</b></td><td>163.73</td><td>0.707</td><td>0.548</td></tr>
+    <tr class="row-default"><td class="left">0.9999 <small>(community default)</small></td><td>5.17</td><td>163.73</td><td>0.707</td><td>0.548</td></tr>
     <tr><td class="left">0.99991</td><td>5.20</td><td>164.51</td><td>0.708</td><td>0.547</td></tr>
     <tr class="row-best"><td class="left">0.99993</td><td><b>5.17</b></td><td>162.94</td><td>0.713</td><td>0.540</td></tr>
     <tr><td class="left">0.99995</td><td>5.21</td><td>164.70</td><td>0.717</td><td>0.536</td></tr>
-    <tr><td class="left">0.99997</td><td>5.51</td><td>164.76</td><td><b>0.723</b></td><td>0.527</td></tr>
+    <tr><td class="left">0.99997</td><td>5.51</td><td>164.76</td><td>0.723</td><td>0.527</td></tr>
   </tbody>
 </table>
 <p class="legend-note">For SiT, the community-default \(0.9999\) ties the FID-best entry (\(0.99993\)) — but recall continues to fall as \(\beta\) increases, so the precision–recall tradeoff is still active even though the default happens to be near-optimal on FID here.</p>
@@ -806,12 +805,12 @@ This table is not meant to claim that any particular result is invalid. Rather, 
 
 <p>
   Because the precision–recall tradeoff is real, two models that look essentially tied under their raw
-  checkpoints can <em>separate</em> once you apply different EMA decays — and vice versa. Conversely, a method
+  checkpoints can separate once you apply different EMA decays — and vice versa. Conversely, a method
   that looks "best" under one decay may stop being best when you sweep. The hero figure at the top of the
-  post shows the mechanism at work: the same RAE-DiT-XL training run moves from FID <b>3.21</b> (\(\beta
-  = 0.999\)) to <b>4.14</b> (\(\beta = 0.9999\)) — a ~1 FID swing that is purely about the decay. So when the
-  same paper's <em>DiT-DH</em> variant reports <b>2.16</b> using \(\beta = 0.9995\) and is compared to
-  LightningDiT's <b>4.29</b> at \(\beta = 0.9999\), part of the headline gap is the architecture and part is
+  post shows the mechanism at work: the same RAE-DiT-XL training run moves from FID 3.21 (\(\beta
+  = 0.999\)) to 4.14 (\(\beta = 0.9999\)) — a ~1 FID swing that is purely about the decay. So when the
+  same paper's DiT-DH variant reports 2.16 using \(\beta = 0.9995\) and is compared to
+  LightningDiT's 4.29 at \(\beta = 0.9999\), part of the headline gap is the architecture and part is
   the EMA-decay change — and without a matched-EMA sweep we can't tell how much. The lesson generalizes: if
   a benchmark allows each method to pick its own EMA decay — or worse, leaves it inherited and undocumented —
   part of the resulting ordering is an EMA artefact, not an architecture or objective advantage.
