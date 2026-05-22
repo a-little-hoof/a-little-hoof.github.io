@@ -98,9 +98,9 @@ hidden: false
   }
 
   .post-wrap .lead {
-    font-size: 1.1rem;
-    color: var(--fg);
-    line-height: 1.6;
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.65;
   }
 
   /* Blockquote — subtle tinted background, no border-radius corner-cut */
@@ -333,10 +333,9 @@ window.MathJax = {
 </header>
 
 <p class="lead">
-  Diffusion transformers are now competing on <em>convergence speed</em> — who can hit a target
-  FID in the fewest training epochs. Here is an uncomfortable thing about that competition: with
-  the way the community currently reports results, you can move up the leaderboard almost for
-  free, by quietly tuning a single hyperparameter that almost nobody noticed — the EMA decay.
+  Diffusion transformers are now competing on convergence speed: who can hit a target FID in
+  the fewest training epochs. Yet you can climb that leaderboard almost for free, by quietly
+  tuning a hyperparameter almost nobody talks about — the EMA decay.
 </p>
 
 <figure class="post-figure">
