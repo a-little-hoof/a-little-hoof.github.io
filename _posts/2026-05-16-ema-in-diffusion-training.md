@@ -335,8 +335,8 @@ window.MathJax = {
 <p class="lead">
   Diffusion transformers are now competing on <em>convergence speed</em> — who can hit a target
   FID in the fewest training epochs. Here is an uncomfortable thing about that competition: with
-  the way the community currently reports results, you can cheat at it almost for free, by
-  quietly tuning a single hyperparameter that almost nobody noticed — the EMA decay.
+  the way the community currently reports results, you can move up the leaderboard almost for
+  free, by quietly tuning a single hyperparameter that almost nobody noticed — the EMA decay.
 </p>
 
 <figure class="post-figure">
