@@ -706,7 +706,7 @@ This table is not meant to claim that any particular result is invalid. Rather, 
     <tr class="row-collapse"><td class="left">0.999999</td><td>328.03</td><td>1.22</td><td>0.000</td><td>0.000</td></tr>
   </tbody>
 </table>
-<p class="legend-note">Blue row = best FID. Orange row = the community-default 0.9999. Red rows = full collapse.</p>
+<p class="legend-note">Bold = best FID. Orange = the community-default \(\beta = 0.9999\). Italic grey = full collapse.</p>
 
 <p>
   Three things jump out:
@@ -772,7 +772,7 @@ This table is not meant to claim that any particular result is invalid. Rather, 
     <tr class="row-collapse"><td class="left">0.999999</td><td>422.26</td><td>1.03</td><td>0.000</td><td>0.000</td></tr>
   </tbody>
 </table>
-<p class="legend-note">Blue = best FID (\(\beta = 0.9997\)). Orange = community-default \(0.9999\). Red = full collapse. As with RAE, the default is <em>not</em> FID-optimal here.</p>
+<p class="legend-note">Bold = best FID (\(\beta = 0.9997\)). Orange = community-default \(\beta = 0.9999\). Italic grey = full collapse. As with RAE, the default is <em>not</em> FID-optimal here.</p>
 
 <p><b>SiT (latent space) at 90 epochs (classifier-free guidance scale 1.5).</b></p>
 
