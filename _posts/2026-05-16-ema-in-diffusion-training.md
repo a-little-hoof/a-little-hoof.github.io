@@ -943,54 +943,37 @@ That single question, asked routinely, would already remove a large fraction of 
 </article>
 
 <script>
-// Auto-build the right-side TOC from h2 headings in the post, and add a
-// scroll-spy that highlights the current section.
+/* Auto-build the right-side TOC from h2 headings in the post and run a
+   scroll-spy. Uses block comments only — Jekyll compress_html strips
+   newlines, which would turn // line comments into "everything is a comment". */
 (function () {
-  const article = document.querySelector('.post-wrap');
-  const toc = document.querySelector('#toc');
+  var article = document.querySelector('.post-wrap');
+  var toc = document.querySelector('#toc');
   if (!article || !toc) return;
-
-  const headings = Array.from(article.querySelectorAll('h2'))
-    .filter(h => h.dataset.tocSkip !== 'true');
-  if (headings.length === 0) {
-    toc.style.display = 'none';
-    return;
-  }
-
-  // Slug helper
-  const slugify = s => s
-    .toLowerCase()
-    .replace(/[^a-z0-9 \-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .slice(0, 60);
-
-  const linkByHeading = new Map();
-  headings.forEach((h, i) => {
+  var headings = Array.from(article.querySelectorAll('h2')).filter(function (h) { return h.dataset.tocSkip !== 'true'; });
+  if (headings.length === 0) { toc.style.display = 'none'; return; }
+  function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9 \-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60); }
+  var linkByHeading = new Map();
+  headings.forEach(function (h, i) {
     if (!h.id) h.id = slugify(h.textContent) || ('sec-' + (i + 1));
-    const a = document.createElement('a');
+    var a = document.createElement('a');
     a.href = '#' + h.id;
     a.textContent = h.textContent;
-    a.addEventListener('click', e => {
-      // smooth-scroll handled by html { scroll-behavior } in browsers;
-      // we set the active class proactively for snappier feedback
-      document.querySelectorAll('#toc a').forEach(l => l.classList.remove('toc-active'));
+    a.addEventListener('click', function () {
+      document.querySelectorAll('#toc a').forEach(function (l) { l.classList.remove('toc-active'); });
       a.classList.add('toc-active');
     });
     toc.appendChild(a);
     linkByHeading.set(h, a);
   });
-
-  // Scroll-spy
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
       if (entry.isIntersecting) {
-        document.querySelectorAll('#toc a').forEach(l => l.classList.remove('toc-active'));
+        document.querySelectorAll('#toc a').forEach(function (l) { l.classList.remove('toc-active'); });
         linkByHeading.get(entry.target).classList.add('toc-active');
       }
     });
   }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
-
-  headings.forEach(h => observer.observe(h));
+  headings.forEach(function (h) { observer.observe(h); });
 })();
 </script>
