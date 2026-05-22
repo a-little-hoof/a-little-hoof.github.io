@@ -103,10 +103,18 @@ hidden: false
     line-height: 1.65;
     text-wrap: balance;
   }
-  /* Also balance lines on the H1 title and on H2 section headers — short, important blocks */
+  /* Balance lines on short, important blocks: H1 title, H2 section headers, subtitle */
   .post-header h1,
   .post-wrap h2 {
     text-wrap: balance;
+  }
+  /* Long-form blocks (paragraphs, figure captions): use text-wrap: pretty, which
+     fixes single-word orphans on the last line without the line-count limit of balance */
+  .post-wrap p,
+  .post-figure figcaption,
+  .pair-figure + figcaption,
+  .footnotes li {
+    text-wrap: pretty;
   }
 
   /* Blockquote — subtle tinted background, no border-radius corner-cut */
