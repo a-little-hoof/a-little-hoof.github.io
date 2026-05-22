@@ -515,18 +515,12 @@ happens to sit closer to its FID-optimal EMA decay for that particular <em>k</em
 </figure>
 
 <p>
-Two consequences follow:
-</p>
-<ul>
-  <li><b>EP<sub>FID@k</sub> without a matched EMA sweep is under-specified.</b> Two methods can
-  swap rankings just because of which decay each one defaults to. We should either strictly follow the baseline EMA values or sweep the best EMA value for each method.</li>
-</ul>
-
-<p>
-For convergence-speed claims, the minimum bar is: report EP<sub>FID@k</sub> together with the
-EMA decay used, and ideally either (a) sweep EMA per method under a shared protocol, or (b)
-report EP both for the EMA checkpoint and for the raw checkpoint, so that the smoothing effect
-can be separated from the underlying training dynamics.
+The practical consequence: <b>EP<sub>FID@k</sub> without a matched EMA sweep is under-specified.</b>
+Two methods can swap rankings just because of which decay each one defaults to. The minimum bar
+for convergence-speed claims is to report EP<sub>FID@k</sub> together with the EMA decay used,
+and ideally either (a) sweep EMA per method under a shared protocol, or (b) report EP both for
+the EMA checkpoint and for the raw checkpoint, so the smoothing effect can be separated from
+the underlying training dynamics.
 </p>
 
 <h3>EMA settings are often hard to audit</h3>
