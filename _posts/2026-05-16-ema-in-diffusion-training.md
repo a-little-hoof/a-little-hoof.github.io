@@ -48,14 +48,20 @@ hidden: false
   .post-wrap a:hover { text-decoration: underline; }
   .post-wrap strong, .post-wrap b { font-weight: 600; color: var(--fg); }
 
-  /* Headings — H2 has a thin top rule, acting as section divider */
+  /* Headings — H2 has a thin top rule, acting as section divider.
+     Explicitly reset bottom/background/text-decoration so the academicpages
+     theme defaults (which add their own border-bottom) don't bleed through. */
   .post-wrap h2 {
     font-family: inherit;
     font-size: 1.55rem;
     font-weight: 600;
     margin: 3.5rem 0 1rem;
-    padding-top: 1.5rem;
+    padding: 1.5rem 0 0;
     border-top: 1px solid var(--rule);
+    border-bottom: none;
+    background: transparent;
+    text-decoration: none;
+    box-shadow: none;
     color: var(--fg);
     letter-spacing: -0.005em;
     scroll-margin-top: 1.25rem;
@@ -65,6 +71,10 @@ hidden: false
     font-size: 1.15rem;
     font-weight: 600;
     margin: 2rem 0 0.7rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    text-decoration: none;
     color: var(--fg);
     scroll-margin-top: 1.25rem;
   }
@@ -357,15 +367,13 @@ window.MathJax = {
   <figcaption>
     <b>Same model architecture, same data, same 80-epoch training run — only the EMA decay
     changes.</b> RAE-DiT-XL<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">1</a></sup> (DINOv2-B) on ImageNet 256.
-    At the community-default \(\beta = 0.9999\), our sweep gives <b>FID = 4.14</b> (the RAE paper
-    reports <b>4.28</b> for the same configuration) — essentially tied with LightningDiT's
-    <b>4.29</b> at the same \(\beta\).
-    The interesting case is the same paper's <b>DiT-DH</b> variant, which they report at
-    <b>FID = 2.16</b> using a <em>non-default</em> \(\beta = 0.9995\). Our DiT-XL sweep shows
+    At the community-default \(\beta = 0.9999\), our sweep gives FID = 4.14 (the RAE paper
+    reports 4.28 for the same configuration) — essentially tied with LightningDiT's
+    4.29 at the same \(\beta\).
+    The interesting case is the same paper's DiT-DH variant, which they report at
+    FID = 2.16 using a <em>non-default</em> \(\beta = 0.9995\). Our DiT-XL sweep shows
     that switching from \(\beta = 0.9999\) to \(\beta = 0.9995\) alone is worth about a full
-    FID point at this training stage (4.14 → 3.29 in our sweep), so a meaningful slice of the
-    DiT-DH headline is likely bought by the EMA-decay change rather than the DH architecture
-    itself.
+    FID point at this training stage (4.14 → 3.29 in our sweep).
   </figcaption>
 </figure>
 
@@ -374,7 +382,7 @@ window.MathJax = {
   visible and to bring EMA decay into the community's attention as a first-class hyperparameter. 
   Almost every modern diffusion-model paper uses an exponential moving average (EMA) of the weights and reports
   results from the EMA checkpoint, yet the decay value is usually inherited from a parent
-  codebase rather than tuned or even reported. Our experiments show this matters more than the
+  codebase rather than tuned or even reported. This blog shows this matters more than the
   field acknowledges.
 </p>
 
