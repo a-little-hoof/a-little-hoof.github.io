@@ -101,6 +101,12 @@ hidden: false
     font-size: 1rem;
     color: #555;
     line-height: 1.65;
+    text-wrap: balance;
+  }
+  /* Also balance lines on the H1 title and on H2 section headers — short, important blocks */
+  .post-header h1,
+  .post-wrap h2 {
+    text-wrap: balance;
   }
 
   /* Blockquote — subtle tinted background, no border-radius corner-cut */
