@@ -883,6 +883,12 @@ That single question, asked routinely, would already remove a large fraction of 
 "progress" the field reports today.
 </p>
 
+<h2>Acknowledgments</h2>
+
+<p>
+We thank Tsu-Jui Fu, Liang-Chieh Chen, and Zhe Gan (Apple) for fruitful discussions.
+</p>
+
 <section class="footnotes">
   <h3>References</h3>
   <ol>
