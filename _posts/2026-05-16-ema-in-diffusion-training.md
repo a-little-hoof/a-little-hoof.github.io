@@ -101,14 +101,6 @@ hidden: false
     line-height: 1.5;
     margin: 0.25rem 0 0.1rem;
   }
-  .post-header .post-authors .affiliation {
-    color: var(--fg-muted);
-  }
-  .post-header .post-authors .affiliation::before {
-    content: " · ";
-    color: var(--fg-muted);
-    margin: 0 0.15rem;
-  }
   .post-header .equal-contrib {
     color: var(--fg-muted);
     font-size: 0.82rem;
@@ -369,7 +361,7 @@ window.MathJax = {
 <header class="post-header">
   <h1>Ignoring EMA may lead to unfair comparison</h1>
   <div class="post-authors">
-    Yifei Wang<sup>*</sup>, Xiaoyu Wu<sup>*</sup>, Chen Wei<span class="affiliation">Rice University</span>
+    <a href="https://a-little-hoof.github.io/">Yifei Wang</a><sup>*</sup>, <a href="https://nicholas0228.github.io/">Xiaoyu Wu</a><sup>*</sup>, <a href="https://weichen582.github.io/">Chen Wei</a>
   </div>
   <div class="equal-contrib"><sup>*</sup>Equal contribution</div>
   <div class="post-tags">
@@ -909,7 +901,7 @@ That single question, asked routinely, would already remove a large fraction of 
 <h2>Acknowledgments</h2>
 
 <p>
-We thank Tsu-Jui Fu, Liang-Chieh Chen, and Zhe Gan (Apple) for fruitful discussions.
+We thank <a href="https://tsujuifu.github.io/">Tsu-Jui Fu</a>, <a href="http://liangchiehchen.com/">Liang-Chieh Chen</a>, and <a href="https://zhegan27.github.io/">Zhe Gan</a> for fruitful discussions.
 </p>
 
 <section class="footnotes">
