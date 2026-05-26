@@ -23,7 +23,7 @@ hidden: false
   :root {
     --fg: #1a1a1a;
     --fg-muted: #666;
-    --accent: #c44b25;
+    --accent: #52adc8;
     --rule: #ddd;
     --rule-soft: #e6e5e0;
     --code-bg: #f5f4f0;
