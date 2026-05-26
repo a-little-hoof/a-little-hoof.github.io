@@ -95,6 +95,25 @@ hidden: false
     letter-spacing: -0.015em;
     color: var(--fg);
   }
+  .post-header .post-authors {
+    color: var(--fg);
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0.25rem 0 0.1rem;
+  }
+  .post-header .post-authors .affiliation {
+    color: var(--fg-muted);
+  }
+  .post-header .post-authors .affiliation::before {
+    content: " · ";
+    color: var(--fg-muted);
+    margin: 0 0.15rem;
+  }
+  .post-header .equal-contrib {
+    color: var(--fg-muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.5rem;
+  }
   .post-header .post-tags {
     display: flex; flex-wrap: wrap; gap: 6px;
     margin-top: 0.5rem;
@@ -349,6 +368,10 @@ window.MathJax = {
 
 <header class="post-header">
   <h1>Ignoring EMA may lead to unfair comparison</h1>
+  <div class="post-authors">
+    Yifei Wang<sup>*</sup>, Xiaoyu Wu<sup>*</sup>, Chen Wei<span class="affiliation">Rice University</span>
+  </div>
+  <div class="equal-contrib"><sup>*</sup>Equal contribution</div>
   <div class="post-tags">
     <span class="tag">diffusion</span>
     <span class="tag">training-dynamics</span>
