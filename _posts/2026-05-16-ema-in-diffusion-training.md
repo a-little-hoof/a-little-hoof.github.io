@@ -835,13 +835,17 @@ This table is not meant to claim that any particular result is invalid. Rather, 
   disentangled from the underlying method.
 </p>
 
-<h2>What does this <em>look like</em>? A 2D toy</h2>
+<h2>What does mode collapse look like? A 2D toy</h2>
 
 <p>
-  To make the effect visible, we ran a controlled experiment on a 2D tree-structured Gaussian mixture (from
-  autoguidance<sup class="footnote-ref" id="fnref:autoguidance"><a href="#fn:autoguidance">10</a></sup>). The ground truth is a hierarchical tree of branches; some branches are dense and "popular,"
-  others are sparse "tail" branches. We trained a small MLP score model, then compared the raw model with
-  EMA versions at decays <code>0.99 / 0.997 / 0.998 / 0.999</code>.
+  The ImageNet metrics in Findings 1 and 2 tell us high-\(\beta\) EMA causes mode collapse —
+  sample diversity drops as \(\beta\) grows — but not <em>what</em> the model is doing differently
+  at the sample level. To visualize the mode collapse effect, we re-ran the same kind of EMA
+  sweep on a 2D toy distribution from
+  autoguidance<sup class="footnote-ref" id="fnref:autoguidance"><a href="#fn:autoguidance">10</a></sup>
+  — a tree-structured Gaussian mixture with dense "popular" branches and sparse "tail" branches,
+  simple enough to plot directly. We trained a small MLP score model and compared the raw output
+  to EMA versions at decays <code>0.99 / 0.997 / 0.998 / 0.999</code>.
 </p>
 
 <figure class="post-figure">
@@ -887,6 +891,16 @@ EMA decay is one of those quiet hyperparameters that almost everyone uses but al
 We hope this post makes a case for treating it like learning rate,
 batch size, or guidance scale — a first-class design choice that materially shapes both the
 model's learned distribution and the numbers we publish about it.
+</p>
+
+<p>
+Several questions remain open. The precision–recall trade-off likely admits
+a clean characterization in terms of how EMA reshapes the score function, but the theoretical
+insight behind this phenomenon requires further study. Moreover, does the optimal
+\(\beta\) drift predictably with training horizon, model size, or guidance scale? If so, an
+adaptive or scheduled EMA could track the optimum without a per-method sweep. A complementary
+line of work, <em>post-hoc EMA</em> from EDM2<sup class="footnote-ref" id="fnref:edm2"><a href="#fn:edm2">11</a></sup>,
+proposed a promising path toward making matched-EMA comparisons routine in practice.
 </p>
 
 <p>
@@ -967,6 +981,13 @@ We thank <a href="https://tsujuifu.github.io/">Tsu-Jui Fu</a>, <a href="http://l
       <em>Guiding a Diffusion Model with a Bad Version of Itself.</em>
       NeurIPS 2024.
       <a href="#fnref:autoguidance" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:edm2">
+      Karras, Aittala, Lehtinen, Hellsten, Aila, &amp; Laine.
+      <em>Analyzing and Improving the Training Dynamics of Diffusion Models.</em>
+      CVPR 2024.
+      <a href="https://arxiv.org/abs/2312.02696">arXiv:2312.02696</a>.
+      <a href="#fnref:edm2" class="footnote-back" title="back to text">↩︎</a>
     </li>
   </ol>
 </section>
