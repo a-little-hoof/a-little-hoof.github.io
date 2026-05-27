@@ -686,8 +686,8 @@ This table is not meant to claim that any particular result is invalid. Rather, 
   for SiT we use a denser grid concentrated near 1,
   <code>{0.999, 0.9993, 0.9995, 0.9997, 0.9998, 0.9999, 0.99991, 0.99993, 0.99995, 0.99997}</code>.
   Each sweep also includes the raw online checkpoint as a baseline. We train each model for
-  around 80 epochs and report FID, Inception Score, precision, and recall, following each
-  repo's provided sampling strategy.
+  around 80 epochs and report FID<sup class="footnote-ref" id="fnref:fid"><a href="#fn:fid">7</a></sup>,
+  Inception Score, precision, and recall, following each repo's provided sampling strategy.
 </p>
 
 <h2 data-toc-skip="true">Finding 1: EMA decay slides you along a precision–recall curve</h2>
@@ -697,55 +697,38 @@ This table is not meant to claim that any particular result is invalid. Rather, 
   differ in which EMA decay we apply on top of it.
 </p>
 
-<table class="ema-sweep">
-  <thead>
-    <tr>
-      <th class="left">EMA decay</th>
-      <th>FID<sup class="footnote-ref" id="fnref:fid"><a href="#fn:fid">7</a></sup> ↓</th>
-      <th>IS<sup class="footnote-ref" id="fnref:is"><a href="#fn:is">8</a></sup> ↑</th>
-      <th>Precision<sup class="footnote-ref" id="fnref:pr"><a href="#fn:pr">9</a></sup> ↑</th>
-      <th>Recall ↑</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="left">raw (no EMA)</td><td>4.46</td><td>159.6</td><td>0.684</td><td>0.607</td></tr>
-    <tr><td class="left">0.5</td><td>4.38</td><td>160.0</td><td>0.680</td><td>0.611</td></tr>
-    <tr><td class="left">0.9</td><td>3.88</td><td>164.3</td><td>0.687</td><td><b>0.615</b></td></tr>
-    <tr><td class="left">0.99</td><td>3.33</td><td>179.3</td><td>0.709</td><td>0.604</td></tr>
-    <tr class="row-best"><td class="left">0.999</td><td><b>3.21</b></td><td>200.0</td><td>0.741</td><td>0.585</td></tr>
-    <tr><td class="left">0.9993</td><td>3.24</td><td>204.5</td><td>0.744</td><td>0.586</td></tr>
-    <tr><td class="left">0.9995</td><td>3.29</td><td>207.6</td><td>0.749</td><td>0.579</td></tr>
-    <tr><td class="left">0.9997</td><td>3.38</td><td>212.3</td><td>0.758</td><td>0.569</td></tr>
-    <tr class="row-default"><td class="left">0.9999 <small>(community default)</small></td><td>4.14</td><td>234.8</td><td>0.787</td><td>0.531</td></tr>
-    <tr class="row-collapse"><td class="left">0.99999</td><td>444.78</td><td>1.23</td><td>0.000</td><td>0.000</td></tr>
-    <tr class="row-collapse"><td class="left">0.999999</td><td>328.03</td><td>1.22</td><td>0.000</td><td>0.000</td></tr>
-  </tbody>
-</table>
-<p class="legend-note">Bold = best FID (\(\beta = 0.999\)) and best recall (\(\beta = 0.9\)). Orange = the community-default \(\beta = 0.9999\). Grey = full collapse.</p>
+<figure class="post-figure">
+  <img src="/images/blog/ema/rae_precision_recall.png"
+       alt="Precision-recall trade-off curve for the RAE EMA sweep at 80 epochs: each point is one EMA decay value; as decay grows from raw to 0.9999, precision rises and recall falls" />
+  <figcaption>
+    <b>RAE-DiT-XL at 80 epochs: EMA decay traces a precision–recall trade-off.</b>
+    Each point is the same training checkpoint with a different EMA decay applied.
+    As \(\beta\) grows from raw (no EMA) toward the community default \(\beta = 0.9999\),
+    samples gain precision<sup class="footnote-ref" id="fnref:pr"><a href="#fn:pr">9</a></sup>
+    but lose recall.
+  </figcaption>
+</figure>
 
 <p>
-  Three things jump out:
+  Two things jump out from the curve:
 </p>
 
 <ol>
   <li>
-    <b>The best-FID, best-precision, and best-recall settings are <em>different EMA values</em>.</b> Recall
-    peaks at 0.9, FID at 0.999, IS and precision at 0.9999. There is no single decay that wins on every metric.
+    <b>EMA decay traces a clean precision–recall trade-off.</b> Moving along the curve from raw to
+    \(\beta = 0.9999\), samples gain precision (0.68 → 0.79) while losing recall (0.61 → 0.53).
+    No single decay wins on both axes.
   </li>
   <li>
-    <b>The community default of 0.9999 is not the FID-optimal choice</b> at this training stage. It gives the
-    highest precision and the highest IS, but FID is worse than every decay between 0.99 and 0.9997 — because
-    recall has dropped from 0.61 to 0.53.
-  </li>
-  <li>
-    <b>Pushing the decay further (0.99999, 0.999999) is a cliff.</b> The averaged model becomes so stale that
-    the generative distribution falls off the data manifold entirely.
+    <b>The community default \(\beta = 0.9999\) sits at the precision-extreme end of the curve.</b>
+    It gives the highest precision in the sweep (0.787), but recall has fallen all the way to 0.531
+    — the trade-off is steep. (Finding 2 picks up what this does to FID and IS.)
   </li>
 </ol>
 
 <p>
   In other words: EMA isn't only smoothing optimization noise. It's also dialing the model along a
-  fidelity–coverage tradeoff.
+  fidelity–coverage trade-off.
 </p>
 
 <h3>The same pattern holds in pixel and latent spaces</h3>
@@ -753,88 +736,103 @@ This table is not meant to claim that any particular result is invalid. Rather, 
 <p>
   RAE is not a special case. The same precision-up / recall-down trajectory shows up in
   pixel-space (JiT) and latent-space (SiT) diffusion, and the same collapse
-  cliff appears at very large decays. What differs across models is <em>where on the curve</em>
-  the community-default \(0.9999\) lands: sub-optimal for RAE and JiT, near-optimal for SiT
-  at this training stage. The point isn't that \(0.9999\) is universally wrong; it's that
-  picking a decay without sweeping is a coin flip whose outcome depends on the model,
-  the input space, <em>and</em> the training stage.
+  cliff appears at very large decays.
 </p>
 
-<p><b>JiT (pixel space) at 80 epochs.</b></p>
+<figure class="post-figure">
+  <img src="/images/blog/ema/jit_precision_recall.png"
+       alt="Precision-recall trade-off curve for JiT (pixel space) at 80 epochs: as EMA decay grows, precision rises and recall falls, with a sharp hook at the community default beta=0.9999 where precision drops back below the beta=0.9997 value" />
+  <figcaption>
+    <b>JiT (pixel space) at 80 epochs: same trade-off as RAE.</b>
+    Precision rises and recall falls as \(\beta\) grows. The community default \(\beta = 0.9999\)
+    sits at the high-precision / low-recall end of the curve.
+  </figcaption>
+</figure>
 
-<table class="ema-sweep">
-  <thead>
-    <tr>
-      <th class="left">EMA decay</th>
-      <th>FID ↓</th>
-      <th>IS ↑</th>
-      <th>Precision ↑</th>
-      <th>Recall ↑</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="left">raw (no EMA)</td><td>13.10</td><td>40.06</td><td>0.520</td><td>0.528</td></tr>
-    <tr><td class="left">0.5</td><td>12.59</td><td>40.54</td><td>0.527</td><td>0.528</td></tr>
-    <tr><td class="left">0.9</td><td>11.51</td><td>41.29</td><td>0.550</td><td>0.522</td></tr>
-    <tr><td class="left">0.99</td><td>10.08</td><td>42.96</td><td>0.582</td><td>0.503</td></tr>
-    <tr><td class="left">0.999</td><td>8.73</td><td>44.20</td><td>0.614</td><td>0.494</td></tr>
-    <tr><td class="left">0.9993</td><td>8.59</td><td>45.02</td><td>0.617</td><td>0.494</td></tr>
-    <tr><td class="left">0.9995</td><td>8.53</td><td>45.11</td><td>0.621</td><td>0.487</td></tr>
-    <tr class="row-best"><td class="left">0.9997</td><td><b>8.42</b></td><td>45.35</td><td><b>0.682</b></td><td>0.487</td></tr>
-    <tr class="row-default"><td class="left">0.9999 <small>(community default)</small></td><td>9.42</td><td>44.14</td><td>0.618</td><td>0.462</td></tr>
-    <tr class="row-collapse"><td class="left">0.99999</td><td>360.62</td><td>1.20</td><td>0.078</td><td>0.000</td></tr>
-    <tr class="row-collapse"><td class="left">0.999999</td><td>422.26</td><td>1.03</td><td>0.000</td><td>0.000</td></tr>
-  </tbody>
-</table>
-<p class="legend-note">Bold = best FID (\(\beta = 0.9997\)), which also wins precision. Orange = community-default \(\beta = 0.9999\). Italic grey = full collapse. As with RAE, the default is <em>not</em> FID-optimal here.</p>
+<figure class="post-figure">
+  <img src="/images/blog/ema/sit_precision_recall.png"
+       alt="Precision-recall trade-off curve for SiT (latent space) at 90 epochs: a smooth precision-up, recall-down trajectory across the dense decay grid, with the community default beta=0.9999 near the FID-best point" />
+  <figcaption>
+    <b>SiT (latent space) at 90 epochs (CFG = 1.5): a subtler version of the same trade-off.</b>
+  </figcaption>
+</figure>
 
-<p><b>SiT (latent space) at 90 epochs (classifier-free guidance scale 1.5).</b></p>
-
-<table class="ema-sweep">
-  <thead>
-    <tr>
-      <th class="left">EMA decay</th>
-      <th>FID ↓</th>
-      <th>IS ↑</th>
-      <th>Precision ↑</th>
-      <th>Recall ↑</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td class="left">raw (no EMA)</td><td>6.93</td><td>136.73</td><td>0.634</td><td>0.573</td></tr>
-    <tr><td class="left">0.999</td><td>5.73</td><td>152.28</td><td>0.674</td><td>0.563</td></tr>
-    <tr><td class="left">0.9993</td><td>5.58</td><td>154.54</td><td>0.676</td><td>0.563</td></tr>
-    <tr><td class="left">0.9995</td><td>5.55</td><td>154.65</td><td>0.684</td><td>0.564</td></tr>
-    <tr><td class="left">0.9997</td><td>5.41</td><td>156.62</td><td>0.690</td><td>0.558</td></tr>
-    <tr><td class="left">0.9998</td><td>5.24</td><td>160.88</td><td>0.698</td><td>0.549</td></tr>
-    <tr class="row-default"><td class="left">0.9999 <small>(community default)</small></td><td>5.17</td><td>163.73</td><td>0.707</td><td>0.548</td></tr>
-    <tr><td class="left">0.99991</td><td>5.20</td><td>164.51</td><td>0.708</td><td>0.547</td></tr>
-    <tr class="row-best"><td class="left">0.99993</td><td><b>5.17</b></td><td>162.94</td><td>0.713</td><td>0.540</td></tr>
-    <tr><td class="left">0.99995</td><td>5.21</td><td>164.70</td><td>0.717</td><td>0.536</td></tr>
-    <tr><td class="left">0.99997</td><td>5.51</td><td>164.76</td><td>0.723</td><td>0.527</td></tr>
-  </tbody>
-</table>
-<p class="legend-note">For SiT, the community-default \(0.9999\) ties the FID-best entry (\(0.99993\)) — but recall continues to fall as \(\beta\) increases, so the precision–recall tradeoff is still active even though the default happens to be near-optimal on FID here.</p>
-
-<h2 data-toc-skip="true">Finding 2: EMA changes the ranking, not just the score</h2>
+<h2 data-toc-skip="true">Finding 2: The community default β = 0.9999 is not the optimal choice</h2>
 
 <p>
-  Because the precision–recall tradeoff is real, two models that look essentially tied under their raw
-  checkpoints can separate once you apply different EMA decays — and vice versa. Conversely, a method
-  that looks "best" under one decay may stop being best when you sweep. The hero figure at the top of the
-  post shows the mechanism at work: the same RAE-DiT-XL training run moves from FID 3.21 (\(\beta
-  = 0.999\)) to 4.14 (\(\beta = 0.9999\)) — a ~1 FID swing that is purely about the decay. So when the
-  same paper's DiT-DH variant reports 2.16 using \(\beta = 0.9995\) and is compared to
-  LightningDiT's 4.29 at \(\beta = 0.9999\), part of the headline gap is the architecture and part is
-  the EMA-decay change — and without a matched-EMA sweep we can't tell how much. The lesson generalizes: if
-  a benchmark allows each method to pick its own EMA decay — or worse, leaves it inherited and undocumented —
-  part of the resulting ordering is an EMA artefact, not an architecture or objective advantage.
+  Modern diffusion codebases overwhelmingly default to \(\beta = 0.9999\) for EMA, usually
+  inherited from an earlier paper rather than re-tuned per method. Across the three diffusion
+  model families we swept, this default is suboptimal on FID — the metric the field actually
+  reports — in two of three cases. In one of three (JiT) it is <em>strictly dominated</em>:
+  another decay produces lower FID, higher Inception Score, higher precision, and higher recall
+  simultaneously. There is no metric you can invoke to defend the default for JiT.
+</p>
+
+<figure class="post-figure">
+  <img src="/images/blog/ema/fid_is_3panel.png"
+       alt="3-panel chart of FID and Inception Score vs EMA decay for RAE-DiT-XL, JiT, and SiT. The community default beta=0.9999 is highlighted in red on each curve. RAE: 0.9999 is FID-suboptimal but wins IS. JiT: 0.9999 is worse on both FID and IS than beta=0.9995. SiT: 0.9999 ties for FID-best but IS keeps climbing past it." />
+  <figcaption>
+    <b>FID and IS vs EMA decay across three model families.</b>
+    Each panel: FID (blue, left axis), Inception Score<sup class="footnote-ref" id="fnref:is"><a href="#fn:is">8</a></sup>
+    (purple, right axis). The red marker on each curve is the community default
+    \(\beta = 0.9999\). The RAE panel also shows three published FID baselines for context
+    (dashed lines: raw RAE, LightningDiT, and the RAE codebase's own number at \(\beta = 0.9995\)).
+  </figcaption>
+</figure>
+
+<ol>
+  <li>
+    <b>RAE</b> (representation space): FID bottoms out at \(\beta = 0.999\) (3.21). At the
+    default \(\beta = 0.9999\), FID has climbed back to 4.14 — almost a full point worse. IS
+    does peak at the default, so \(\beta = 0.9999\) wins one metric — but not the one the
+    leaderboard runs on.
+  </li>
+  <li>
+    <b>JiT</b> (pixel space): both FID and IS are best at \(\beta = 0.9995\) (FID 8.53, IS
+    45.11). At the default \(\beta = 0.9999\), FID is 9.42 and IS is 44.14 — both worse.
+    \(\beta = 0.9995\) <em>Pareto-dominates</em> the default on FID, IS, precision, and recall
+    simultaneously. There is no metric to defend \(\beta = 0.9999\) here.
+  </li>
+  <li>
+    <b>SiT</b> (latent space): the mildest case. The default ties \(\beta = 0.99993\) for
+    best FID. But IS continues to climb past it, peaking at \(\beta = 0.99997\) — so even here
+    the default is one of several near-optima rather than <em>the</em> optimum, and this is the
+    strongest defense of \(\beta = 0.9999\) we could find.
+  </li>
+</ol>
+
+<p>
+  Three models, one pattern: \(\beta = 0.9999\) is rarely the metric-optimal choice — and in
+  JiT it has no leg to stand on.
+</p>
+
+<h3>Why this matters: rankings depend on β</h3>
+
+<p>
+  Most diffusion papers compare new methods at the default \(\beta = 0.9999\), often without
+  even reporting the value. If that default is FID-suboptimal for most models, every such
+  comparison is happening at a non-optimal decay — and headline rankings can shift purely from
+  EMA mismatches. The RAE panel above makes this concrete: the same RAE-DiT-XL training run sits
+  just under LightningDiT's 4.29 line at the default \(\beta = 0.9999\) (4.14, barely beating
+  it), but <em>well</em> below it at \(\beta = 0.999\) (3.21, beating it by a full point). When
+  the same paper's DiT-DH variant reports FID 2.16 using \(\beta = 0.9995\) and is compared to
+  LightningDiT's 4.29 at \(\beta = 0.9999\), part of the headline 2.13-FID gap is the
+  architecture and part is the EMA mismatch — and without a matched sweep we can't tell how
+  much.
 </p>
 
 <p>
-  Our practical recommendation is mild but firm: at minimum, papers should report the EMA decay they used.
-  Ideally, comparisons should either tune EMA per method under a shared protocol, or include the raw-checkpoint
-  numbers alongside EMA ones so the smoothing effect can be disentangled from the underlying method.
+  <b>Caveat.</b> These sweeps are at ~80-epoch training horizons. At much longer training,
+  optimal \(\beta\) likely drifts toward 1, and \(\beta = 0.9999\) may become defensible. The
+  argument isn't "use \(\beta = 0.999\) instead" — it is that the default needs to be tuned
+  per method and per training stage, not inherited.
+</p>
+
+<p>
+  Our practical recommendation is mild but firm: at minimum, papers should report the EMA decay
+  they used. Ideally, comparisons should either tune EMA per method under a shared protocol, or
+  include the raw-checkpoint numbers alongside EMA ones so the smoothing effect can be
+  disentangled from the underlying method.
 </p>
 
 <h2>What does this <em>look like</em>? A 2D toy</h2>
