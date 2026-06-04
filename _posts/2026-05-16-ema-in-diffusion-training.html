@@ -1,0 +1,1399 @@
+---
+layout: raw
+title: "EMA: A Quiet Hyperparameter That Moves Diffusion Leaderboards"
+date: 2026-05-16
+permalink: /blog/2026/05/ema-in-diffusion-training/
+excerpt: "We benchmark EMA decay across pixel-, latent-, and representation-space diffusion models and show that the popular 0.9999 default silently trades recall for precision."
+tags:
+  - diffusion
+  - training-dynamics
+  - EMA
+hidden: false
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMA: A Quiet Hyperparameter That Moves Diffusion Leaderboards</title>
+  <meta name="description" content="We benchmark EMA decay across pixel-, latent-, and representation-space diffusion models and show that the popular 0.9999 default silently trades recall for precision.">
+  <link rel="canonical" href="https://a-little-hoof.github.io/blog/2026/05/ema-in-diffusion-training/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+  /* Color tokens */
+  :root {
+    --fg: #252932;
+    --fg-muted: #66707a;
+    --fg-soft: #87909a;
+    --accent: #24788d;
+    --accent-soft: #e9f4f6;
+    --rule: #dfe4e8;
+    --rule-soft: #edf0f2;
+    --code-bg: #f5f7f8;
+    --highlight: #fff7d8;
+    --surface: #ffffff;
+  }
+
+  /* Core layout */
+  .post-wrap {
+    max-width: 760px;
+    font-family: "Inter", "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 16.8px;
+    line-height: 1.76;
+    color: var(--fg);
+  }
+  .post-wrap p,
+  .post-wrap li {
+    color: var(--fg);
+    line-height: 1.76;
+    font-size: 16.8px;
+  }
+  .post-wrap a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: rgba(36, 120, 141, 0.26);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+  .post-wrap a:hover { text-decoration-color: currentColor; }
+  .post-wrap strong, .post-wrap b { font-weight: 600; color: var(--fg); }
+
+  /* Headings — H2 has a thin top rule, acting as a section divider. */
+  .post-wrap h2 {
+    font-family: inherit;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin: 3.7rem 0 1rem;
+    padding: 1.35rem 0 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: none;
+    background: transparent;
+    text-decoration: none;
+    box-shadow: none;
+    color: var(--fg);
+    letter-spacing: 0;
+    scroll-margin-top: 1.25rem;
+  }
+  /* Post header (h1 + tags) */
+  .post-header {
+    position: relative;
+    margin-bottom: 2rem;
+    padding: 1.2rem 0 1.35rem;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .post-header::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 92px;
+    height: 4px;
+    background: var(--accent);
+  }
+  .post-header h1 {
+    font-family: inherit;
+    margin: 0 0 1.05rem;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0;
+    color: var(--fg);
+  }
+  .post-header .title-main {
+    display: block;
+    max-width: 720px;
+  }
+  .post-header .post-authors {
+    color: var(--fg);
+    font-size: 0.98rem;
+    line-height: 1.5;
+    margin: 0.25rem 0 0.1rem;
+  }
+  .post-header .post-affiliation {
+    color: var(--fg-muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+    margin: 0.1rem 0 0.15rem;
+  }
+  .post-header .equal-contrib {
+    color: var(--fg-muted);
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+  .post-header .post-tags {
+    display: flex; flex-wrap: wrap; gap: 7px;
+    margin-top: 0.65rem;
+  }
+  .post-header .post-tags .tag {
+    background: var(--accent-soft);
+    color: #355b65;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.76rem;
+    font-weight: 500;
+  }
+
+  .post-wrap .lead {
+    font-size: 1.08rem;
+    color: #444c56;
+    line-height: 1.72;
+    margin: 1.65rem 0 1.8rem;
+    text-wrap: balance;
+  }
+
+  .beta-compare {
+    width: 100%;
+    max-width: 640px;
+    margin: 0.85rem 0 0;
+    padding: 0.8rem 0 0;
+    border-top: 1px solid var(--rule-soft);
+  }
+  .beta-compare__title {
+    color: var(--fg-soft);
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0;
+  }
+  .beta-compare__row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+  }
+  .beta-compare__item {
+    min-width: 0;
+    padding: 0 1rem;
+    border-left: 1px solid var(--rule-soft);
+  }
+  .beta-compare__item:first-child {
+    padding-left: 0;
+    border-left: none;
+  }
+  .beta-compare__decay,
+  .beta-compare__label,
+  .beta-compare__fid {
+    display: block;
+  }
+  .beta-compare__decay {
+    color: var(--fg);
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .beta-compare__label {
+    margin-top: 0.08rem;
+    color: var(--fg-soft);
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+  .beta-compare__fid {
+    margin-top: 0.18rem;
+    color: var(--fg-muted);
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .beta-compare__item--best .beta-compare__fid {
+    color: var(--accent);
+  }
+  /* Balance lines on short, important blocks: H1 title, H2 section headers, subtitle */
+  .post-header h1,
+  .post-wrap h2 {
+    text-wrap: balance;
+  }
+  /* Long-form blocks (paragraphs, figure captions): use text-wrap: pretty */
+  .post-wrap p,
+  .post-figure figcaption,
+  .footnotes li {
+    text-wrap: pretty;
+  }
+
+  .post-wrap .paper-quote {
+    position: relative;
+    margin: 1.65rem 0;
+    padding: 0.92rem 1.05rem 0.95rem 2.55rem;
+    background: #f8fbfc;
+    border: 1px solid rgba(36, 120, 141, 0.72);
+    border-radius: 8px;
+    box-shadow: 0 1px 0 rgba(37, 41, 50, 0.05);
+    color: var(--fg);
+    font-size: 0.96rem;
+    line-height: 1.55;
+  }
+  .post-wrap .paper-quote::before {
+    content: "\201C";
+    position: absolute;
+    left: 1rem;
+    top: 0.78rem;
+    color: var(--accent);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .post-wrap .paper-quote p {
+    margin: 0;
+    color: var(--fg);
+    font-size: inherit;
+    line-height: inherit;
+  }
+  .post-wrap .paper-quote cite {
+    display: block;
+    margin: 0 0 0.36rem;
+    color: var(--accent);
+    font-size: inherit;
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.35;
+  }
+
+  /* Inline code — tinted box, mono */
+  .post-wrap code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+    background: var(--code-bg);
+    color: var(--fg);
+    padding: 0.14em 0.38em;
+    border-radius: 4px;
+    font-size: 0.86em;
+  }
+  .post-wrap pre {
+    margin: 1rem 0 0;
+    padding: 1rem 1.1rem;
+    background: var(--code-bg);
+    border: 1px solid var(--rule-soft);
+    border-radius: 6px;
+    color: var(--fg);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    overflow-x: auto;
+    text-align: left;
+  }
+  .post-wrap pre code {
+    display: block;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    font-size: inherit;
+    line-height: inherit;
+    white-space: pre;
+  }
+  .end-section { margin-top: 2.4rem; }
+  .end-section + .end-section { margin-top: 2.1rem; }
+  .end-section h4 {
+    margin: 0 0 0.65rem;
+    color: var(--fg);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .end-section p {
+    margin: 0;
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .cite-section .bibtex {
+    margin-top: 0.85rem;
+    padding: 0.95rem 1rem;
+    background: #f8fafb;
+    border-color: var(--rule);
+    font-size: 0.8rem;
+  }
+
+  /* Figures */
+  .post-figure {
+    margin: 2.1rem 0 2.25rem;
+    text-align: center;
+  }
+  .post-figure img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    border-radius: 6px;
+    background: var(--surface);
+  }
+  .teaser-figure { max-width: none; }
+  .teaser-figure img {
+    width: 100%;
+    max-width: 640px;
+    margin-left: 0;
+    margin-right: auto;
+  }
+  .teaser-figure figcaption {
+    max-width: 100%;
+    margin-top: 0.95rem;
+  }
+  .post-figure figcaption {
+    color: var(--fg-soft);
+    font-size: 0.86rem;
+    line-height: 1.58;
+    margin: 0.72rem auto 0;
+    max-width: 96%;
+    text-align: left;
+  }
+  .post-figure figcaption b,
+  .post-figure figcaption strong {
+    color: inherit;
+    font-weight: 600;
+  }
+  .pair-figure {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 2rem 0 0.55rem;
+  }
+  .pair-figure .col { text-align: center; }
+  .pair-figure img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+  .pair-figure .label {
+    font-size: 0.78rem; font-weight: 600; color: var(--fg-soft);
+    text-transform: uppercase; letter-spacing: 0;
+    margin-bottom: 4px;
+  }
+  @media (max-width: 580px) {
+    .pair-figure { grid-template-columns: 1fr; }
+  }
+
+  /* Tables */
+  .post-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.55rem 0;
+    border-top: 1px solid var(--rule-soft);
+    border-bottom: 1px solid var(--rule-soft);
+    color: var(--fg);
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+    background: transparent;
+  }
+  .post-wrap table th,
+  .post-wrap table td {
+    padding: 0.58rem 0.72rem;
+    border-bottom: 1px solid var(--rule-soft);
+    text-align: center;
+    vertical-align: middle;
+    line-height: 1.35;
+  }
+  .post-wrap table th {
+    background: transparent;
+    color: #4b5563;
+    font-size: 0.74rem;
+    font-weight: 650;
+    letter-spacing: 0;
+  }
+  .post-wrap table tbody tr:last-child td { border-bottom: 0; }
+  .post-wrap table td:first-child,
+  .post-wrap table th:first-child,
+  table.ema-sweep td.left,
+  table.ema-sweep th.left { text-align: left; }
+  .post-wrap table td:first-child,
+  .post-wrap table th:first-child { padding-left: 0; }
+  .post-wrap table td:last-child,
+  .post-wrap table th:last-child { padding-right: 0; }
+  .post-wrap table td:first-child {
+    color: var(--fg);
+    font-weight: 500;
+  }
+  table.ema-sweep th + th,
+  table.ema-sweep td + td { border-left: 1px solid var(--rule-soft); }
+  table.ema-sweep tr.row-best td { font-weight: 600; }
+  table.ema-sweep tr.row-best td:last-child { color: var(--accent); }
+  .table-figure { margin: 1.7rem 0 2rem; }
+  .table-figure table { margin: 0; }
+  .table-figure figcaption {
+    color: var(--fg-soft, var(--fg-muted));
+    font-size: 0.86rem;
+    line-height: 1.58;
+    margin: 0.72rem 0 0;
+    text-align: left;
+    text-wrap: pretty;
+  }
+  .table-figure figcaption b,
+  .table-figure figcaption strong { color: inherit; font-weight: 600; }
+
+  /* TL;DR / callout */
+  .callout {
+    max-width: 720px;
+    margin: 1.8rem 0 2rem;
+    padding: 0.95rem 1.1rem 1rem;
+    background: var(--accent-soft);
+    border: 1px solid #d7e9ed;
+    border-left: 4px solid var(--accent);
+    border-radius: 6px;
+    color: var(--fg);
+    font-size: 1rem;
+  }
+  .callout b { color: var(--fg); font-weight: 600; }
+
+  /* Inline citation badges with Distill-inspired hover cards */
+  sup.footnote-ref {
+    position: relative;
+    display: inline-block;
+    margin-left: 0.08em;
+    vertical-align: super;
+    line-height: 0;
+  }
+  .post-wrap sup.footnote-ref a {
+    position: relative;
+    display: inline-block;
+    padding: 0 0.08em;
+    background: transparent;
+    border-radius: 4px;
+    color: var(--accent);
+    font-size: 0.72em;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .post-wrap sup.footnote-ref a::before {
+    content: "[";
+    color: rgba(36, 120, 141, 0.72);
+  }
+  .post-wrap sup.footnote-ref a::after {
+    content: "]";
+    color: rgba(36, 120, 141, 0.72);
+  }
+  .post-wrap sup.footnote-ref a:hover,
+  .post-wrap sup.footnote-ref a:focus-visible {
+    background: rgba(36, 120, 141, 0.09);
+    color: #1f6a7d;
+    outline: none;
+    text-decoration: none;
+  }
+  .post-wrap sup.footnote-ref a:hover::before,
+  .post-wrap sup.footnote-ref a:hover::after,
+  .post-wrap sup.footnote-ref a:focus-visible::before,
+  .post-wrap sup.footnote-ref a:focus-visible::after { color: currentColor; }
+  .post-wrap sup.footnote-ref:hover,
+  .post-wrap sup.footnote-ref:focus-within { z-index: 50; }
+  .cite-popover {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 0.66rem);
+    z-index: 40;
+    width: min(34rem, calc(100vw - 2rem));
+    padding: 0.85rem 1rem 0.9rem;
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    box-shadow: 0 14px 34px rgba(37, 41, 50, 0.16);
+    color: var(--fg);
+    font-size: 0.88rem;
+    font-weight: 500;
+    line-height: 1.38;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(0.24rem);
+    visibility: hidden;
+    transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s ease;
+  }
+  .cite-popover::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -0.36rem;
+    width: 0.62rem;
+    height: 0.62rem;
+    background: #fff;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    transform: translateX(-50%) rotate(45deg);
+  }
+  .cite-popover__row { display: block; }
+  .cite-popover__row + .cite-popover__row { margin-top: 0.28rem; }
+  .cite-popover__value {
+    display: block;
+    color: var(--fg);
+    font-size: 0.88rem;
+    font-weight: 500;
+    line-height: 1.38;
+  }
+  .post-wrap sup.footnote-ref:hover .cite-popover,
+  .post-wrap sup.footnote-ref:focus-within .cite-popover {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    visibility: visible;
+  }
+  .footnotes {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.92rem;
+    color: var(--fg-muted);
+  }
+  .footnotes.references-section { padding-top: 0; border-top: none; }
+  .footnotes.references-section h2 { margin-top: 3.5rem; }
+  .footnotes ol { padding-left: 22px; margin: 0; }
+  .footnotes li { margin: 0.5rem 0; line-height: 1.6; }
+  .references-section li {
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .references-section li em { color: var(--fg-muted); }
+  .references-section li a {
+    color: var(--accent);
+    text-decoration-color: rgba(36, 120, 141, 0.2);
+  }
+  .footnotes li[id]:target,
+  sup[id]:target a { background: var(--highlight); border-radius: 4px; padding: 1px 4px; }
+  .footnote-back {
+    text-decoration: none;
+    margin-left: 6px;
+    color: var(--fg-soft);
+    font-size: 0.95em;
+  }
+  .footnote-back:hover { color: var(--accent); }
+
+  /* Right-side fixed table of contents — visible only on wide screens */
+  #toc {
+    display: none;
+    position: fixed;
+    top: 140px;
+    left: max(24px, calc(50% + 380px + 44px));
+    width: 360px;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 5;
+    font-family: "Inter", "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 0.2rem 0 0.2rem 0.85rem;
+    border-left: 1px solid var(--rule);
+  }
+  @media (min-width: 1460px) {
+    #toc { display: flex; }
+  }
+  #toc .toc-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: var(--fg);
+    padding: 0 0 0.55rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  #toc a {
+    display: block;
+    padding: 0.32rem 0.65rem;
+    border-left: 3px solid transparent;
+    border-radius: 0 5px 5px 0;
+    color: var(--fg-muted);
+    font-size: 0.84rem;
+    font-weight: 500;
+    line-height: 1.35;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  }
+  #toc a:hover {
+    color: var(--fg);
+    background: var(--code-bg);
+    text-decoration: none;
+  }
+  #toc a.toc-active {
+    color: var(--fg);
+    border-left-color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 700;
+  }
+
+  /* Local standalone layout */
+  html { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0;
+    background: #fff;
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .article-shell {
+    width: min(760px, calc(100% - 32px));
+    margin: 48px auto 80px;
+  }
+  .post-wrap { margin: 0 auto; }
+  .post-wrap img { height: auto; }
+
+  @media (max-width: 640px) {
+    .article-shell {
+      width: min(100% - 24px, 760px);
+      margin-top: 28px;
+    }
+    .post-header h1 { font-size: 2.28rem; line-height: 1.08; }
+    .post-wrap, .post-wrap p, .post-wrap li { font-size: 16.2px; }
+    .post-wrap .lead { font-size: 1rem; line-height: 1.68; }
+    .beta-compare__row { grid-template-columns: 1fr; gap: 0.65rem; }
+    .beta-compare__item, .beta-compare__item:first-child {
+      padding: 0; border-left: none;
+    }
+    .post-figure figcaption { max-width: 100%; font-size: 0.84rem; }
+    .table-figure { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-figure table { min-width: 640px; }
+  }
+  </style>
+</head>
+<body>
+  <main class="article-shell">
+<nav id="toc" aria-label="Table of contents">
+  <div class="toc-title">Contents</div>
+</nav>
+
+<article class="post-wrap">
+
+<header class="post-header">
+  <h1>
+    <span class="title-main">EMA: A Quiet Hyperparameter That Moves Diffusion Leaderboards</span>
+  </h1>
+  <div class="post-authors">
+    <a href="https://a-little-hoof.github.io/">Yifei Wang</a><sup>*</sup>, <a href="https://nicholas0228.github.io/">Xiaoyu Wu</a><sup>*</sup>, <a href="https://weichen582.github.io/">Chen Wei</a>
+  </div>
+  <div class="post-affiliation">Rice University</div>
+  <div class="equal-contrib"><sup>*</sup>Equal contribution</div>
+  <div class="post-tags">
+    <span class="tag">diffusion</span>
+    <span class="tag">training-dynamics</span>
+    <span class="tag">EMA</span>
+  </div>
+</header>
+
+<p class="lead">
+  Diffusion transformers are increasingly compared by convergence speed: who can reach a target
+  FID in the fewest training epochs. But before changing the model architecture, loss, or input space,
+  one quiet hyperparameter can already move the number: EMA decay. In the figure below, we
+  take the same RAE-DiT<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">1</a></sup>
+  training run at 80 epochs and change only the EMA decay. The gFID moves from <b>4.14</b> to
+  <b>3.21</b>. This is large enough that two papers could appear to differ in method quality
+  when they are partly differing in EMA protocol.
+</p>
+
+<figure class="post-figure teaser-figure">
+  <img src="/images/blog/ema/ema_sweep_curves_v2.png" alt="gFID vs EMA decay at 80 epochs for RAE-DiT (DINOv2-B), with horizontal references for raw, LightningDiT, and the published RAE number" />
+  <div class="beta-compare" aria-label="EMA decay comparison at 80 epochs">
+    <div class="beta-compare__title">Same training run, different EMA decay</div>
+    <div class="beta-compare__row">
+      <div class="beta-compare__item">
+        <span class="beta-compare__decay">&beta; = 0.9999</span>
+        <span class="beta-compare__label">community default</span>
+        <span class="beta-compare__fid">FID 4.14</span>
+      </div>
+      <div class="beta-compare__item">
+        <span class="beta-compare__decay">&beta; = 0.9995</span>
+        <span class="beta-compare__label">common non-default</span>
+        <span class="beta-compare__fid">FID 3.29</span>
+      </div>
+      <div class="beta-compare__item beta-compare__item--best">
+        <span class="beta-compare__decay">&beta; = 0.999</span>
+        <span class="beta-compare__label">best in sweep</span>
+        <span class="beta-compare__fid">FID 3.21</span>
+      </div>
+    </div>
+  </div>
+  <figcaption>
+    RAE-DiT-XL with DINOv2-B on ImageNet 256, trained for
+    80 epochs. The training run is fixed; only the EMA decay changes. See the
+    <a href="#ema-reporting-table">reporting table</a> below for common EMA choices in recent
+    diffusion papers.
+  </figcaption>
+</figure>
+
+<p>
+  This plot is the instability we want to make visible. EMA decay is often treated as a fixed
+  detail of the training recipe rather than a hyperparameter to study. But the plot above shows
+  the key point: common EMA choices are not interchangeable. Later, the
+  <a href="#ema-reporting-table">reporting table</a> shows how often these choices are inherited
+  from existing codebases or left implicit in recent diffusion papers.
+</p>
+
+<p>
+  The rest of the post asks two questions. First, when diffusion models are evaluated before full
+  convergence, how much can EMA decay change the comparison? Second, what does EMA decay change
+  inside the learned distribution? We study three settings: representation-space diffusion
+  (RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup>), pixel-space diffusion
+  (JiT<sup class="footnote-ref"><a href="#fn:jit">5</a></sup>), and latent-space diffusion
+  (SiT<sup class="footnote-ref"><a href="#fn:sit">4</a></sup>).
+</p>
+
+<div class="callout">
+  <b>TL;DR.</b> EMA decay is not just a smoothing trick. In short-schedule diffusion training,
+  common choices such as &beta; = 0.9999 and 0.9995 can produce materially different FID
+  numbers from the same training run. EMA decay should be treated as a critical hyperparameter:
+  swept when possible, and clearly reported.
+</div>
+
+<h2>Why Did EMA Become the Default?</h2>
+
+<p>
+Exponential moving average (EMA) keeps a slowly updated copy of the model weights alongside the
+training weights. At every optimizer step <em>t</em>, the EMA weights &theta;&prime; are updated as
+</p>
+
+<p>
+$$\theta'_t \;=\; \beta \, \theta'_{t-1} \;+\; (1 - \beta)\, \theta_t\,,$$
+</p>
+
+<p>
+where &beta; is the EMA decay. At evaluation time, samples are drawn from
+&theta;&prime; instead of &theta;: the running average, not the latest optimizer step. That sounds
+like harmless smoothing, and historically that is exactly why EMA became popular.
+</p>
+
+<p>
+The NCSNv2 example below shows the original motivation. EMA was introduced to diffusion models as
+a fix for a very <em>visible</em> failure mode: <em>color shift</em><sup class="footnote-ref" id="fnref:ncsnv2"><a href="#fn:ncsnv2">2</a></sup>.
+Without EMA, samples near the end of training drifted in color statistics, even when the score loss
+kept decreasing. The EMA checkpoint smoothed the trajectory and brought the sample statistics back
+in line.
+</p>
+
+<figure class="post-figure">
+  <img src="/images/blog/ema/ncsnv2_color_shift.png"
+       alt="CIFAR-10 FID over training iterations for NCSN with and without EMA, with sample insets showing color-shifted samples from the raw model and clean samples from the EMA model"
+       style="max-width: 500px; display: block; margin: 0 auto;" />
+  <figcaption>
+    <b>NCSN with vs. without EMA on CIFAR-10.</b> The raw NCSN checkpoint (dashed blue)
+    oscillates wildly in FID and produces visibly color-shifted, off-distribution samples;
+    the EMA-averaged checkpoint (orange) trains stably and recovers correct image statistics.
+    Figure taken from Song &amp; Ermon, <em>Improved Techniques for Training Score-Based
+    Generative Models</em> (NeurIPS 2020)<sup class="footnote-ref"><a href="#fn:ncsnv2">2</a></sup>;
+    credit to the original authors.
+  </figcaption>
+</figure>
+
+<p>
+This figure explains why EMA became a near-universal default: the fix is obvious, visual,
+empirically useful, and almost free. In our sweeps, EMA-smoothed checkpoints also beat the raw checkpoint across
+pixel-, latent-, and representation-space diffusion. So the question is not whether EMA helps. It
+does. The question is whether the decay rate can be left on autopilot.
+</p>
+
+<p>
+That distinction matters most away from convergence. If the goal is a final, near-converged FID,
+the exact averaging window may look less central: late in training, the weights move more slowly,
+and different EMA averages can become similar. But at 40 epochs, 80 epochs, or any target-FID
+speed benchmark, the trajectory is still moving quickly. Different EMA decays can then correspond to
+very different evaluated checkpoints.
+</p>
+
+<h2>Short-Schedule FID Makes EMA Visible</h2>
+
+<p>
+  That lag becomes a measurement problem because diffusion papers usually report the EMA
+  checkpoint. An FID number is therefore not determined only by the method, optimizer, and training
+  budget; it also depends on the EMA decay used to build the checkpoint. The reporting landscape
+  below shows why this is easy to miss.
+</p>
+
+<figure id="ema-reporting-table" class="table-figure">
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Parent Codebase</th>
+      <th>Reported EMA Decay</th>
+      <th>Epoch 40</th>
+      <th>Epoch 80</th>
+      <th>EP<sub>FID@3</sub></th>
+      <th>Open Sourced?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DiT<sup class="footnote-ref" id="fnref:dit"><a href="#fn:dit">3</a></sup></td>
+      <td>-</td>
+      <td>0.9999</td>
+      <td>39</td>
+      <td>16</td>
+      <td>&gt;800</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>SiT<sup class="footnote-ref"><a href="#fn:sit">4</a></sup></td>
+      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">3</a></sup></td>
+      <td>0.9999</td>
+      <td>34</td>
+      <td>15</td>
+      <td>&gt;800</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>JiT<sup class="footnote-ref"><a href="#fn:jit">5</a></sup></td>
+      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">3</a></sup></td>
+      <td>0.9999</td>
+      <td>-</td>
+      <td>42.9</td>
+      <td>&gt;800</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>REPA<sup class="footnote-ref" id="fnref:repa"><a href="#fn:repa">6</a></sup></td>
+      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">3</a></sup>, SiT<sup class="footnote-ref"><a href="#fn:sit">4</a></sup></td>
+      <td>0.9999</td>
+      <td>10.5</td>
+      <td>7.9</td>
+      <td>&gt;800</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup></td>
+      <td>LightningDiT<sup class="footnote-ref" id="fnref:lightningdit"><a href="#fn:lightningdit">7</a></sup></td>
+      <td>0.9995</td>
+      <td>6.7</td>
+      <td>4.3</td>
+      <td>200</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>RJF<sup class="footnote-ref" id="fnref:rjf"><a href="#fn:rjf">8</a></sup></td>
+      <td>RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup></td>
+      <td>0.9995</td>
+      <td>-</td>
+      <td>3.6</td>
+      <td>80~85</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>FAE<sup class="footnote-ref" id="fnref:fae"><a href="#fn:fae">9</a></sup></td>
+      <td>RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup></td>
+      <td>-</td>
+      <td>2.8</td>
+      <td>2.1</td>
+      <td>35~40</td>
+      <td>No</td>
+    </tr>
+    <tr>
+      <td>RAEv2<sup class="footnote-ref" id="fnref:raev2"><a href="#fn:raev2">10</a></sup></td>
+      <td>RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup></td>
+      <td>0.9995</td>
+      <td>2.8</td>
+      <td>2.3</td>
+      <td>&lt;20</td>
+      <td>Yes</td>
+    </tr>
+    <tr>
+      <td>PAE<sup class="footnote-ref" id="fnref:pae"><a href="#fn:pae">11</a></sup></td>
+      <td>RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup></td>
+      <td>0.9999</td>
+      <td>5.8</td>
+      <td>1.9</td>
+      <td>45~50</td>
+      <td>Yes</td>
+    </tr>
+  </tbody>
+</table>
+<figcaption>
+  <b>Recent diffusion papers often inherit EMA decay from a parent codebase.</b>
+  Reported values are taken from the cited papers and, where
+  needed, their released implementations.
+  This table shows that short-schedule FID and EP<sub>FID@k</sub> numbers can use an EMA choice that is not always
+  searched over, matched, or easy to find.
+</figcaption>
+</figure>
+
+
+<p>
+  The table matters because recent comparisons increasingly live at intermediate checkpoints.
+  Final FID still appears, but many papers now emphasize fixed-budget FID at 40 or 80 epochs, or the number of epochs
+  needed to hit a target FID. RAEv2<sup class="footnote-ref" id="fnref:raev2"><a href="#fn:raev2">10</a></sup> makes one piece of this shift explicit:
+</p>
+
+
+<blockquote class="paper-quote" cite="#fn:raev2">
+  <cite>RAEv2 on Training-Convergence Evaluation<sup class="footnote-ref"><a href="#fn:raev2">10</a></sup></cite>
+  <p>
+  "Incremental improvements in absolute gFID values might provide limited signal
+  for practical applications. Inspired by recent speedrun in language domain, we also report training
+  convergence using EP<sub>FID@k</sub> (epochs to reach unguided gFID &le; <em>k</em>)."
+  </p>
+</blockquote>
+
+<p>
+  RAEv2 therefore reports EP<sub>FID@k</sub>: the number of epochs needed to reach unguided gFID
+  &le; <em>k</em>. This is a useful direction because it asks how much training a method needs to
+  become good enough, not just where it lands after a long run. But the curve being thresholded is
+  usually the EMA-smoothed curve. If changing &beta; moves that curve, it can also move the apparent
+  convergence time.
+</p>
+
+<p>
+  The figure below shows this within a single RAE-DiT<sup class="footnote-ref"><a href="#fn:rae">1</a></sup>
+  run. All curves come from the same optimizer trajectory; only the EMA decay changes. At target
+  <em>k</em> = 4, that choice changes the apparent convergence time from 32 epochs to beyond
+  80 epochs.
+</p>
+
+<figure class="post-figure">
+  <img src="/images/blog/ema/convergence_threshold_v2.png"
+       alt="FID vs. training epoch for one RAE-DiT run, with one curve per EMA decay" />
+  <figcaption>
+    <b>Same RAE-DiT run at 80 epochs.</b> Left: gFID vs. training epoch for one optimizer trajectory under different
+    EMA decays. The FID = 4 threshold is shown as a dashed line and threshold-crossing points are marked.
+    Right: the same run reduced to EP<sub>FID@4</sub> — the number of epochs to first reach gFID &le; 4.
+  </figcaption>
+</figure>
+
+<p>
+  Read together, these results show why fixed-budget FID and EP<sub>FID@k</sub> need a matched
+  EMA protocol. If two methods use different decays, the reported gap can reflect both the proposed
+  method and the EMA checkpoint used to evaluate it.
+</p>
+
+<p>
+  That motivates the controlled sweeps in the next section: if EMA decay can change both the number
+  and the crossing time, what exactly is it changing in the learned distribution?
+</p>
+
+
+<h2>EMA Trades Precision for Recall</h2>
+
+<p>
+  We showed that EMA decay can change the reported FID. Here we ask what changes inside
+  the learned distribution. The answer is not simply "better" or "worse": EMA decay moves the
+  model along a precision-recall trade-off. Larger decays tend to sharpen samples and raise
+  precision, but they also reduce coverage and lower recall.
+</p>
+
+<p>
+  The intuition is that EMA rewards
+  what is stable across time. Common patterns survive the averaging window and become cleaner;
+  rare or fragile modes are more easily averaged away. So the model looks more precise, but it
+  covers less of the distribution.
+</p>
+
+<p>
+  To isolate this effect, we sweep EMA decay for three diffusion models spanning common input
+  spaces: JiT<sup class="footnote-ref" id="fnref:jit"><a href="#fn:jit">5</a></sup> in pixel space,
+  SiT<sup class="footnote-ref" id="fnref:sit"><a href="#fn:sit">4</a></sup> in latent space, and
+  RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup> in representation space. Each sweep also
+  includes the raw online checkpoint.
+</p>
+
+<p>
+  The RAE sweep makes the mechanism visible. Every point below comes from the same online training trajectory; only the EMA decay used to form the checkpoint changes.
+</p>
+
+<figure class="post-figure">
+  <img src="/images/blog/ema/rae_precision_recall.png"
+       alt="Precision-recall trade-off curve for the RAE EMA sweep at 80 epochs: each point is one EMA decay value; as decay grows from raw to 0.9999, precision rises and recall falls" />
+  <figcaption>
+    <b>RAE-DiT-XL at 80 epochs: EMA decay changes the precision-recall balance.</b>
+    Each point is the same training run with a different EMA decay. As &beta; grows from raw
+    toward &beta; = 0.9999, precision<sup class="footnote-ref"><a href="#fn:pr">14</a></sup>
+    rises while recall falls.
+  </figcaption>
+</figure>
+
+<p>
+  This is the key mechanism. Moving from raw to &beta; = 0.9999, precision rises from 0.68 to
+  0.79, while recall falls from 0.61 to 0.53. No single decay wins on both axes. EMA does not only
+  smooth optimization noise; it dials the model between fidelity and coverage.
+</p>
+
+<p>
+  The same pattern holds in pixel and latent spaces.
+  JiT and SiT show the same broad direction: as decay grows, precision tends to improve and recall
+  tends to shrink. The exact curve shape differs by model, but the effect is not specific to RAE.
+</p>
+
+<figure class="post-figure">
+  <img src="/images/blog/ema/jit_precision_recall.png"
+       alt="Precision-recall trade-off curve for JiT (pixel space) at 80 epochs: as EMA decay grows, precision generally rises and recall falls" />
+  <figcaption>
+    <b>JiT (pixel space) at 80 epochs: the same precision-up, recall-down pressure.</b>
+    Larger EMA decay pushes samples toward higher precision and lower recall.
+  </figcaption>
+</figure>
+
+<figure class="post-figure">
+  <img src="/images/blog/ema/sit_precision_recall.png"
+       alt="Precision-recall trade-off curve for SiT (latent space) at 90 epochs: EMA decay changes the balance between precision and recall" />
+  <figcaption>
+    <b>SiT (latent space) at 90 epochs, CFG = 1.5: a subtler version of the same trade-off.</b>
+  </figcaption>
+</figure>
+
+<p>
+  This also explains why there is no universally best decay. FID is sensitive to both fidelity and
+  coverage, so it tends to reward a compromise point on the precision-recall curve. Precision-like
+  metrics can prefer larger decays. Recall prefers smaller decays. Once EMA decay moves the
+  precision-recall ratio, different metrics naturally select different decays.
+</p>
+
+<figure class="post-figure">
+  <img src="/images/blog/ema/fid_is_3panel.png"
+       alt="3-panel chart of FID and Inception Score vs EMA decay for RAE-DiT-XL, JiT, and SiT, showing that the FID-best and IS-best EMA decays can differ" />
+  <figcaption>
+    <b>Different metrics prefer different EMA decays.</b>
+    Each panel shows FID (blue, left axis) and Inception Score<sup class="footnote-ref"><a href="#fn:is">13</a></sup>
+    (purple, right axis). Because EMA changes the precision-recall balance, FID, IS, precision,
+    and recall need not agree on the same best decay.
+  </figcaption>
+</figure>
+
+<p>
+  RAE is the cleanest example: FID is best at &beta; = 0.999, while Inception Score keeps improving
+  toward larger decays. JiT is different: &beta; = 0.9995 is best on both FID and IS in this sweep.
+  SiT is milder: FID is nearly flat around the high-decay region, while IS keeps rising. The common
+  lesson is not that one decay is always right. The lesson is that EMA decay changes the
+  distributional trade-off, so the metric decides which decay rate serves best.
+</p>
+
+<h2>Soft Collapse in a 2D Toy</h2>
+
+<p>
+  The ImageNet sweeps show the metric-level effect: larger EMA decay raises precision and reduces
+  recall. The toy example below shows the same effect at the sample level. We use a 2D distribution
+  from AutoGuidance<sup class="footnote-ref" id="fnref:autoguidance"><a href="#fn:autoguidance">15</a></sup>:
+  a tree with dense, popular branches and sparse tail branches. If recall drops, those tail
+  branches should be the first places to disappear.
+</p>
+
+<p>
+  We train one small MLP score model, then compare the raw model with EMA versions at
+  <code>0.99 / 0.997 / 0.998 / 0.999</code>. The first figure is the sweep overview: read it left to
+  right as EMA decay increases.
+</p>
+
+<figure class="post-figure">
+  <img src="/images/blog/ema/soft-overconcentration.jpg" alt="2D toy EMA sweep showing samples and same-seed trajectories concentrating on dominant branches as EMA decay increases" />
+  <figcaption>
+    <b>Increasing EMA decay pulls mass toward the dominant branches.</b>
+    Top: final samples overlaid on the true tree. Bottom: same-seed trajectories, with tail-branch
+    paths highlighted. As decay grows, trajectories that should cover tail branches are pulled
+    back toward the trunk. At 0.999, the averaged model is stale enough that samples
+    start leaving the manifold.
+  </figcaption>
+</figure>
+
+<p>
+  The most useful comparison is not the catastrophic <code>0.999</code> case. It is the softer
+  <code>0.998</code> case: samples still look plausible, but coverage has already changed.
+</p>
+
+<figure class="post-figure">
+  <div class="pair-figure">
+    <div class="col">
+      <div class="label">Raw model</div>
+      <img src="/images/blog/ema/model.jpg" alt="Raw model samples on the tree distribution" />
+    </div>
+    <div class="col">
+      <div class="label">EMA 0.998</div>
+      <img src="/images/blog/ema/ema0998.jpg" alt="EMA 0.998 samples on the tree distribution" />
+    </div>
+  </div>
+  <figcaption>
+    <b>Same seeds, same training run.</b>
+    The red boxes mark sparse tail branches. The raw model covers them more broadly; EMA 0.998
+    concentrates samples along the main trunk and under-covers the tail branches.
+  </figcaption>
+</figure>
+
+<p>
+  This is not a hard collapse to a single mode. It is softer: EMA over-concentrates the model on
+  high-density regions. That explains the precision-recall trade-off from the previous section.
+  Samples can look cleaner because they hug typical patterns more tightly, while rare configurations
+  quietly lose coverage.
+</p>
+
+<h2>Closing Remarks</h2>
+
+<p>
+EMA is easy to trust because it is genuinely useful. It stabilizes sampling, improves raw
+checkpoints, and has become part of the default diffusion training recipe. But the decay rate is
+not just an implementation detail: it changes which checkpoint we evaluate and where the model sits
+on the precision-recall curve.
+</p>
+
+<p>
+<b>Our practical recommendation is simple: report the EMA decay, and treat it as part of the
+evaluation protocol.</b> For short-schedule comparisons,
+fixed-budget FID at 40 or 80 epochs, or EP<sub>FID@k</sub>, matched EMA settings matter. When
+possible, sweep EMA under a shared protocol; at minimum, an early FID number should come with the
+EMA decay that produced it.
+</p>
+
+<p>
+Several questions remain open. Can the precision-recall trade-off be characterized directly from
+how EMA reshapes the score function? Does the optimal &beta; drift predictably with training
+horizon, model size, or guidance scale? If so, adaptive EMA, scheduled EMA, or post-hoc EMA
+methods such as EDM2<sup class="footnote-ref" id="fnref:edm2"><a href="#fn:edm2">16</a></sup>
+could make matched comparisons routine rather than expensive.
+</p>
+
+<section class="footnotes references-section">
+  <h2>References</h2>
+  <ol>
+    <li id="fn:rae">
+      Zheng, Ma, Tong, &amp; Xie.
+      <em>Diffusion Transformers with Representation Autoencoders.</em>
+      ICLR, 2026.
+      <a href="https://arxiv.org/abs/2510.11690">arXiv:2510.11690</a>.
+      <a href="#fnref:rae" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:ncsnv2">
+      Song &amp; Ermon.
+      <em>Improved Techniques for Training Score-Based Generative Models.</em>
+      NeurIPS 2020.
+      <a href="https://arxiv.org/abs/2006.09011">arXiv:2006.09011</a>.
+      <a href="#fnref:ncsnv2" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:dit">
+      Peebles &amp; Xie.
+      <em>Scalable Diffusion Models with Transformers.</em>
+      ICCV 2023.
+      <a href="https://arxiv.org/abs/2212.09748">arXiv:2212.09748</a>.
+      <a href="#fnref:dit" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:sit">
+      Ma, Goldstein, Albergo, Boffi, Vanden-Eijnden, &amp; Xie.
+      <em>SiT: Exploring Flow and Diffusion-based Generative Models with Scalable Interpolant Transformers.</em>
+      ECCV 2024.
+      <a href="https://arxiv.org/abs/2401.08740">arXiv:2401.08740</a>.
+      <a href="#fnref:sit" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:jit">
+      Li &amp; He. <em>Back to Basics: Let Denoising Generative Models Denoise.</em> CVPR 2026.
+      <a href="https://arxiv.org/abs/2511.13720">arXiv:2511.13720</a>.
+      <a href="#fnref:jit" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:repa">
+      Yu, Kwak, Jang, Jeong, Huang, Shin, &amp; Xie.
+      <em>Representation Alignment for Generation: Training Diffusion Transformers is Easier than You Think.</em>
+      ICLR 2025.
+      <a href="https://arxiv.org/abs/2410.06940">arXiv:2410.06940</a>.
+      <a href="#fnref:repa" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:lightningdit">
+      Yao, Yang, &amp; Wang.
+      <em>Reconstruction vs. Generation: Taming Optimization Dilemma in Latent Diffusion Models.</em>
+      CVPR 2025.
+      <a href="https://arxiv.org/abs/2501.01423">arXiv:2501.01423</a>.
+      <a href="#fnref:lightningdit" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:rjf">
+      Kumar &amp; Patel.
+      <em>Learning on the Manifold: Unlocking Standard Diffusion Transformers with Representation Encoders.</em>
+      arXiv preprint, 2026.
+      <a href="https://arxiv.org/abs/2602.10099">arXiv:2602.10099</a>.
+      <a href="#fnref:rjf" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:fae">
+      Gao, Chen, Chen, &amp; Gu.
+      <em>One Layer Is Enough: Adapting Pretrained Visual Encoders for Image Generation.</em>
+      arXiv preprint, 2025.
+      <a href="https://arxiv.org/abs/2512.07829">arXiv:2512.07829</a>.
+      <a href="#fnref:fae" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:raev2">
+      Singh, Zheng, Wu, Zhang, Shechtman, &amp; Xie.
+      <em>Improved Baselines with Representation Autoencoders.</em>
+      arXiv preprint, 2026.
+      <a href="https://arxiv.org/abs/2605.18324">arXiv:2605.18324</a>.
+      <a href="#fnref:raev2" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:pae">
+      Yue, Hu, Chen, Zhang, Pan, Liu, Wang, Lan, Zhu, Zheng, &amp; Wang.
+      <em>What Matters for Diffusion-Friendly Latent Manifold? Prior-Aligned Autoencoders for Latent Diffusion.</em>
+      arXiv preprint, 2026.
+      <a href="https://arxiv.org/abs/2605.07915">arXiv:2605.07915</a>.
+      <a href="#fnref:pae" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:fid">
+      Heusel, Ramsauer, Unterthiner, Nessler, &amp; Hochreiter.
+      <em>GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium.</em>
+      NeurIPS 2017.
+      <a href="https://arxiv.org/abs/1706.08500">arXiv:1706.08500</a>.
+      <a href="#fnref:fid" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:is">
+      Salimans, Goodfellow, Zaremba, Cheung, Radford, &amp; Chen.
+      <em>Improved Techniques for Training GANs.</em>
+      NeurIPS 2016.
+      <a href="https://arxiv.org/abs/1606.03498">arXiv:1606.03498</a>.
+      <a href="#fnref:is" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:pr">
+      Kynkäänniemi, Karras, Laine, Lehtinen, &amp; Aila.
+      <em>Improved Precision and Recall Metric for Assessing Generative Models.</em>
+      NeurIPS 2019.
+      <a href="https://arxiv.org/abs/1904.06991">arXiv:1904.06991</a>.
+      <a href="#fnref:pr" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:autoguidance">
+      Karras, Aittala, Kynkäänniemi, Lehtinen, Aila, &amp; Laine.
+      <em>Guiding a Diffusion Model with a Bad Version of Itself.</em>
+      NeurIPS 2024.
+      <a href="https://arxiv.org/abs/2406.02507">arXiv:2406.02507</a>.
+      <a href="#fnref:autoguidance" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:edm2">
+      Karras, Aittala, Lehtinen, Hellsten, Aila, &amp; Laine.
+      <em>Analyzing and Improving the Training Dynamics of Diffusion Models.</em>
+      CVPR 2024.
+      <a href="https://arxiv.org/abs/2312.02696">arXiv:2312.02696</a>.
+      <a href="#fnref:edm2" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+  </ol>
+</section>
+
+<section class="end-section">
+  <h4>Acknowledgments</h4>
+
+  <p>
+  We thank Tsu-Jui Fu, Liang-Chieh Chen, and Zhe Gan for fruitful discussions.
+  We acknowledge the Center for Research Computing (CRC) at Rice University for providing technical
+  support and research computing services.
+  </p>
+</section>
+
+<section class="end-section cite-section">
+  <h4>Please Cite</h4>
+  <p>If this post is useful for your work, please cite it as:</p>
+  <pre class="bibtex"><code>@misc{wang2026ema,
+  title = {EMA: A Quiet Hyperparameter That Moves Diffusion Leaderboards},
+  author = {Wang, Yifei and Wu, Xiaoyu and Wei, Chen},
+  year = {2026},
+  url = {https://a-little-hoof.github.io/blog/2026/05/ema-in-diffusion-training/},
+  note = {Blog post}
+}</code></pre>
+</section>
+</article>
+
+<!-- MathJax: enables LaTeX math via $$...$$ display blocks. Loaded after the article to avoid async typesetting races. -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    packages: { '[+]': ['noerrors'] }
+  },
+  loader: { load: ['[tex]/noerrors'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" id="MathJax-script" defer></script>
+
+<script>
+/* Attach structured reference-list cards to inline citation badges. */
+(function () {
+  var refs = new Map();
+
+  function clean(text) {
+    return (text || '').replace(/\s+/g, ' ').trim().replace(/^[,.\s]+|[,.\s]+$/g, '');
+  }
+
+  function textBefore(parent, anchor) {
+    var parts = [];
+    for (var node = parent.firstChild; node && node !== anchor; node = node.nextSibling) {
+      if (node.nodeType === Node.TEXT_NODE) parts.push(node.textContent);
+      else if (!node.classList || !node.classList.contains('footnote-back')) parts.push(node.textContent);
+    }
+    return clean(parts.join(' '));
+  }
+
+  function textBetween(start, end) {
+    var parts = [];
+    for (var node = start.nextSibling; node && node !== end; node = node.nextSibling) {
+      if (node.nodeType === Node.TEXT_NODE) parts.push(node.textContent);
+      else if (!node.classList || !node.classList.contains('footnote-back')) parts.push(node.textContent);
+    }
+    return clean(parts.join(' '));
+  }
+
+  function makeRow(value) {
+    var row = document.createElement('span');
+    var valueEl = document.createElement('span');
+    row.className = 'cite-popover__row';
+    valueEl.className = 'cite-popover__value';
+    valueEl.textContent = value || '-';
+    row.appendChild(valueEl);
+    return row;
+  }
+
+  document.querySelectorAll('.references-section li[id^="fn:"]').forEach(function (ref) {
+    var titleEl = ref.querySelector('em');
+    var sourceLink = Array.from(ref.querySelectorAll('a')).find(function (link) {
+      return !link.classList.contains('footnote-back');
+    });
+    var backLink = ref.querySelector('.footnote-back');
+    var authors = titleEl ? textBefore(ref, titleEl) : '';
+    var title = titleEl ? clean(titleEl.textContent) : clean(ref.textContent);
+    var venue = titleEl ? textBetween(titleEl, sourceLink || backLink) : '';
+    var arxiv = sourceLink ? clean(sourceLink.textContent) : '';
+    refs.set('#' + ref.id, {
+      authors: authors,
+      title: title,
+      venue: venue,
+      arxiv: arxiv
+    });
+  });
+
+  document.querySelectorAll('sup.footnote-ref a[href^="#fn:"]').forEach(function (link) {
+    var ref = refs.get(link.getAttribute('href'));
+    if (!ref) return;
+    var card = document.createElement('span');
+    card.className = 'cite-popover';
+    card.setAttribute('aria-hidden', 'true');
+    card.appendChild(makeRow(ref.authors));
+    card.appendChild(makeRow(ref.title));
+    card.appendChild(makeRow(ref.venue));
+    link.parentNode.querySelectorAll('.cite-popover').forEach(function (oldCard) { oldCard.remove(); });
+    link.parentNode.appendChild(card);
+    link.setAttribute('aria-label', 'Citation: ' + [ref.authors, ref.title, ref.venue, ref.arxiv].filter(Boolean).join('. '));
+  });
+}());
+</script>
+
+<script>
+/* Auto-build the right-side TOC from h2 headings in the post and run a
+   scroll-spy. Uses block comments only — Jekyll compress_html strips
+   newlines, which would turn // line comments into "everything is a comment". */
+(function () {
+  var article = document.querySelector('.post-wrap');
+  var toc = document.querySelector('#toc');
+  if (!article || !toc) return;
+  var headings = Array.from(article.querySelectorAll('h2')).filter(function (h) { return h.dataset.tocSkip !== 'true'; });
+  if (headings.length === 0) { toc.style.display = 'none'; return; }
+  function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9 \-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60); }
+  var linkByHeading = new Map();
+  headings.forEach(function (h, i) {
+    if (!h.id) h.id = slugify(h.textContent) || ('sec-' + (i + 1));
+    var a = document.createElement('a');
+    a.href = '#' + h.id;
+    a.textContent = h.textContent;
+    a.addEventListener('click', function () {
+      document.querySelectorAll('#toc a').forEach(function (l) { l.classList.remove('toc-active'); });
+      a.classList.add('toc-active');
+    });
+    toc.appendChild(a);
+    linkByHeading.set(h, a);
+  });
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('#toc a').forEach(function (l) { l.classList.remove('toc-active'); });
+        linkByHeading.get(entry.target).classList.add('toc-active');
+      }
+    });
+  }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+  headings.forEach(function (h) { observer.observe(h); });
+})();
+</script>
+  </main>
+</body>
+</html>
