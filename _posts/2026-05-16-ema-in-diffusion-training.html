@@ -726,8 +726,8 @@ hidden: false
   convergence, how much can EMA decay change the comparison? Second, what does EMA decay change
   inside the learned distribution? We study three settings: representation-space diffusion
   (RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup>), pixel-space diffusion
-  (JiT<sup class="footnote-ref"><a href="#fn:jit">5</a></sup>), and latent-space diffusion
-  (SiT<sup class="footnote-ref"><a href="#fn:sit">4</a></sup>).
+  (JiT<sup class="footnote-ref"><a href="#fn:jit">2</a></sup>), and latent-space diffusion
+  (SiT<sup class="footnote-ref"><a href="#fn:sit">3</a></sup>).
 </p>
 
 <div class="callout">
@@ -756,7 +756,7 @@ like harmless smoothing, and historically that is exactly why EMA became popular
 
 <p>
 The NCSNv2 example below shows the original motivation. EMA was introduced to diffusion models as
-a fix for a very <em>visible</em> failure mode: <em>color shift</em><sup class="footnote-ref" id="fnref:ncsnv2"><a href="#fn:ncsnv2">2</a></sup>.
+a fix for a very <em>visible</em> failure mode: <em>color shift</em><sup class="footnote-ref" id="fnref:ncsnv2"><a href="#fn:ncsnv2">4</a></sup>.
 Without EMA, samples near the end of training drifted in color statistics, even when the score loss
 kept decreasing. The EMA checkpoint smoothed the trajectory and brought the sample statistics back
 in line.
@@ -771,7 +771,7 @@ in line.
     oscillates wildly in FID and produces visibly color-shifted, off-distribution samples;
     the EMA-averaged checkpoint (orange) trains stably and recovers correct image statistics.
     Figure taken from Song &amp; Ermon, <em>Improved Techniques for Training Score-Based
-    Generative Models</em> (NeurIPS 2020)<sup class="footnote-ref"><a href="#fn:ncsnv2">2</a></sup>;
+    Generative Models</em> (NeurIPS 2020)<sup class="footnote-ref"><a href="#fn:ncsnv2">4</a></sup>;
     credit to the original authors.
   </figcaption>
 </figure>
@@ -815,7 +815,7 @@ very different evaluated checkpoints.
   </thead>
   <tbody>
     <tr>
-      <td>DiT<sup class="footnote-ref" id="fnref:dit"><a href="#fn:dit">3</a></sup></td>
+      <td>DiT<sup class="footnote-ref" id="fnref:dit"><a href="#fn:dit">5</a></sup></td>
       <td>-</td>
       <td>0.9999</td>
       <td>39</td>
@@ -824,8 +824,8 @@ very different evaluated checkpoints.
       <td>Yes</td>
     </tr>
     <tr>
-      <td>SiT<sup class="footnote-ref"><a href="#fn:sit">4</a></sup></td>
-      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">3</a></sup></td>
+      <td>SiT<sup class="footnote-ref"><a href="#fn:sit">3</a></sup></td>
+      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">5</a></sup></td>
       <td>0.9999</td>
       <td>34</td>
       <td>15</td>
@@ -833,8 +833,8 @@ very different evaluated checkpoints.
       <td>Yes</td>
     </tr>
     <tr>
-      <td>JiT<sup class="footnote-ref"><a href="#fn:jit">5</a></sup></td>
-      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">3</a></sup></td>
+      <td>JiT<sup class="footnote-ref"><a href="#fn:jit">2</a></sup></td>
+      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">5</a></sup></td>
       <td>0.9999</td>
       <td>-</td>
       <td>42.9</td>
@@ -843,7 +843,7 @@ very different evaluated checkpoints.
     </tr>
     <tr>
       <td>REPA<sup class="footnote-ref" id="fnref:repa"><a href="#fn:repa">6</a></sup></td>
-      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">3</a></sup>, SiT<sup class="footnote-ref"><a href="#fn:sit">4</a></sup></td>
+      <td>DiT<sup class="footnote-ref"><a href="#fn:dit">5</a></sup>, SiT<sup class="footnote-ref"><a href="#fn:sit">3</a></sup></td>
       <td>0.9999</td>
       <td>10.5</td>
       <td>7.9</td>
@@ -978,8 +978,8 @@ very different evaluated checkpoints.
 
 <p>
   To isolate this effect, we sweep EMA decay for three diffusion models spanning common input
-  spaces: JiT<sup class="footnote-ref" id="fnref:jit"><a href="#fn:jit">5</a></sup> in pixel space,
-  SiT<sup class="footnote-ref" id="fnref:sit"><a href="#fn:sit">4</a></sup> in latent space, and
+  spaces: JiT<sup class="footnote-ref" id="fnref:jit"><a href="#fn:jit">2</a></sup> in pixel space,
+  SiT<sup class="footnote-ref" id="fnref:sit"><a href="#fn:sit">3</a></sup> in latent space, and
   RAE<sup class="footnote-ref"><a href="#fn:rae">1</a></sup> in representation space. Each sweep also
   includes the raw online checkpoint.
 </p>
@@ -994,7 +994,7 @@ very different evaluated checkpoints.
   <figcaption>
     <b>RAE-DiT-XL at 80 epochs: EMA decay changes the precision-recall balance.</b>
     Each point is the same training run with a different EMA decay. As &beta; grows from raw
-    toward &beta; = 0.9999, precision<sup class="footnote-ref"><a href="#fn:pr">14</a></sup>
+    toward &beta; = 0.9999, precision<sup class="footnote-ref"><a href="#fn:pr">12</a></sup>
     rises while recall falls.
   </figcaption>
 </figure>
@@ -1059,7 +1059,7 @@ very different evaluated checkpoints.
 <p>
   The ImageNet sweeps show the metric-level effect: larger EMA decay raises precision and reduces
   recall. The toy example below shows the same effect at the sample level. We use a 2D distribution
-  from AutoGuidance<sup class="footnote-ref" id="fnref:autoguidance"><a href="#fn:autoguidance">15</a></sup>:
+  from AutoGuidance<sup class="footnote-ref" id="fnref:autoguidance"><a href="#fn:autoguidance">14</a></sup>:
   a tree with dense, popular branches and sparse tail branches. If recall drops, those tail
   branches should be the first places to disappear.
 </p>
@@ -1132,7 +1132,7 @@ EMA decay that produced it.
 Several questions remain open. Can the precision-recall trade-off be characterized directly from
 how EMA reshapes the score function? Does the optimal &beta; drift predictably with training
 horizon, model size, or guidance scale? If so, adaptive EMA, scheduled EMA, or post-hoc EMA
-methods such as EDM2<sup class="footnote-ref" id="fnref:edm2"><a href="#fn:edm2">16</a></sup>
+methods such as EDM2<sup class="footnote-ref" id="fnref:edm2"><a href="#fn:edm2">15</a></sup>
 could make matched comparisons routine rather than expensive.
 </p>
 
@@ -1145,6 +1145,18 @@ could make matched comparisons routine rather than expensive.
       ICLR, 2026.
       <a href="https://arxiv.org/abs/2510.11690">arXiv:2510.11690</a>.
       <a href="#fnref:rae" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:jit">
+      Li &amp; He. <em>Back to Basics: Let Denoising Generative Models Denoise.</em> CVPR 2026.
+      <a href="https://arxiv.org/abs/2511.13720">arXiv:2511.13720</a>.
+      <a href="#fnref:jit" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:sit">
+      Ma, Goldstein, Albergo, Boffi, Vanden-Eijnden, &amp; Xie.
+      <em>SiT: Exploring Flow and Diffusion-based Generative Models with Scalable Interpolant Transformers.</em>
+      ECCV 2024.
+      <a href="https://arxiv.org/abs/2401.08740">arXiv:2401.08740</a>.
+      <a href="#fnref:sit" class="footnote-back" title="back to text">↩︎</a>
     </li>
     <li id="fn:ncsnv2">
       Song &amp; Ermon.
@@ -1159,18 +1171,6 @@ could make matched comparisons routine rather than expensive.
       ICCV 2023.
       <a href="https://arxiv.org/abs/2212.09748">arXiv:2212.09748</a>.
       <a href="#fnref:dit" class="footnote-back" title="back to text">↩︎</a>
-    </li>
-    <li id="fn:sit">
-      Ma, Goldstein, Albergo, Boffi, Vanden-Eijnden, &amp; Xie.
-      <em>SiT: Exploring Flow and Diffusion-based Generative Models with Scalable Interpolant Transformers.</em>
-      ECCV 2024.
-      <a href="https://arxiv.org/abs/2401.08740">arXiv:2401.08740</a>.
-      <a href="#fnref:sit" class="footnote-back" title="back to text">↩︎</a>
-    </li>
-    <li id="fn:jit">
-      Li &amp; He. <em>Back to Basics: Let Denoising Generative Models Denoise.</em> CVPR 2026.
-      <a href="https://arxiv.org/abs/2511.13720">arXiv:2511.13720</a>.
-      <a href="#fnref:jit" class="footnote-back" title="back to text">↩︎</a>
     </li>
     <li id="fn:repa">
       Yu, Kwak, Jang, Jeong, Huang, Shin, &amp; Xie.
@@ -1214,12 +1214,12 @@ could make matched comparisons routine rather than expensive.
       <a href="https://arxiv.org/abs/2605.07915">arXiv:2605.07915</a>.
       <a href="#fnref:pae" class="footnote-back" title="back to text">↩︎</a>
     </li>
-    <li id="fn:fid">
-      Heusel, Ramsauer, Unterthiner, Nessler, &amp; Hochreiter.
-      <em>GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium.</em>
-      NeurIPS 2017.
-      <a href="https://arxiv.org/abs/1706.08500">arXiv:1706.08500</a>.
-      <a href="#fnref:fid" class="footnote-back" title="back to text">↩︎</a>
+    <li id="fn:pr">
+      Kynkäänniemi, Karras, Laine, Lehtinen, &amp; Aila.
+      <em>Improved Precision and Recall Metric for Assessing Generative Models.</em>
+      NeurIPS 2019.
+      <a href="https://arxiv.org/abs/1904.06991">arXiv:1904.06991</a>.
+      <a href="#fnref:pr" class="footnote-back" title="back to text">↩︎</a>
     </li>
     <li id="fn:is">
       Salimans, Goodfellow, Zaremba, Cheung, Radford, &amp; Chen.
@@ -1227,13 +1227,6 @@ could make matched comparisons routine rather than expensive.
       NeurIPS 2016.
       <a href="https://arxiv.org/abs/1606.03498">arXiv:1606.03498</a>.
       <a href="#fnref:is" class="footnote-back" title="back to text">↩︎</a>
-    </li>
-    <li id="fn:pr">
-      Kynkäänniemi, Karras, Laine, Lehtinen, &amp; Aila.
-      <em>Improved Precision and Recall Metric for Assessing Generative Models.</em>
-      NeurIPS 2019.
-      <a href="https://arxiv.org/abs/1904.06991">arXiv:1904.06991</a>.
-      <a href="#fnref:pr" class="footnote-back" title="back to text">↩︎</a>
     </li>
     <li id="fn:autoguidance">
       Karras, Aittala, Kynkäänniemi, Lehtinen, Aila, &amp; Laine.
@@ -1248,6 +1241,13 @@ could make matched comparisons routine rather than expensive.
       CVPR 2024.
       <a href="https://arxiv.org/abs/2312.02696">arXiv:2312.02696</a>.
       <a href="#fnref:edm2" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:fid">
+      Heusel, Ramsauer, Unterthiner, Nessler, &amp; Hochreiter.
+      <em>GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium.</em>
+      NeurIPS 2017.
+      <a href="https://arxiv.org/abs/1706.08500">arXiv:1706.08500</a>.
+      <a href="#fnref:fid" class="footnote-back" title="back to text">↩︎</a>
     </li>
   </ol>
 </section>
