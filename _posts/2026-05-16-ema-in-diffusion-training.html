@@ -1133,7 +1133,9 @@ Several questions remain open. Can the precision-recall trade-off be characteriz
 how EMA reshapes the score function? Does the optimal &beta; drift predictably with training
 horizon, model size, or guidance scale? If so, adaptive EMA, scheduled EMA, or post-hoc EMA
 methods such as EDM2<sup class="footnote-ref" id="fnref:edm2"><a href="#fn:edm2">15</a></sup>
-could make matched comparisons routine rather than expensive.
+could make matched comparisons routine rather than expensive. Until then, the cheapest safeguard
+is also the simplest: whenever you report a short-schedule number, report the EMA decay that
+produced it.
 </p>
 
 <section class="footnotes references-section">
