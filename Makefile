@@ -23,11 +23,11 @@ install: ## Install Ruby gem dependencies into vendor/bundle (run once)
 	bundle install
 
 preview: ## Local preview with drafts + future posts + livereload (private to localhost)
-	bundle exec jekyll serve --drafts --future --livereload \
+	bundle exec jekyll serve --drafts --future --force_polling --livereload \
 	  --port $(PORT) --config _config.yml,_config.dev.yml
 
 serve: ## Local preview without drafts (what visitors will see)
-	bundle exec jekyll serve --livereload \
+	bundle exec jekyll serve --force_polling --livereload \
 	  --port $(PORT) --config _config.yml,_config.dev.yml
 
 build: ## One-off site build into _site/ (no server)
