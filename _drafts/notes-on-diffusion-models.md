@@ -2127,6 +2127,37 @@ $$
   </div>
 </details>
 
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>Q5.</strong> Why do people use DPM-Solver less for flow matching models?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>DPM-Solver is designed for diffusion probability flow ODEs. It uses the special diffusion parameterization to split the ODE into a known linear part and a learned noise-prediction part:</p>
+
+$$
+\frac{dx_t}{dt}
+=
+\underbrace{f(t)x_t}_{\text{known linear part}}
++
+\underbrace{\text{learned denoising term}}_{\epsilon_\theta\ \text{or score term}}.
+$$
+
+    <p>Because the linear part is known, DPM-Solver can integrate that part analytically and only approximate the learned term. This is very useful for DDPM/score-based models, where the sampler is built around the noise schedule, log-SNR time, and a noise or score prediction network.</p>
+
+    <p>Flow matching changes the setup. The model is trained to directly predict a velocity field:</p>
+
+$$
+\frac{dx_t}{dt}
+=
+v_\theta(x_t,t).
+$$
+
+    <p>So there is no special diffusion linear term that must be separated out. The learned object is already the ODE velocity. This makes generic ODE solvers such as Euler, midpoint, Heun, or Runge-Kutta natural choices.</p>
+
+    <p>In short: DPM-Solver is powerful because it exploits diffusion-specific structure. Flow matching removes much of that structure by directly learning the transport velocity, so the advantage of a diffusion-specific solver becomes less central.</p>
+  </div>
+</details>
+
 ## Design Space
 > How to define a diffusion model?
 
@@ -2160,6 +2191,406 @@ $$
   </div>
 </div>
 
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> Prefixed noise schedule</span>
+  </summary>
+  <div class="ddim-block__content">
+    <figure>
+      <img src="/images/blog/diffusion/snr-linear-cosine-schedule.png" alt="Linear versus cosine noise schedule, cumulative signal, and signal-to-noise ratio curves" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        Linear and cosine schedules produce different \(\beta_t\), \(\bar{\alpha}_t\), and SNR trajectories.
+      </figcaption>
+    </figure>
+
+    <p>The three y-axes correspond to the quantities in the forward noising process:</p>
+
+$$
+q(x_t \mid x_{t-1})
+=
+\mathcal{N}\!\left(x_t;\sqrt{1-\beta_t}\,x_{t-1},\beta_t I\right),
+$$
+
+$$
+\alpha_t = 1-\beta_t,
+\qquad
+\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s,
+$$
+
+$$
+q(x_t \mid x_0)
+=
+\mathcal{N}\!\left(x_t;\sqrt{\bar{\alpha}_t}\,x_0,(1-\bar{\alpha}_t)I\right),
+\qquad
+x_t
+=
+\sqrt{\bar{\alpha}_t}x_0
++
+\sqrt{1-\bar{\alpha}_t}\epsilon,
+$$
+
+$$
+\mathrm{SNR}(t)
+=
+\frac{\text{signal variance}}{\text{noise variance}}
+=
+\frac{\bar{\alpha}_t}{1-\bar{\alpha}_t},
+\qquad
+\mathrm{SNR}_{\mathrm{dB}}(t)
+=
+10\log_{10}\!\left(\frac{\bar{\alpha}_t}{1-\bar{\alpha}_t}\right).
+$$
+
+    <p><strong>Linear scheduler</strong> chooses the noise rates \(\beta_t\) by linear interpolation:</p>
+
+$$
+\beta_t
+=
+\beta_{\min}
++
+\frac{t-1}{T-1}
+\left(\beta_{\max}-\beta_{\min}\right).
+$$
+
+    <p><strong>Cosine scheduler</strong> instead defines the cumulative signal \(\bar{\alpha}_t\) with a cosine-shaped curve, then derives \(\beta_t\) from it:</p>
+
+$$
+\bar{\alpha}_t
+=
+\frac{f(t)}{f(0)},
+\qquad
+f(t)
+=
+\cos^2\!\left(
+\frac{t/T+s}{1+s}\cdot\frac{\pi}{2}
+\right),
+$$
+
+$$
+\beta_t
+=
+1-\frac{\bar{\alpha}_t}{\bar{\alpha}_{t-1}}.
+$$
+
+    <figure>
+      <img src="/images/blog/diffusion/snr-forward-linear-cosine.png" alt="Forward noising comparison for linear and cosine schedules across timesteps" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        The cosine schedule preserves visible signal longer, while the linear schedule destroys the image earlier.
+      </figcaption>
+    </figure>
+
+    <p>At small \(t\), SNR is high: \(x_t\) still looks close to data. At large \(t\), SNR is low: \(x_t\) is mostly noise. A linear \(\beta_t\) schedule can make SNR drop too aggressively, so many late timesteps contain almost no useful signal. A cosine scheduler is designed to control the SNR decay more smoothly, preserving signal for longer and making the denoising tasks across timesteps better balanced.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> Training noise sampling schedule</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Variational Diffusion Models<sup class="footnote-ref" id="fnref:vdm"><a href="#fn:vdm">5</a></sup> frame diffusion training as likelihood-based variational learning. Their key observation is that the continuous-time VLB can be written in terms of the signal-to-noise ratio, so the noise schedule can be optimized jointly with the denoising model. In practice, they learn a log-SNR schedule that reduces the variance of the VLB estimator, making optimization more stable and efficient.</p>
+
+    <figure>
+      <img src="/images/blog/diffusion/vdm-learned-snr-schedule.png" alt="Learned log-SNR schedule and variance of VLB estimate from Variational Diffusion Models" style="width: 100%; max-width: 720px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        The learned log-SNR schedule lowers the variance of the VLB estimate compared with hand-designed schedules.
+      </figcaption>
+    </figure>
+
+    <p>After choosing the noising process, training still needs to decide which timestep \(t\) to sample for each data point. The simplest choice is uniform sampling:</p>
+
+$$
+t \sim \mathrm{Uniform}\{1,\ldots,T\}.
+$$
+
+    <p>But not every timestep is equally useful. Some noise levels may be too easy, while others may dominate the gradient. A more general view is to train under a timestep sampling distribution:</p>
+
+$$
+t \sim p_{\mathrm{train}}(t),
+\qquad
+\mathcal{L}
+=
+\mathbb{E}_{t \sim p_{\mathrm{train}},x_0,\epsilon}
+\left[
+w(t)
+\left\|
+\epsilon-\epsilon_\theta(x_t,t)
+\right\|_2^2
+\right].
+$$
+
+    <p>If the schedule itself is learned, one convenient parameterization is the log-SNR curve:</p>
+
+$$
+\gamma_\eta(t)
+=
+\log \mathrm{SNR}_\eta(t)
+=
+\log\frac{\bar{\alpha}_\eta(t)}{1-\bar{\alpha}_\eta(t)}.
+$$
+
+    <p>Once \(\gamma_\eta(t)\) is learned, it determines the signal and noise scales:</p>
+
+$$
+\bar{\alpha}_\eta(t)
+=
+\mathrm{sigmoid}\!\left(\gamma_\eta(t)\right),
+\qquad
+1-\bar{\alpha}_\eta(t)
+=
+\mathrm{sigmoid}\!\left(-\gamma_\eta(t)\right).
+$$
+
+$$
+x_t
+=
+\sqrt{\bar{\alpha}_\eta(t)}x_0
++
+\sqrt{1-\bar{\alpha}_\eta(t)}\epsilon.
+$$
+
+    <p>The key idea is that the model does not only care what noise levels exist; it also cares how often training visits each noise level.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Loss weighting w.r.t. time</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Even with the same timestep sampler, we can change how much each timestep contributes to the objective by adding a time-dependent weight:</p>
+
+$$
+\mathcal{L}
+=
+\mathbb{E}_{t,x_0,\epsilon}
+\left[
+w(t)
+\left\|
+\epsilon-\epsilon_\theta(x_t,t)
+\right\|_2^2
+\right].
+$$
+
+    <p>Another equivalent view is: sample the more difficult timesteps more frequently during training time. If a certain noise level produces larger error, we can either increase its loss weight \(w(t)\), or sample that \(t\) more often through \(p_{\mathrm{train}}(t)\).</p>
+
+    <figure>
+      <img src="/images/blog/diffusion/loss-weighting-time-sampling.png" alt="Loss as a function of noise scale with a sampling distribution over sigma" style="width: 100%; max-width: 560px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        Observed initial (green) and final loss per noise level, representative of the 32×32 (blue) and 64×64 (orange) models. The shaded regions represent the standard deviation over 10k random samples. Our proposed training sample density is shown by the dashed red curve.
+      </figcaption>
+    </figure>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>4.</strong> Reparameterization</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>The same noised sample can be written as a mixture of clean signal and noise:</p>
+
+$$
+x_t
+=
+\alpha_t x_0+\sigma_t\epsilon.
+$$
+
+    <p>So the denoiser can be trained to predict different but equivalent targets:</p>
+
+$$
+x_{0,\theta}(x_t,t),
+\qquad
+\epsilon_\theta(x_t,t),
+\qquad
+v_\theta(x_t,t).
+$$
+
+$$
+\begin{array}{c|c|c}
+\textbf{Prediction target}
+&
+\textbf{Easy regime}
+&
+\textbf{Hard regime}
+\\
+\hline
+x_{0,\theta}(x_t,t)
+&
+\text{low noise / high SNR}
+&
+\text{high noise / low SNR}
+\\
+\epsilon_\theta(x_t,t)
+&
+\text{high noise / low SNR}
+&
+\text{low noise / high SNR}
+\\
+v_\theta(x_t,t)
+&
+\text{balanced}
+&
+\text{balanced}
+\end{array}
+$$
+
+    <p>Progressive Distillation for Fast Sampling of Diffusion Models<sup class="footnote-ref" id="fnref:progressive-distillation"><a href="#fn:progressive-distillation">6</a></sup> uses velocity prediction as a better-balanced parameterization:</p>
+
+$$
+v
+=
+\alpha_t\epsilon-\sigma_t x_0.
+$$
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>5.</strong> Input/output scaling</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>At different noise levels, \(x_t\) can have different magnitudes. Input/output scaling normalizes the signal seen by the network and rescales the prediction back to the desired target:</p>
+
+$$
+\hat{x}_t
+=
+c_{\mathrm{in}}(t)x_t,
+\qquad
+\hat{y}_\theta
+=
+c_{\mathrm{out}}(t)F_\theta(\hat{x}_t,t).
+$$
+
+    <p>This is a model design choice: the mathematical diffusion process can be fixed, while the neural network interface is rescaled for easier learning.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>6.</strong> How to do time conditioning</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>The denoiser needs to know the current noise level. Instead of feeding raw \(t\), many models embed either \(t\), \(\sigma_t\), or log-SNR:</p>
+
+$$
+\lambda_t
+=
+\log\frac{\alpha_t}{\sigma_t},
+\qquad
+e_t
+=
+\mathrm{Embed}(t)
+\quad\text{or}\quad
+\mathrm{Embed}(\lambda_t).
+$$
+
+    <p>The embedding can be injected through additive bias, adaptive normalization, or attention conditioning.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>7.</strong> Solver</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>See sampler section.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>8.</strong> Sampling-time noise schedule</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>The schedule used during sampling does not have to visit every training timestep. In EDM, Karras et al.<sup class="footnote-ref" id="fnref:edm"><a href="#fn:edm">7</a></sup> study this as a discretization problem: for a fixed number of sampling steps, choose the noise levels \(\{\sigma_i\}\) so the numerical solver has smaller truncation error. A more detailed analysis can be found in Appendix D.1 of EDM.</p>
+
+$$
+\sigma_0=\sigma_{\max}
+>
+\sigma_1
+>
+\cdots
+>
+\sigma_N=0.
+$$
+
+    <p>A convenient choice is to sample uniformly after applying a polynomial warp. For \(i<N\),</p>
+
+$$
+\sigma_i
+=
+\left(
+\sigma_{\max}^{1/\rho}
++
+\frac{i}{N-1}
+\left(
+\sigma_{\min}^{1/\rho}
+-
+\sigma_{\max}^{1/\rho}
+\right)
+\right)^\rho,
+\qquad
+\sigma_N=0.
+$$
+
+    <p>When \(\rho=1\), this is uniform spacing in \(\sigma\). As \(\rho\) increases, more sampling points are allocated to low-noise levels, where Euler and Heun steps can otherwise accumulate larger visible error.</p>
+
+    <figure>
+      <img src="/images/blog/diffusion/sampling-noise-rho-schedule.png" alt="Truncation error and FID for different polynomial noise schedules" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        Different \(\rho\) values redistribute sampling steps across noise levels. Larger \(\rho\) places more steps near low noise; the right plot shows that this affects FID.
+      </figcaption>
+    </figure>
+
+    <p>The design question is therefore not just “how many steps?”, but also “where should those steps be placed?” A good sampling-time schedule spends more resolution where solver error matters most.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>9.</strong> Number of time steps</span>
+  </summary>
+  <div class="ddim-block__content">
+    <table style="width: 100%; border-collapse: collapse; margin: 0.9rem 0; font-size: 0.95rem;">
+      <thead>
+        <tr>
+          <th style="border-bottom: 1px solid #d6dde3; padding: 0.45rem; text-align: left;">Model / sampler family</th>
+          <th style="border-bottom: 1px solid #d6dde3; padding: 0.45rem; text-align: left;">Typical steps</th>
+          <th style="border-bottom: 1px solid #d6dde3; padding: 0.45rem; text-align: left;">Use case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">Original DDPM-style ancestral sampling</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">hundreds to \(1000\)</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">slow reference sampling</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">DDIM / PLMS / classic Stable Diffusion samplers</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">\(20\)-\(50\)</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">standard image generation</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">DPM-Solver / DPM++ / Euler / Heun</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">\(10\)-\(30\)</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">fast high-quality sampling</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">Flow-matching / rectified-flow image models</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">\(20\)-\(50\)</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">current large text-to-image models</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.45rem;">Distilled / turbo / few-step models</td>
+          <td style="padding: 0.45rem;">\(1\)-\(8\)</td>
+          <td style="padding: 0.45rem;">real-time or interactive generation</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</details>
+
 ## Architecture
 > Coding part.
 
@@ -2178,11 +2609,10 @@ $$
 
 ### Trajectory distillation
 
-## Image and Video Diffusion Models
+## A industry level text-to-image diffusion pipeline
+> Study notes on Krea 2 Technical Report<sup class="footnote-ref" id="fnref:krea2"><a href="#fn:krea2">8</a></sup>
 
-### Image Diffusion Models
-
-### Video Diffusion Models
+## A industry level video diffusion pipeline
 
 ## Reading list
 
@@ -2309,6 +2739,34 @@ $$
       Blog post, 2022.
       <a href="https://benanne.github.io/2022/05/26/guidance.html">benanne.github.io</a>.
       <a href="#fnref:guidance-cheat-code" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:vdm">
+      Kingma, Salimans, Poole, &amp; Ho.
+      <em>Variational Diffusion Models.</em>
+      NeurIPS 2021.
+      <a href="https://arxiv.org/abs/2107.00630">arXiv:2107.00630</a>.
+      <a href="#fnref:vdm" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:progressive-distillation">
+      Salimans &amp; Ho.
+      <em>Progressive Distillation for Fast Sampling of Diffusion Models.</em>
+      ICLR 2022.
+      <a href="https://arxiv.org/abs/2202.00512">arXiv:2202.00512</a>.
+      <a href="#fnref:progressive-distillation" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:edm">
+      Karras, Aittala, Aila, &amp; Laine.
+      <em>Elucidating the Design Space of Diffusion-Based Generative Models.</em>
+      NeurIPS 2022.
+      <a href="https://arxiv.org/abs/2206.00364">arXiv:2206.00364</a>.
+      <a href="#fnref:edm" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:krea2">
+      Krea.
+      <em>Krea 2 Technical Report.</em>
+      Technical report, 2026.
+      <a href="https://www.krea.ai/blog/krea-2-technical-report">krea.ai</a>.
+      <a href="#fnref:krea2" class="footnote-back" title="back to text">↩︎</a>
     </li>
   </ol>
 </section>
