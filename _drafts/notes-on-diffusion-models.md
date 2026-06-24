@@ -45,6 +45,59 @@ hidden: false
   color: #252932;
   border-left-color: #24788d;
 }
+.page__content .design-space-box {
+  margin: 1.25rem 0 1.5rem;
+  padding: 1rem;
+  border: 1.5px solid #252932;
+  border-radius: 18px;
+  background: #f5f6f7;
+}
+.page__content .design-space-title {
+  margin-bottom: 0.85rem;
+  color: #252932;
+  font-size: 1.12rem;
+  font-weight: 700;
+  text-align: center;
+}
+.page__content .design-space-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.page__content .design-space-card {
+  min-width: 0;
+  padding: 0.85rem 0.95rem;
+  border: 1.5px solid #252932;
+  border-radius: 14px;
+}
+.page__content .design-space-card--training {
+  background: #ffd4d1;
+}
+.page__content .design-space-card--model {
+  background: #ffe2a3;
+}
+.page__content .design-space-card--sampling {
+  background: #bdeef2;
+}
+.page__content .design-space-card h3 {
+  margin: 0 0 0.55rem;
+  color: #111827;
+  font-size: 1rem;
+  text-align: center;
+}
+.page__content .design-space-card ul {
+  margin: 0;
+  padding-left: 1.05rem;
+}
+.page__content .design-space-card li {
+  margin: 0.42rem 0;
+  line-height: 1.45;
+}
+@media (max-width: 760px) {
+  .page__content .design-space-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @media (min-width: 1460px) {
   .page__content #draft-toc {
     position: fixed;
@@ -66,10 +119,564 @@ hidden: false
 
 ## Generative Modeling Basics
 ### VAE
-- Explain the Evidence Lower Bound (ELBO).
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> What is VAE?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <figure>
+      <img src="/images/blog/diffusion/vae-encoder-decoder.png" alt="VAE encoder maps X to latent Z and decoder reconstructs X" style="width: 100%; max-width: 860px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        VAE encodes data \(X\) into a latent variable \(Z\), then decodes \(Z\) back into a reconstruction of \(X\).
+      </figcaption>
+    </figure>
+
+    <p>A VAE starts from a simple autoencoder picture. The encoder \(E_\phi\) maps data \(X\) into a latent variable \(Z\), and the decoder \(D_\theta\) maps \(Z\) back to a reconstruction of \(X\).</p>
+
+    <p>We are trying to do two things at the same time. First, we want the model to explain the data well, so we want to maximize the likelihood of \(X\). Second, we want the \(Z\) we get from encoding \(X\) to actually decode back into the same \(X\), so the latent code must preserve useful information for reconstruction.</p>
+
+    <p>The difficulty is that we can design the prior \(p_\theta(z)\), the encoder \(q_\phi(z\mid x)\), and the decoder \(p_\theta(x\mid z)\). But we do not directly have the marginal likelihood \(p_\theta(x)\), and we also do not directly have the true posterior \(p_\theta(z\mid x)\).</p>
+
+    <p>So the problem becomes: we want \(p_\theta(x)\) so the model assigns high likelihood to data, and we want \(q_\phi(z\mid x)\) to be close to \(p_\theta(z\mid x)\) so the encoder's latent distribution is a good stand-in for the true posterior. The ELBO is the tool that connects these pieces into something trainable.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> Deriving ELBO</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>In a VAE, we want to maximize the marginal likelihood \(p_\theta(x)\), but the true posterior \(p_\theta(z\mid x)\) is usually intractable. So we introduce an approximate posterior \(q_\phi(z\mid x)\).</p>
+
+$$
+\begin{aligned}
+\log p_\theta(x)
+&=
+\mathbb{E}_{q_\phi(z\mid x)}
+\left[
+\log p_\theta(x)
+\right] \\
+&=
+\mathbb{E}_{q_\phi(z\mid x)}
+\left[
+\log
+\frac{p_\theta(x,z)}{p_\theta(z\mid x)}
+\right] \\
+&=
+\mathbb{E}_{q_\phi(z\mid x)}
+\left[
+\log
+\left(
+\frac{p_\theta(x,z)}{q_\phi(z\mid x)}
+\frac{q_\phi(z\mid x)}{p_\theta(z\mid x)}
+\right)
+\right] \\
+&=
+\underbrace{
+\mathbb{E}_{q_\phi(z\mid x)}
+\left[
+\log
+\frac{p_\theta(x,z)}{q_\phi(z\mid x)}
+\right]
+}_{\mathcal{L}_{\theta,\phi}(x)\ \text{(ELBO)}}
++
+\underbrace{
+\mathbb{E}_{q_\phi(z\mid x)}
+\left[
+\log
+\frac{q_\phi(z\mid x)}{p_\theta(z\mid x)}
+\right]
+}_{D_{\mathrm{KL}}\left(q_\phi(z\mid x)\,\|\,p_\theta(z\mid x)\right)}.
+\end{aligned}
+$$
+
+    <p>Since KL divergence is nonnegative, the first term is a lower bound on the log likelihood:</p>
+
+$$
+\mathcal{L}_{\theta,\phi}(x)
+\le
+\log p_\theta(x).
+$$
+
+    <p>Now expand the ELBO using \(p_\theta(x,z)=p_\theta(z)p_\theta(x\mid z)\):</p>
+
+$$
+\begin{aligned}
+\mathcal{L}_{\theta,\phi}(x)
+&=
+\mathbb{E}_{z\sim q_\phi(z\mid x)}
+\left[
+\log
+\frac{p_\theta(x,z)}{q_\phi(z\mid x)}
+\right] \\
+&=
+\mathbb{E}_{z\sim q_\phi(z\mid x)}
+\left[
+\log p_\theta(x,z)
+-
+\log q_\phi(z\mid x)
+\right] \\
+&=
+\mathbb{E}_{z\sim q_\phi(z\mid x)}
+\left[
+\log p_\theta(z)
++
+\log p_\theta(x\mid z)
+-
+\log q_\phi(z\mid x)
+\right] \\
+&=
+\mathbb{E}_{z\sim q_\phi(z\mid x)}
+\left[
+\log p_\theta(x\mid z)
+\right]
+-
+\mathbb{E}_{z\sim q_\phi(z\mid x)}
+\left[
+\log q_\phi(z\mid x)
+-
+\log p_\theta(z)
+\right] \\
+&=
+\underbrace{
+\mathbb{E}_{z\sim q_\phi(z\mid x)}
+\left[
+\log p_\theta(x\mid z)
+\right]
+}_{\text{reconstruction term}}
+-
+\underbrace{
+D_{\mathrm{KL}}\left(q_\phi(z\mid x)\,\|\,p_\theta(z)\right)
+}_{\text{regularization term}}.
+\end{aligned}
+$$
+
+    <p>So the VAE objective balances two forces: reconstruct \(x\) well from latent \(z\), while keeping the approximate posterior \(q_\phi(z\mid x)\) close to the prior \(p_\theta(z)\).</p>
+
+    <p>The same lower bound can also be derived directly with Jensen's inequality. Insert \(q_\phi(z\mid x)\) into the marginal likelihood:</p>
+
+$$
+\begin{aligned}
+\log p_\theta(x)
+&=
+\log \int p_\theta(x,z)\,dz \\
+&=
+\log \int
+\frac{q_\phi(z\mid x)}{q_\phi(z\mid x)}
+p_\theta(x,z)\,dz \\
+&=
+\log
+\mathbb{E}_{q_\phi(z\mid x)}
+\left[
+\frac{p_\theta(x,z)}{q_\phi(z\mid x)}
+\right].
+\end{aligned}
+$$
+
+    <p>Because \(\log(\cdot)\) is concave, Jensen's inequality gives \(\log \mathbb{E}[Y]\ge \mathbb{E}[\log Y]\). Therefore</p>
+
+$$
+\begin{aligned}
+\log p_\theta(x)
+&\ge
+\mathbb{E}_{q_\phi(z\mid x)}
+\left[
+\log
+\frac{p_\theta(x,z)}{q_\phi(z\mid x)}
+\right] \\
+&=
+\mathbb{E}_{z\sim q_\phi(z\mid x)}
+\left[
+\log p_\theta(x\mid z)
+\right]
+-
+D_{\mathrm{KL}}\left(q_\phi(z\mid x)\,\|\,p_\theta(z)\right)
+=
+\mathcal{L}_{\theta,\phi}(x).
+\end{aligned}
+$$
+
+    <p>The only inequality step is Jensen's inequality: for convex \(f\), \(\mathbb{E}[f(X)]\ge f(\mathbb{E}[X])\); for concave \(f\), \(f(\mathbb{E}[X])\ge \mathbb{E}[f(X)]\). Here \(f=\log\), so it is concave.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Calculating VAE loss and reparameterization</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>In implementation, the encoder outputs a Gaussian approximate posterior:</p>
+
+$$
+q_\phi(z\mid x)
+=
+\mathcal{N}\left(
+z;
+\mu_\phi(x),
+\mathrm{diag}\left(\sigma_\phi^2(x)\right)
+\right).
+$$
+
+    <p>To sample \(z\) while keeping the computation differentiable with respect to \(\phi\), use the reparameterization trick:</p>
+
+$$
+z
+=
+\mu_\phi(x)
++
+\sigma_\phi(x)\odot\epsilon,
+\qquad
+\epsilon\sim\mathcal{N}(0,I).
+$$
+
+    <p>Training usually minimizes the negative ELBO:</p>
+
+$$
+L(\phi,\theta;x)
+=
+\underbrace{
+-\mathbb{E}_{z\sim q_\phi(z\mid x)}
+\left[
+\log p_\theta(x\mid z)
+\right]
+}_{\text{reconstruction loss}}
++
+\underbrace{
+D_{\mathrm{KL}}\left(q_\phi(z\mid x)\,\|\,p_\theta(z)\right)
+}_{\text{latent regularization}}
+$$
+
+    <p>For the common choice \(p_\theta(z)=\mathcal{N}(0,I)\) and diagonal Gaussian \(q_\phi(z\mid x)\), the KL term has a closed form:</p>
+
+$$
+D_{\mathrm{KL}}\left(q_\phi(z\mid x)\,\|\,p_\theta(z)\right)
+=
+\frac{1}{2}
+\sum_d
+\left(
+\mu_d(x;\phi)^2
++
+\sigma_d(x;\phi)^2
+-
+1
+-
+2\log\sigma_d(x;\phi)
+\right).
+$$
+
+    <p>If the decoder likelihood is modeled with a squared-error reconstruction term, the practical VAE loss becomes</p>
+
+$$
+L(\phi,\theta;x)
+=
+\left\|x-\mu_\theta(z)\right\|^2
++
+\frac{1}{2}
+\sum_d
+\left(
+\mu_d(x;\phi)^2
++
+\sigma_d(x;\phi)^2
+-
+1
+-
+2\log\sigma_d(x;\phi)
+\right).
+$$
+  </div>
+</details>
+
+<details class="ddim-block ddim-algorithm">
+  <summary>
+    <span class="ddim-block__title"><strong>4.</strong> Pseudocode: VAE Training and Sampling</span>
+  </summary>
+  <div class="ddim-block__content">
+    <div class="ddim-algorithm__require"><strong>Require:</strong> encoder parameters \(\phi\), decoder parameters \(\theta\)</div>
+    <div class="ddim-algorithm-grid">
+      <div class="ddim-algorithm-panel">
+        <div class="ddim-algorithm__require"><strong>Training</strong> For existing data \(x\)</div>
+        <div class="ddim-algorithm__body">
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">1:</div>
+            <div class="ddim-algorithm__code">Encode \(x\) and get \(\mu_\phi(x)\) and \(\sigma_\phi^2(x)\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">2:</div>
+            <div class="ddim-algorithm__code">Sample \(\epsilon\sim\mathcal{N}(0,I)\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">3:</div>
+            <div class="ddim-algorithm__code">\(z=\mu_\phi(x)+\sigma_\phi(x)\epsilon\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">4:</div>
+            <div class="ddim-algorithm__code">Calculate the loss</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+        </div>
+
+$$
+L(\phi,\theta;x)
+=
+\left\|x-\mu_\theta(z)\right\|^2
++
+\frac{1}{2}
+\sum_d
+\left(
+\mu_d(x;\phi)^2
++
+\sigma_d(x;\phi)^2
+-
+1
+-
+2\log\sigma_d(x;\phi)
+\right).
+$$
+      </div>
+
+      <div class="ddim-algorithm-panel">
+        <div class="ddim-algorithm__require"><strong>Sampling</strong></div>
+        <div class="ddim-algorithm__body">
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">1:</div>
+            <div class="ddim-algorithm__code">Sample \(z\sim\mathcal{N}(0,I)\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">2:</div>
+            <div class="ddim-algorithm__code">Get \(x=\mathrm{Decoder}(z)\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</details>
 
 ### GAN
-- What should the optimal discriminator satisfy?
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> What is GAN?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <figure>
+      <img src="/images/blog/diffusion/gan-minimax.png" alt="GAN minimax objective with generator and discriminator roles" style="width: 100%; max-width: 860px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        A GAN trains a generator \(G\) and discriminator \(D\) in a minimax game.
+      </figcaption>
+    </figure>
+
+    <p>A generative adversarial network has two players. The generator \(G\) starts from an easy-to-sample noise variable \(z\), such as Gaussian noise, and transforms it into a fake sample \(G(z)\). The discriminator \(D\) receives a sample and tries to decide whether it came from the real data distribution or from the generator.</p>
+
+    <p>The discriminator tries to become better at distinguishing real samples from fake ones. The generator tries to make fake samples more realistic so that they fool the discriminator. This gives the minimax objective</p>
+
+$$
+\min_G \max_D V(D,G)
+=
+\mathbb{E}_{x\sim p_{\mathrm{data}}(x)}
+\left[
+\log D(x)
+\right]
++
+\mathbb{E}_{z\sim p_z(z)}
+\left[
+\log(1-D(G(z)))
+\right].
+$$
+
+    <p>Intuitively, \(D(x)\) should be high for real data, while \(D(G(z))\) should be low for generated data. The generator improves by moving \(G(z)\) toward the target data distribution, while the discriminator keeps pressure on the generator by identifying the remaining differences.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> Optimal discriminator</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>For a fixed generator \(G\), let \(p_g\) be the distribution induced by generated samples \(G(z)\). The discriminator maximizes</p>
+
+$$
+V(D,G)
+=
+\mathbb{E}_{x\sim p_{\mathrm{data}}}
+\left[
+\log D(x)
+\right]
++
+\mathbb{E}_{x\sim p_g}
+\left[
+\log(1-D(x))
+\right].
+$$
+
+    <p>Writing the expectations as integrals, the objective becomes</p>
+
+$$
+V(D,G)
+=
+\int
+\left[
+p_{\mathrm{data}}(x)\log D(x)
++
+p_g(x)\log(1-D(x))
+\right]dx.
+$$
+
+    <p>Since \(D(x)\) appears independently for each \(x\), optimize the integrand pointwise. Let \(y=D(x)\), \(a=p_{\mathrm{data}}(x)\), and \(b=p_g(x)\):</p>
+
+$$
+f(y)=a\log y+b\log(1-y).
+$$
+
+    <p>Set the derivative to zero:</p>
+
+$$
+\frac{df}{dy}
+=
+\frac{a}{y}
+-
+\frac{b}{1-y}
+=0.
+$$
+
+$$
+a(1-y)=by
+\quad\Longrightarrow\quad
+a=(a+b)y.
+$$
+
+    <p>Therefore the optimal discriminator is</p>
+
+$$
+D^*(x)
+=
+\frac{p_{\mathrm{data}}(x)}
+{p_{\mathrm{data}}(x)+p_g(x)}.
+$$
+
+    <p>Interpretation: the discriminator estimates the probability that a sample came from the data distribution rather than the generator. At equilibrium, when \(p_g=p_{\mathrm{data}}\), we get \(D^*(x)=\frac{1}{2}\) everywhere.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Training the generator is minimizing JS divergence</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Plug the optimal discriminator back into the GAN value function. Let \(p_d=p_{\mathrm{data}}\). Since</p>
+
+$$
+D^*(x)
+=
+\frac{p_d(x)}{p_d(x)+p_g(x)},
+\qquad
+1-D^*(x)
+=
+\frac{p_g(x)}{p_d(x)+p_g(x)},
+$$
+
+    <p>we get</p>
+
+$$
+\begin{aligned}
+V(D^*,G)
+&=
+\mathbb{E}_{x\sim p_d}
+\left[
+\log
+\frac{p_d(x)}{p_d(x)+p_g(x)}
+\right]
++
+\mathbb{E}_{x\sim p_g}
+\left[
+\log
+\frac{p_g(x)}{p_d(x)+p_g(x)}
+\right] \\
+&=
+\int
+p_d(x)\log
+\frac{p_d(x)}{p_d(x)+p_g(x)}
+\,dx
++
+\int
+p_g(x)\log
+\frac{p_g(x)}{p_d(x)+p_g(x)}
+\,dx.
+\end{aligned}
+$$
+
+    <p>Define the mixture distribution</p>
+
+$$
+m(x)=\frac{1}{2}\left(p_d(x)+p_g(x)\right).
+$$
+
+    <p>Then \(p_d(x)+p_g(x)=2m(x)\), so</p>
+
+$$
+\begin{aligned}
+V(D^*,G)
+&=
+\int
+p_d(x)\log
+\frac{p_d(x)}{2m(x)}
+\,dx
++
+\int
+p_g(x)\log
+\frac{p_g(x)}{2m(x)}
+\,dx \\
+&=
+\int
+p_d(x)\log
+\frac{p_d(x)}{m(x)}
+\,dx
++
+\int
+p_g(x)\log
+\frac{p_g(x)}{m(x)}
+\,dx
+-
+2\log 2 \\
+&=
+D_{\mathrm{KL}}(p_d\,\|\,m)
++
+D_{\mathrm{KL}}(p_g\,\|\,m)
+-
+\log 4.
+\end{aligned}
+$$
+
+    <p>The Jensen-Shannon divergence is</p>
+
+$$
+D_{\mathrm{JS}}(p_d\,\|\,p_g)
+=
+\frac{1}{2}
+D_{\mathrm{KL}}(p_d\,\|\,m)
++
+\frac{1}{2}
+D_{\mathrm{KL}}(p_g\,\|\,m).
+$$
+
+    <p>Therefore</p>
+
+$$
+V(D^*,G)
+=
+-\log 4
++
+2D_{\mathrm{JS}}(p_{\mathrm{data}}\,\|\,p_g).
+$$
+
+    <p>So after the discriminator is optimized, training the generator is equivalent to minimizing the Jensen-Shannon divergence between the data distribution and the generator distribution. The minimum is reached when \(p_g=p_{\mathrm{data}}\).</p>
+  </div>
+</details>
 
 ## Diffusion Formulations
 > Diffusion model family.
@@ -444,73 +1051,9 @@ $$
   </div>
 </details>
 
-<details class="ddim-block">
-  <summary>
-    <span class="ddim-block__title"><strong>4.</strong> Reparameterization</span>
-  </summary>
-  <div class="ddim-block__content">
-    <p>The reparameterization trick separates randomness from the quantity we want the network to learn. Instead of treating \(x_t\) as an opaque Gaussian sample from \(q(x_t\mid x_0)\), we write it as a deterministic function of \(x_0\), \(t\), and a standard Gaussian noise variable:</p>
-
-$$
-x_t
-=
-\sqrt{\bar{\alpha}_t}x_0
-+
-\sqrt{1-\bar{\alpha}_t}\epsilon,
-\qquad
-\epsilon\sim\mathcal{N}(0,I).
-$$
-
-    <p>This is useful because the training target is now explicit: the model sees \(x_t\) and \(t\), and tries to predict the exact noise \(\epsilon\) that produced \(x_t\).</p>
-
-$$
-\epsilon_\theta(x_t,t)
-\approx
-\epsilon.
-$$
-
-    <p>Once the model predicts \(\epsilon_\theta(x_t,t)\), we can also recover an estimate of the clean sample:</p>
-
-$$
-\hat{x}_0(x_t,t)
-=
-\frac{x_t-\sqrt{1-\bar{\alpha}_t}\epsilon_\theta(x_t,t)}
-{\sqrt{\bar{\alpha}_t}}.
-$$
-
-    <p>Plugging this prediction into the Gaussian posterior mean gives the DDPM reverse mean in the noise-prediction parameterization:</p>
-
-$$
-\mu_\theta(x_t,t)
-=
-\frac{1}{\sqrt{\alpha_t}}
-\left(
-x_t
--
-\frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}
-\epsilon_\theta(x_t,t)
-\right).
-$$
-
-    <p>So the learned reverse transition becomes</p>
-
-$$
-p_\theta(x_{t-1}\mid x_t)
-=
-\mathcal{N}\left(
-x_{t-1};
-\mu_\theta(x_t,t),
-\sigma_t^2 I
-\right),
-$$
-
-    <p>and sampling is just repeatedly applying this denoising step, with fresh noise added according to \(\sigma_t\).</p>
-  </div>
-</details>
-
 <details class="ddim-block ddim-algorithm">
   <summary>
-    <span class="ddim-block__title"><strong>5.</strong> Pseudocode: DDPM Training and Sampling</span>
+    <span class="ddim-block__title"><strong>4.</strong> Pseudocode: DDPM Training and Sampling</span>
   </summary>
   <div class="ddim-block__content">
     <div class="ddim-algorithm-grid">
@@ -601,6 +1144,118 @@ $$
 ### Flow Matching
 
 ### Q&A
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>Q1.</strong> What is the reparameterization trick in DDPM, and why do we need it?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>The reparameterization trick in DDPM is to rewrite a noisy sample from \(q(x_t\mid x_0)\) as a deterministic function of the clean data \(x_0\), the timestep \(t\), and a standard Gaussian noise variable \(\epsilon\). Instead of treating \(x_t\) as an opaque Gaussian sample, write it as</p>
+
+$$
+x_t
+=
+\sqrt{\bar{\alpha}_t}x_0
++
+\sqrt{1-\bar{\alpha}_t}\epsilon,
+\qquad
+\epsilon\sim\mathcal{N}(0,I).
+$$
+
+    <p>We need this because it isolates all randomness in \(\epsilon\), making the training target explicit: given \(x_t\) and \(t\), predict the noise that created \(x_t\).</p>
+
+$$
+\epsilon_\theta(x_t,t)\approx\epsilon.
+$$
+
+    <p>This is also where the simplified loss comes from. After the Gaussian KL term in the ELBO is reduced to matching reverse means, substitute the reparameterized \(x_t\) into the posterior mean. Mean matching becomes proportional to</p>
+
+$$
+\left\|
+\epsilon-\epsilon_\theta(x_t,t)
+\right\|_2^2.
+$$
+
+    <p>DDPM then drops the timestep-dependent weighting and constants, giving the practical objective</p>
+
+$$
+L_{\mathrm{simple}}
+=
+\mathbb{E}_{t,x_0,\epsilon}
+\left[
+\left\|
+\epsilon-\epsilon_\theta
+\left(
+\sqrt{\bar{\alpha}_t}x_0
++
+\sqrt{1-\bar{\alpha}_t}\epsilon,
+t
+\right)
+\right\|_2^2
+\right].
+$$
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>Q2.</strong> What are the three common DDPM prediction targets?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>A denoising model can be parameterized to predict different but equivalent quantities. Given \(x_t\) and \(t\), the network can predict the clean sample \(x_0\), the previous sample \(x_{t-1}\), or the added noise \(\epsilon\).</p>
+
+    <p><strong>1. Predict \(x_0\).</strong> The model directly estimates the clean data:</p>
+
+$$
+\hat{x}_0 = f_\theta(x_t,t).
+$$
+
+    <p>Then use \(\hat{x}_0\) inside the true posterior mean \(\tilde{\mu}_t(x_t,\hat{x}_0)\) to sample \(x_{t-1}\).</p>
+
+    <p><strong>2. Predict \(x_{t-1}\).</strong> The model directly predicts the next denoised step, usually through the reverse mean:</p>
+
+$$
+\mu_\theta(x_t,t)\approx x_{t-1},
+\qquad
+p_\theta(x_{t-1}\mid x_t)
+=
+\mathcal{N}\left(x_{t-1};\mu_\theta(x_t,t),\sigma_t^2I\right).
+$$
+
+    <p>This matches the Markov reverse-chain view most directly, but it is less common as the raw neural-network target.</p>
+
+    <p><strong>3. Predict noise \(\epsilon\).</strong> The model predicts the Gaussian noise used to create \(x_t\):</p>
+
+$$
+\epsilon_\theta(x_t,t)\approx\epsilon.
+$$
+
+    <p>From the noise prediction, recover the clean sample estimate</p>
+
+$$
+\hat{x}_0
+=
+\frac{x_t-\sqrt{1-\bar{\alpha}_t}\epsilon_\theta(x_t,t)}
+{\sqrt{\bar{\alpha}_t}},
+$$
+
+    <p>or equivalently the reverse mean</p>
+
+$$
+\mu_\theta(x_t,t)
+=
+\frac{1}{\sqrt{\alpha_t}}
+\left(
+x_t
+-
+\frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}
+\epsilon_\theta(x_t,t)
+\right).
+$$
+
+    <p>The original DDPM simplified objective uses noise prediction because the training target \(\epsilon\) is known exactly after reparameterization, and the loss becomes a simple mean-squared error.</p>
+  </div>
+</details>
 
 ## Deep dive in diffusion models
 > Math related properties.
@@ -893,7 +1548,281 @@ $$
 
 ### ODE solvers
 
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> Euler solver</span>
+  </summary>
+  <div class="ddim-block__content">
+    <figure>
+      <img src="/images/blog/diffusion/euler-solver-step.png" alt="Euler solver step follows the local velocity from x_t to x_{t plus delta t}" style="width: 100%; max-width: 820px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        Euler's method follows the local velocity \(v_\theta(x_t,t)\) for a small time step \(\Delta t\).
+      </figcaption>
+    </figure>
+
+    <p>For a deterministic sampler, we can view generation as solving an ODE from noise to data. Suppose the learned model gives a velocity field \(v_\theta(x_t,t)\):</p>
+
+$$
+\frac{d x_t}{dt}
+=
+v_\theta(x_t,t).
+$$
+
+    <p>Euler's method is the simplest numerical solver for this ODE. At time \(t\), it approximates the curve by a straight line in the current velocity direction:</p>
+
+$$
+x_{t+\Delta t}
+=
+x_t
++
+\Delta t\,v_\theta(x_t,t).
+$$
+
+    <p>In diffusion sampling, the sign of \(\Delta t\) depends on the time convention. If time runs from data to noise, generation integrates backward from high noise to low noise, so the update is often written as</p>
+
+$$
+x_{t-\Delta t}
+=
+x_t
+-
+\Delta t\,v_\theta(x_t,t).
+$$
+
+    <p>The benefit is simplicity: one model evaluation gives one step. The downside is that Euler is only first-order accurate, so using too few steps can drift away from the true trajectory. Higher-order solvers improve this by using better approximations to the same underlying ODE path.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> Midpoint solver</span>
+  </summary>
+  <div class="ddim-block__content">
+    <figure>
+      <img src="/images/blog/diffusion/midpoint-solver-step.png" alt="Midpoint solver estimates the midpoint velocity before taking the full step" style="width: 100%; max-width: 820px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        The midpoint method first estimates \(x_{t+\frac{1}{2}\Delta t}\), then uses the midpoint velocity for the full step.
+      </figcaption>
+    </figure>
+
+    <p>The midpoint solver improves over Euler by evaluating the velocity at an estimated middle point rather than only at the beginning of the interval.</p>
+
+$$
+\frac{d x_t}{dt}
+=
+v_\theta(x_t,t).
+$$
+
+    <p>First, take a half Euler step to estimate the midpoint:</p>
+
+$$
+x_{t+\frac{1}{2}\Delta t}
+=
+x_t
++
+\frac{1}{2}\Delta t\,v_\theta(x_t,t).
+$$
+
+    <p>Then evaluate the velocity at that midpoint and use it for the full update:</p>
+
+$$
+x_{t+\Delta t}
+=
+x_t
++
+\Delta t\,
+v_\theta
+\left(
+x_{t+\frac{1}{2}\Delta t},
+t+\frac{1}{2}\Delta t
+\right).
+$$
+
+    <p>Compared with Euler, this uses one extra model evaluation per step, but it usually follows the curved trajectory more accurately. In diffusion sampling, this is useful when the denoising path bends noticeably between two selected timesteps.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Second-order Heun solver</span>
+  </summary>
+  <div class="ddim-block__content">
+    <figure>
+      <img src="/images/blog/diffusion/heun-solver-step.png" alt="Second-order Heun solver averages beginning and endpoint velocities" style="width: 100%; max-width: 820px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        Heun's method predicts an endpoint, evaluates the velocity there, then averages the two velocities.
+      </figcaption>
+    </figure>
+
+    <p>Heun's method is another second-order solver. It first uses Euler to predict where the next point would be:</p>
+
+$$
+\hat{x}_{t+\Delta t}
+=
+x_t
++
+\Delta t\,v_\theta(x_t,t).
+$$
+
+    <p>Then it evaluates the velocity at the predicted endpoint:</p>
+
+$$
+v_{\mathrm{end}}
+=
+v_\theta
+\left(
+\hat{x}_{t+\Delta t},
+t+\Delta t
+\right).
+$$
+
+    <p>Finally, it averages the starting velocity and the endpoint velocity:</p>
+
+$$
+x_{t+\Delta t}
+=
+x_t
++
+\frac{\Delta t}{2}
+\left[
+v_\theta(x_t,t)
++
+v_\theta
+\left(
+\hat{x}_{t+\Delta t},
+t+\Delta t
+\right)
+\right].
+$$
+
+    <p>Compared with midpoint, Heun also uses two velocity evaluations, but the second one is taken at the predicted endpoint rather than the middle. This makes it a predictor-corrector method: predict with Euler, then correct using the average slope.</p>
+  </div>
+</details>
+
 ### DPM solvers
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> DPM-Solver</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>DPM-Solver is a diffusion-specific ODE solver. The key observation is that the probability flow ODE has a known linear part and a learned nonlinear part:</p>
+
+$$
+\frac{d x_t}{dt}
+=
+f(t)x_t
+-
+\frac{1}{2}g^2(t)\nabla_x\log q_t(x_t).
+$$
+
+    <p>Here the first term \(f(t)x_t\) is linear and known from the noise schedule. The second term contains the learned score. In the noise-prediction parameterization, the score term can be written using \(\epsilon_\theta(x_t,t)\). For VP-style parameterization,</p>
+
+$$
+f(t)=\frac{d\log\alpha_t}{dt},
+\qquad
+g^2(t)
+=
+\frac{d\sigma_t^2}{dt}
+-
+2\frac{d\log\alpha_t}{dt}\sigma_t^2
+=
+2\sigma_t^2
+\left(
+\frac{d\log\sigma_t}{dt}
+-
+\frac{d\log\alpha_t}{dt}
+\right).
+$$
+
+    <p>Because the linear part is known, we can solve it analytically and only approximate the learned noise term:</p>
+
+$$
+x_t
+=
+e^{\int_s^t f(\tau)\,d\tau}x_s
++
+\int_s^t
+\left(
+e^{\int_\tau^t f(r)\,dr}
+\frac{g^2(\tau)}{2\sigma_\tau}
+\epsilon_\theta(x_\tau,\tau)
+\right)
+d\tau.
+$$
+
+    <p>DPM-Solver then changes variables to log-SNR time \(\lambda\). One update from \(t_{i-1}\) to \(t_i\) can be written as</p>
+
+$$
+x_{t_{i-1}\to t_i}
+=
+\frac{\alpha_{t_i}}{\alpha_{t_{i-1}}}\tilde{x}_{t_{i-1}}
+-
+\alpha_{t_i}
+\int_{\lambda_{t_{i-1}}}^{\lambda_{t_i}}
+e^{-\lambda}
+\hat{\epsilon}_\theta(\hat{x}_\lambda,\lambda)
+d\lambda.
+$$
+
+    <p>The remaining difficult part is the learned noise function \(\hat{\epsilon}_\theta(\hat{x}_\lambda,\lambda)\). DPM-Solver approximates it with a Taylor expansion around the previous time:</p>
+
+$$
+\hat{\epsilon}_\theta(\hat{x}_\lambda,\lambda)
+=
+\sum_{n=0}^{k-1}
+\frac{(\lambda-\lambda_{t_{i-1}})^n}{n!}
+\hat{\epsilon}_\theta^{(n)}
+\left(
+\hat{x}_{\lambda_{t_{i-1}}},
+\lambda_{t_{i-1}}
+\right)
++
+O\left((\lambda-\lambda_{t_{i-1}})^k\right).
+$$
+
+    <p>Substituting this expansion into the integral gives</p>
+
+$$
+\begin{aligned}
+x_{t_{i-1}\to t_i}
+=&
+\frac{\alpha_{t_i}}{\alpha_{t_{i-1}}}\tilde{x}_{t_{i-1}}
+-
+\alpha_{t_i}
+\sum_{n=0}^{k-1}
+\hat{\epsilon}_\theta^{(n)}
+\left(
+\hat{x}_{\lambda_{t_{i-1}}},
+\lambda_{t_{i-1}}
+\right) \\
+&\quad\cdot
+\int_{\lambda_{t_{i-1}}}^{\lambda_{t_i}}
+e^{-\lambda}
+\frac{(\lambda-\lambda_{t_{i-1}})^n}{n!}
+d\lambda
++
+O(h_i^{k+1}).
+\end{aligned}
+$$
+
+    <p>The important split is: the derivatives of the learned noise term are estimated, while the integral involving \(e^{-\lambda}\) can be calculated analytically. For \(k=1\), we keep only the zeroth-order term and get the first-order DPM-Solver update:</p>
+
+$$
+\tilde{x}_{t_i}
+=
+\frac{\alpha_{t_i}}{\alpha_{t_{i-1}}}
+\tilde{x}_{t_{i-1}}
+-
+\sigma_{t_i}
+\left(e^{h_i}-1\right)
+\epsilon_\theta(\tilde{x}_{t_{i-1}},t_{i-1}),
+\qquad
+h_i=\lambda_{t_i}-\lambda_{t_{i-1}}.
+$$
+
+    <p>So compared with generic ODE solvers, DPM-Solver uses the special structure of diffusion ODEs: integrate the known linear dynamics exactly, and approximate only the learned denoising term.</p>
+  </div>
+</details>
 
 ### Q&A
 
@@ -1039,6 +1968,198 @@ $$
   </div>
 </details>
 
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>Q4.</strong> Why do midpoint and Heun have smaller error than Euler?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>For an ODE</p>
+
+$$
+\frac{dx}{dt}=f(x,t),
+$$
+
+    <p>one solver step is trying to approximate the true integral</p>
+
+$$
+x(t+\Delta t)
+=
+x(t)
++
+\int_t^{t+\Delta t} f(x(s),s)\,ds.
+$$
+
+    <p>So the real question is: how well does the solver approximate the average slope over the interval?</p>
+
+    <p><strong>Euler</strong> uses the left endpoint slope:</p>
+
+$$
+x_{t+\Delta t}^{\mathrm{Euler}}
+=
+x_t
++
+\Delta t\,f(x_t,t).
+$$
+
+    <p>But the true solution has the Taylor expansion</p>
+
+$$
+x(t+\Delta t)
+=
+x(t)
++
+\Delta t f
++
+\frac{(\Delta t)^2}{2}f'
++
+O(\Delta t^3),
+$$
+
+    <p>where \(f\) and \(f'\) are evaluated along the trajectory at time \(t\). Euler keeps only the first slope term, so it misses the second-order correction. This gives Euler a local truncation error of order \(O(\Delta t^2)\).</p>
+
+    <p><strong>Midpoint</strong> instead estimates the slope halfway through the interval. The average slope over the interval satisfies</p>
+
+$$
+\frac{1}{\Delta t}
+\int_t^{t+\Delta t} f(x(s),s)\,ds
+=
+f(t)
++
+\frac{\Delta t}{2}f'(t)
++
+O(\Delta t^2).
+$$
+
+    <p>The midpoint slope has the matching expansion</p>
+
+$$
+f\left(
+t+\frac{1}{2}\Delta t
+\right)
+=
+f
++
+\frac{\Delta t}{2}f'
++
+O(\Delta t^2).
+$$
+
+    <p>That is the key: midpoint matches the average slope through the first variation term. It cancels Euler's leading local bias, so the local truncation error improves from \(O(\Delta t^2)\) to \(O(\Delta t^3)\).</p>
+
+    <p><strong>Heun</strong> is better for a similar reason. It first predicts an endpoint with Euler, then evaluates the slope again at that endpoint. Instead of trusting only the left endpoint slope, Heun averages the beginning slope and the predicted endpoint slope:</p>
+
+$$
+x_{t+\Delta t}^{\mathrm{Heun}}
+=
+x_t
++
+\frac{\Delta t}{2}
+\left[
+f(x_t,t)
++
+f(\hat{x}_{t+\Delta t},t+\Delta t)
+\right],
+\qquad
+\hat{x}_{t+\Delta t}=x_t+\Delta t f(x_t,t).
+$$
+
+    <p>The predicted endpoint slope has the Taylor expansion</p>
+
+$$
+f(\hat{x}_{t+\Delta t},t+\Delta t)
+=
+f
++
+\Delta t\,f'
++
+O(\Delta t^2).
+$$
+
+    <p>Therefore the average of the starting slope and predicted endpoint slope is</p>
+
+$$
+\frac{1}{2}
+\left[
+f(x_t,t)
++
+f(\hat{x}_{t+\Delta t},t+\Delta t)
+\right]
+=
+f
++
+\frac{\Delta t}{2}f'
++
+O(\Delta t^2).
+$$
+
+    <p>This average slope matches the same first-order change of the vector field as midpoint, so it cancels the same leading Euler error term. Midpoint samples the slope in the middle; Heun averages the slope at the beginning and the predicted end. Both are second-order methods.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Slope approximation</th>
+          <th>Local error</th>
+          <th>Global error</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Euler</td>
+          <td>left endpoint slope</td>
+          <td>\(O(\Delta t^2)\)</td>
+          <td>\(O(\Delta t)\)</td>
+        </tr>
+        <tr>
+          <td>Midpoint</td>
+          <td>midpoint slope</td>
+          <td>\(O(\Delta t^3)\)</td>
+          <td>\(O(\Delta t^2)\)</td>
+        </tr>
+        <tr>
+          <td>Heun</td>
+          <td>average of start and predicted-end slopes</td>
+          <td>\(O(\Delta t^3)\)</td>
+          <td>\(O(\Delta t^2)\)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</details>
+
+## Design Space
+> How to define a diffusion model?
+
+<div class="design-space-box">
+  <div class="design-space-title">The design space of diffusion models</div>
+  <div class="design-space-grid">
+    <div class="design-space-card design-space-card--training">
+      <h3>Training</h3>
+      <ul>
+        <li>Prefixed noise schedule</li>
+        <li>Training noise sampling schedule</li>
+        <li>Loss weighting w.r.t. time</li>
+      </ul>
+    </div>
+    <div class="design-space-card design-space-card--model">
+      <h3>Model</h3>
+      <ul>
+        <li>Reparameterization</li>
+        <li>Input/output scaling</li>
+        <li>How to do time conditioning</li>
+      </ul>
+    </div>
+    <div class="design-space-card design-space-card--sampling">
+      <h3>Sampling</h3>
+      <ul>
+        <li>Solver</li>
+        <li>Sampling-time noise schedule</li>
+        <li>Number of time steps</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
 ## Architecture
 > Coding part.
 
@@ -1062,6 +2183,40 @@ $$
 ### Image Diffusion Models
 
 ### Video Diffusion Models
+
+## Reading list
+
+### Foundations
+- [A Connection Between Score Matching and Denoising Autoencoders](https://ieeexplore.ieee.org/abstract/document/6795935)
+- [Interpretation and generalization of score matching](https://arxiv.org/pdf/1205.2629)
+- [Understanding Diffusion Models: A Unified Perspective](https://arxiv.org/abs/2208.11970)
+- [Maximum Likelihood Training of Score-Based Diffusion Models](https://arxiv.org/abs/2101.09258)
+
+### DDPM, DDIM, and score-based models
+- [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239)
+- [Denoising Diffusion Implicit Models](https://arxiv.org/abs/2010.02502)
+- [Score-Based Generative Modeling through Stochastic Differential Equations](https://arxiv.org/abs/2011.13456)
+- [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)
+
+### Samplers
+- [DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps](https://arxiv.org/abs/2206.00927)
+
+### Flow matching
+- [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)
+- [Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow](https://arxiv.org/abs/2209.03003)
+
+### One-step and few-step models
+- [Consistency Models](https://arxiv.org/abs/2303.01469)
+- [Improved Techniques for Training Consistency Models](https://arxiv.org/abs/2310.14189)
+- [Simplifying, Stabilizing and Scaling Continuous-Time Consistency Models](https://arxiv.org/abs/2410.11081)
+- [Mean Flows for One-step Generative Modeling](https://arxiv.org/abs/2505.13447)
+
+## Coding list
+
+### Warmup
+- [Tensor Puzzles](https://colab.research.google.com/github/srush/Tensor-Puzzles/blob/main/Tensor%20Puzzlers.ipynb): practice tensor indexing, broadcasting, and vectorization.
+
+- https://github.com/KellyYutongHe/cmu-10799-diffusion
 
 ## Study Checklist
 
@@ -1096,22 +2251,6 @@ $$
 - Explain the idea of MeanFlow (MF) and how to calculate the mean velocity during training.
 - What is the relationship between MF and CM?
 
-### Reading List
-- [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239)
-- [Denoising Diffusion Implicit Models](https://arxiv.org/abs/2010.02502)
-- [Score-Based Generative Modeling through Stochastic Differential Equations](https://arxiv.org/abs/2011.13456)
-- [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)
-- [Understanding Diffusion Models: A Unified Perspective](https://arxiv.org/abs/2208.11970)
-- [A Connection Between Score Matching and Denoising Autoencoders](https://ieeexplore.ieee.org/abstract/document/6795935)
-- [Interpretation and generalization of score matching](https://arxiv.org/pdf/1205.2629)
-- [Maximum Likelihood Training of Score-Based Diffusion Models](https://arxiv.org/abs/2101.09258)
-- [DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps](https://arxiv.org/abs/2206.00927)
-- [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)
-- [Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow](https://arxiv.org/abs/2209.03003)
-- [Mean Flows for One-step Generative Modeling](https://arxiv.org/abs/2505.13447)
-- [Consistency Models](https://arxiv.org/abs/2303.01469)
-- [Improved Techniques for Training Consistency Models](https://arxiv.org/abs/2310.14189)
-- [Simplifying, Stabilizing and Scaling Continuous-Time Consistency Models](https://arxiv.org/abs/2410.11081)
 
 <style>
 .page__content .references-section {
