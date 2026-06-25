@@ -45,6 +45,18 @@ hidden: false
   color: #252932;
   border-left-color: #24788d;
 }
+.page__content #draft-toc a.toc-subsection {
+  padding-left: 1.1rem;
+  color: #7a8490;
+  font-size: 0.78rem;
+  font-weight: 450;
+}
+.page__content #draft-toc a.toc-subsection::before {
+  content: "· ";
+}
+.page__content #draft-toc a.toc-section {
+  margin-top: 0.22rem;
+}
 .page__content .design-space-box {
   margin: 1.25rem 0 1.5rem;
   padding: 1rem;
@@ -683,7 +695,7 @@ $$
 
 ### DDPM
 
-<details class="ddim-block" open>
+<details class="ddim-block">
   <summary>
     <span class="ddim-block__title"><strong>1.</strong> Forward and reverse processes</span>
   </summary>
@@ -1139,7 +1151,940 @@ $$
   </div>
 </details>
 
-### Score-based SDEs
+### Score-based diffusion models
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> What are score-based diffusion models?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Score-based diffusion models describe diffusion as a continuous-time stochastic process. The <strong>forward process</strong> gradually turns data into noise, and the <strong>reverse process</strong> uses a learned score function to denoise samples back into data.</p>
+
+    <figure>
+      <img src="/images/blog/diffusion/score-sde-forward-reverse.png" alt="Forward diffusion process and reverse denoising process" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        The fixed <strong>forward process</strong> maps data to noise. The generative <strong>reverse process</strong> maps noise back to data.
+      </figcaption>
+    </figure>
+
+    <p>The <strong>forward process</strong> is controlled by a forward SDE:</p>
+
+$$
+d x
+=
+f(x,t)\,dt
++
+g(t)\,dw,
+$$
+
+    <p>where \(f(x,t)\) is the drift, \(g(t)\) is the diffusion coefficient, and \(w\) is standard Brownian motion. This SDE defines the noisy marginal distribution \(p_t(x)\) at every time \(t\).</p>
+
+    <p>The <strong>reverse process</strong> is also an SDE. Its drift depends on the score function \(\nabla_x\log p_t(x)\):</p>
+
+$$
+d x
+=
+\left[
+f(x,t)
+-
+g(t)^2\nabla_x\log p_t(x)
+\right]dt
++
+g(t)\,d\bar{w}.
+$$
+
+    <p>So the model's central job is to learn the score function</p>
+
+$$
+s_\theta(x,t)
+\approx
+\nabla_x\log p_t(x).
+$$
+
+    <p>In principle, this can be trained with score matching on the noisy marginal:</p>
+
+$$
+J_{\mathrm{SM}}(\theta)
+=
+\mathbb{E}_{q_t(x_t)}
+\left[
+\frac{1}{2}
+\left\|
+s_\theta(x_t,t)
+-
+\nabla_{x_t}\log q_t(x_t)
+\right\|_2^2
+\right].
+$$
+
+    <p>In practice, people usually use denoising score matching: sample a clean data point, add known Gaussian noise, and train the model to match the known conditional score of that noising process.</p>
+
+$$
+J_{\mathrm{DSM}}(\theta)
+=
+\mathbb{E}_{q_t(x_0,x_t)}
+\left[
+\frac{1}{2}
+\left\|
+s_\theta(x_t,t)
+-
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\|_2^2
+\right].
+$$
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> Mathematical foundation</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>This part is <strong>not important</strong> in understanding score-based diffusion models, but it explains where the reverse SDE and probability flow ODE come from.</p>
+
+    <p>The current storyline is: Brownian motion gives the continuous-time noise source; Itô calculus tells us how functions of stochastic paths evolve; Fokker-Planck describes the evolution of densities; and time reversal explains why the reverse sampler needs the score.</p>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">Brownian motion and Itô integral</span>
+      </summary>
+      <div class="ddim-block__content">
+
+    <p><strong>Brownian motion.</strong> A standard Brownian motion \(w_t\) is the continuous-time noise source. It starts at zero, has independent increments, and satisfies</p>
+
+$$
+w_{t+\Delta t}-w_t
+\sim
+\mathcal{N}(0,\Delta t I).
+$$
+
+    <p>Informally, over a tiny interval \(dt\), this means</p>
+
+$$
+dw_t
+\sim
+\mathcal{N}(0,dt\,I),
+\qquad
+dw_t
+\approx
+\sqrt{dt}\,\epsilon,
+\qquad
+\epsilon\sim\mathcal{N}(0,I).
+$$
+
+    <p>So \(dw_t\) has typical size \(\sqrt{dt}\), but it is still random; it is not literally equal to \(\sqrt{dt}\). This is why the drift term is order \(dt\), while the noise term is order \(\sqrt{dt}\):</p>
+
+$$
+f(x_t,t)\,dt=O(dt),
+\qquad
+g(t)\,dw_t=O(\sqrt{dt}).
+$$
+
+    <p><strong>Key intuition:</strong> because \((dw_t)^2\) is order \(dt\), the quadratic Brownian term survives in Itô's formula.</p>
+
+    <p>So Brownian motion is not differentiable in the ordinary sense. Instead of writing a classical derivative \(dw_t/dt\), we define integrals with respect to Brownian motion.</p>
+
+    <p><strong>Itô integral.</strong> For a deterministic function \(h(t)\), the stochastic integral is the limit of weighted Brownian increments:</p>
+
+$$
+\int_0^t h(s)\,dw_s
+\approx
+\sum_{i=1}^n
+h(t_{i-1})
+\left(w_{t_i}-w_{t_{i-1}}\right).
+$$
+
+    <p>Because each Brownian increment is Gaussian, the integral is also Gaussian:</p>
+
+$$
+\int_0^t h(s)\,dw_s
+\sim
+\mathcal{N}
+\left(
+0,
+\int_0^t h(s)^2\,ds
+\right).
+$$
+
+        <p><strong>Conclusion:</strong> stochastic calculus lets us give precise meaning to continuous-time noise injection.</p>
+      </div>
+    </details>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">Itô process and Itô formula</span>
+      </summary>
+      <div class="ddim-block__content">
+
+    <p><strong>Itô process.</strong> An SDE combines an ordinary integral and an Itô integral:</p>
+
+$$
+d x_t
+=
+b(x_t,t)\,dt
++
+g(t)\,dw_t.
+$$
+
+    <p>Equivalently, in integral form,</p>
+
+$$
+x_t-x_0
+=
+\int_0^t b(x_s,s)\,ds
++
+\int_0^t g(s)\,dw_s.
+$$
+
+    <p>Here \(b(x,t)\) is the drift and \(g(t)\) is the diffusion coefficient. The drift transports samples; the diffusion term spreads them out. <strong>The forward SDE defines both random sample paths and a family of marginal densities \(p_t(x)\).</strong></p>
+
+    <p><strong>Itô's formula.</strong> If \(f(t,x_t)\) is a smooth function of an Itô process, the usual chain rule gets an extra second-order term:</p>
+
+$$
+d\,f(t,x_t)
+=
+\left[
+\partial_t f
++
+\nabla_x f^\top b
++
+\frac{1}{2}g(t)^2\Delta_x f
+\right]dt
++
+g(t)\nabla_x f^\top dw_t.
+$$
+
+    <p>One quick way to see where this comes from is to Taylor expand \(f(t,x_t)\):</p>
+
+$$
+df
+=
+\partial_t f\,dt
++
+\nabla_x f^\top dx_t
++
+\frac{1}{2}dx_t^\top\nabla_x^2 f\,dx_t
++
+\text{higher order terms}.
+$$
+
+    <p>Substitute the SDE \(dx_t=b(x_t,t)dt+g(t)dw_t\). The stochastic scaling rules are</p>
+
+$$
+dt^2\approx 0,
+\qquad
+dt\,dw_t\approx 0,
+\qquad
+dw_t\,dw_t^\top\approx I\,dt.
+$$
+
+    <p>Therefore</p>
+
+$$
+dx_tdx_t^\top
+=
+\left(b\,dt+g\,dw_t\right)
+\left(b\,dt+g\,dw_t\right)^\top
+\approx
+g(t)^2I\,dt.
+$$
+
+    <p>The second-order Taylor term becomes</p>
+
+$$
+\frac{1}{2}dx_t^\top\nabla_x^2 f\,dx_t
+=
+\frac{1}{2}g(t)^2\Delta_x f\,dt.
+$$
+
+    <p>The first-order term becomes</p>
+
+$$
+\nabla_x f^\top dx_t
+=
+\nabla_x f^\top b\,dt
++
+g(t)\nabla_x f^\top dw_t.
+$$
+
+    <p>Compare this with an ODE. If there is no Brownian noise, the dynamics are</p>
+
+$$
+dx_t
+=
+b(x_t,t)\,dt.
+$$
+
+    <p>The ordinary chain rule gives</p>
+
+$$
+df(t,x_t)
+=
+\partial_t f\,dt
++
+\nabla_x f^\top dx_t
+=
+\left[
+\partial_t f
++
+\nabla_x f^\top b
+\right]dt.
+$$
+
+    <p>So the contrast is</p>
+
+$$
+\text{ODE:}\qquad
+df
+=
+\left[
+\partial_t f+\nabla_x f^\top b
+\right]dt.
+$$
+
+$$
+\text{SDE:}\qquad
+df
+=
+\left[
+\partial_t f+\nabla_x f^\top b
++
+\frac{1}{2}g(t)^2\Delta_x f
+\right]dt
++
+g(t)\nabla_x f^\top dw_t.
+$$
+
+        <p><strong>Conclusion:</strong> the extra \(\frac{1}{2}g(t)^2\Delta_x f\) term is the signature of Brownian noise. It is the reason SDEs evolve densities differently from ODEs.</p>
+      </div>
+    </details>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">Solving the OU process</span>
+      </summary>
+      <div class="ddim-block__content">
+
+    <p>For example, the Ornstein-Uhlenbeck process from the lecture is</p>
+
+$$
+dX_t
+=
+-X_t\,dt
++
+\sqrt{2}\,dw_t.
+$$
+
+    <p>To solve it with Itô's formula, choose</p>
+
+$$
+f(t,x)=e^t x.
+$$
+
+    <p>Then</p>
+
+$$
+\partial_t f=e^t x,
+\qquad
+\partial_x f=e^t,
+\qquad
+\partial_{xx}f=0.
+$$
+
+    <p>Apply Itô's formula to \(f(t,X_t)=e^tX_t\):</p>
+
+$$
+\begin{aligned}
+d(e^tX_t)
+&=
+\left(
+\partial_t f
++
+\partial_x f(-X_t)
++
+\frac{1}{2}\partial_{xx}f\cdot 2
+\right)dt
++
+\partial_x f\sqrt{2}\,dw_t \\
+&=
+\left(e^tX_t-e^tX_t+0\right)dt
++
+\sqrt{2}e^t\,dw_t \\
+&=
+\sqrt{2}e^t\,dw_t.
+\end{aligned}
+$$
+
+    <p>Integrate from \(0\) to \(t\):</p>
+
+$$
+e^tX_t-X_0
+=
+\sqrt{2}
+\int_0^t e^s\,dw_s.
+$$
+
+    <p>Therefore</p>
+
+$$
+X_t
+=
+e^{-t}X_0
++
+\sqrt{2}
+\int_0^t e^{-(t-s)}\,dw_s.
+$$
+
+    <p>Since the Itô integral is Gaussian with variance \(1-e^{-2t}\), the distributional form is</p>
+
+$$
+X_t
+\overset{d}{=}
+e^{-t}X_0
++
+\sqrt{1-e^{-2t}}\,\epsilon,
+\qquad
+\epsilon\sim\mathcal{N}(0,I).
+$$
+
+        <p>This is exactly the diffusion-model intuition: the signal coefficient decays, while the noise coefficient grows.</p>
+      </div>
+    </details>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">Fokker-Planck and time reversal</span>
+      </summary>
+      <div class="ddim-block__content">
+
+    <p><strong>Fokker-Planck equation.</strong> To understand the distribution rather than one sample path, apply Itô's formula to a test function \(\varphi(x_t)\), take expectation, and use integration by parts. This gives the density PDE:</p>
+
+$$
+\frac{\partial p_t(x)}{\partial t}
+=
+-\nabla_x\cdot\left(b(x,t)p_t(x)\right)
++
+\frac{1}{2}g(t)^2\Delta_x p_t(x).
+$$
+
+    <p>The first term transports probability mass according to the drift. The second term spreads probability mass because of noise. <strong>Fokker-Planck is the bridge from sample dynamics to distribution dynamics.</strong></p>
+
+    <p><strong>Time reversal.</strong> In diffusion models, the forward process starts from data and ends near noise. Generation needs the opposite direction. If the forward SDE produces marginals \(p_t(x)\), then the reverse-time process must have marginals \(p_{T-t}(x)\).</p>
+
+    <p>The lecture derives the reverse process by forcing the reverse density to satisfy the correct Fokker-Planck equation. The drift that makes the equations match contains the score:</p>
+
+$$
+d x_t
+=
+\left[
+b(x_t,t)
+-
+g(t)^2\nabla_x\log p_t(x_t)
+\right]dt
++
+g(t)\,d\bar{w}_t.
+$$
+
+    <p>The new term is</p>
+
+$$
+\nabla_x\log p_t(x).
+$$
+
+        <p><strong>This is the key conclusion: reversing a diffusion requires the score of the noisy marginal distribution.</strong> The forward SDE is chosen by the model designer, but the reverse SDE is unknown until we learn or estimate \(\nabla_x\log p_t(x)\).</p>
+      </div>
+    </details>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">Probability flow ODE</span>
+      </summary>
+      <div class="ddim-block__content">
+
+    <p><strong>Probability flow ODE.</strong> The lecture then asks whether sampling must be stochastic. Surprisingly, there is a deterministic ODE with the same one-time marginal densities:</p>
+
+$$
+d x_t
+=
+\left[
+b(x_t,t)
+-
+\frac{1}{2}g(t)^2\nabla_x\log p_t(x_t)
+\right]dt.
+$$
+
+    <p><strong>The reverse SDE and probability flow ODE can have the same marginal distributions, but they do not have the same paths.</strong> The SDE path is random and non-smooth; the ODE path is deterministic and smooth once the initial noise sample is fixed.</p>
+
+    <p>For the variance-exploding case</p>
+
+$$
+d x_t
+=
+g(t)\,dw_t,
+$$
+
+    <p>the probability flow ODE becomes</p>
+
+$$
+d x_t
+=
+-\frac{1}{2}g(t)^2\nabla_x\log p_t(x_t)\,dt.
+$$
+
+        <p>Running this ODE backward gives a deterministic sampler. <strong>This is the conceptual bridge from score-based SDEs to ODE samplers such as probability-flow sampling and many modern diffusion solvers.</strong></p>
+      </div>
+    </details>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Why we can use denoising score matching (Gradient perspective)</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>This derivation follows Vincent's denoising score matching view: instead of estimating the unknown marginal score directly, train against the conditional score of a known noising process.<sup class="footnote-ref" id="fnref:smdae"><a href="#fn:smdae">12</a></sup></p>
+
+    <p>Fix a timestep \(t\). Let \(q_{\mathrm{data}}(x_0)\) be the data distribution, \(q_t(x_t\mid x_0)\) be the forward noising kernel, and \(q_t(x_0,x_t)=q_{\mathrm{data}}(x_0)q_t(x_t\mid x_0)\) be the joint distribution of clean and noisy samples. The noisy marginal is</p>
+
+$$
+q_t(x_t)
+=
+\int q_{\mathrm{data}}(x_0)q_t(x_t\mid x_0)\,dx_0
+$$
+
+    <p>The score model tries to learn the marginal score</p>
+
+$$
+s_\theta(x_t,t)
+\approx
+\nabla_{x_t}\log q_t(x_t).
+$$
+
+    <p>The explicit score matching objective is</p>
+
+$$
+J_{\mathrm{SM}}(\theta)
+=
+\mathbb{E}_{q_t(x_t)}
+\left[
+\frac{1}{2}
+\left\|
+s_\theta(x_t,t)
+-
+\nabla_{x_t}\log q_t(x_t)
+\right\|_2^2
+\right].
+$$
+
+    <p>Expand the square:</p>
+
+$$
+\begin{aligned}
+J_{\mathrm{SM}}(\theta)
+&=
+\mathbb{E}_{q_t(x_t)}
+\left[
+\frac{1}{2}\|s_\theta(x_t,t)\|_2^2
+\right]
+-
+\mathbb{E}_{q_t(x_t)}
+\left[
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}\log q_t(x_t)
+\right\rangle
+\right]
++
+C_1,
+\end{aligned}
+$$
+
+    <p>where \(C_1\) does not depend on \(\theta\). The difficult term contains the unknown marginal score. Rewrite that term using the definition of \(q_t(x_t)\):</p>
+
+$$
+\begin{aligned}
+&\mathbb{E}_{q_t(x_t)}
+\left[
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}\log q_t(x_t)
+\right\rangle
+\right] \\
+&=
+\int q_t(x_t)
+\left\langle
+s_\theta(x_t,t),
+\frac{\nabla_{x_t}q_t(x_t)}{q_t(x_t)}
+\right\rangle
+dx_t \\
+&=
+\int
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}q_t(x_t)
+\right\rangle
+dx_t \\
+&=
+\int
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}
+\int q_{\mathrm{data}}(x_0)q_t(x_t\mid x_0)\,dx_0
+\right\rangle
+dx_t \\
+&=
+\int\!\!\int
+q_{\mathrm{data}}(x_0)q_t(x_t\mid x_0)
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\rangle
+dx_0dx_t \\
+&=
+\mathbb{E}_{q_t(x_0,x_t)}
+\left[
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\rangle
+\right].
+\end{aligned}
+$$
+
+    <p>So the explicit objective becomes</p>
+
+$$
+\begin{aligned}
+J_{\mathrm{SM}}(\theta)
+&=
+\mathbb{E}_{q_t(x_0,x_t)}
+\left[
+\frac{1}{2}\|s_\theta(x_t,t)\|_2^2
+-
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\rangle
+\right]
++
+C_1.
+\end{aligned}
+$$
+
+    <p>Now define the denoising score matching objective using the conditional score:</p>
+
+$$
+J_{\mathrm{DSM}}(\theta)
+=
+\mathbb{E}_{q_t(x_0,x_t)}
+\left[
+\frac{1}{2}
+\left\|
+s_\theta(x_t,t)
+-
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\|_2^2
+\right].
+$$
+
+    <p>Expanding it gives</p>
+
+$$
+\begin{aligned}
+J_{\mathrm{DSM}}(\theta)
+&=
+\mathbb{E}_{q_t(x_0,x_t)}
+\left[
+\frac{1}{2}\|s_\theta(x_t,t)\|_2^2
+-
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\rangle
++
+\frac{1}{2}
+\left\|
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\|_2^2
+\right]
+\\
+&=
+\mathbb{E}_{q_t(x_0,x_t)}
+\left[
+\frac{1}{2}\|s_\theta(x_t,t)\|_2^2
+-
+\left\langle
+s_\theta(x_t,t),
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\rangle
+\right]
++
+C_2,
+\end{aligned}
+$$
+
+    <p>where</p>
+
+$$
+C_2
+=
+\mathbb{E}_{q_t(x_0,x_t)}
+\left[
+\frac{1}{2}
+\left\|
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\|_2^2
+\right]
+$$
+
+    <p>does not depend on \(\theta\). Therefore</p>
+
+$$
+J_{\mathrm{SM}}(\theta)
+=
+J_{\mathrm{DSM}}(\theta)
++
+\text{constant}.
+$$
+
+    <p>They have the same optimizer. This is the gradient-perspective reason that we can train a score model with the known conditional corruption score instead of the unknown marginal score.</p>
+
+    <p>For the common Gaussian noising kernel</p>
+
+$$
+x_t
+=
+\alpha_t x_0+\sigma_t\epsilon,
+\qquad
+\epsilon\sim\mathcal{N}(0,I),
+$$
+
+    <p>the conditional score is</p>
+
+$$
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+=
+-\frac{x_t-\alpha_t x_0}{\sigma_t^2}
+=
+-\frac{\epsilon}{\sigma_t}.
+$$
+
+    <p>So the practical denoising score matching objective is</p>
+
+$$
+\mathcal{L}_{\mathrm{DSM}}
+=
+\mathbb{E}_{t,x_0,\epsilon}
+\left[
+\lambda(t)
+\left\|
+s_\theta(\alpha_t x_0+\sigma_t\epsilon,t)
++
+\frac{\epsilon}{\sigma_t}
+\right\|_2^2
+\right].
+$$
+
+    <p>This is the bridge from score prediction to noise prediction: predicting \(\epsilon\) is equivalent to predicting the score up to the scale factor \(-1/\sigma_t\).</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>4.</strong> Deriving Tweedie's formula</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Use the general linear Gaussian corruption</p>
+
+$$
+x_t
+=
+\alpha_t x_0+\sigma_t\epsilon,
+\qquad
+\epsilon\sim\mathcal{N}(0,I).
+$$
+
+    <p>The target identity is</p>
+
+$$
+\nabla_{x_t}\log p_t(x_t)
+=
+\frac{\alpha_t\mathbb{E}[x_0\mid x_t]-x_t}{\sigma_t^2}.
+$$
+
+    <p>Start from the definition of the score:</p>
+
+$$
+\nabla_{x_t}\log p_t(x_t)
+=
+\frac{1}{p_t(x_t)}
+\nabla_{x_t}p_t(x_t).
+$$
+
+    <p>The noisy marginal \(p_t(x_t)\) is obtained by integrating out \(x_0\):</p>
+
+$$
+p_t(x_t)
+=
+\int p_0(x_0)p_t(x_t\mid x_0)\,dx_0.
+$$
+
+    <p>Therefore</p>
+
+$$
+\begin{aligned}
+\nabla_{x_t}\log p_t(x_t)
+&=
+\frac{1}{p_t(x_t)}
+\nabla_{x_t}
+\int p_0(x_0)p_t(x_t\mid x_0)\,dx_0 \\
+&=
+\frac{1}{p_t(x_t)}
+\int p_0(x_0)\nabla_{x_t}p_t(x_t\mid x_0)\,dx_0.
+\end{aligned}
+$$
+
+    <p>Rewrite the derivative of the conditional density as a conditional score:</p>
+
+$$
+\nabla_{x_t}p_t(x_t\mid x_0)
+=
+p_t(x_t\mid x_0)
+\nabla_{x_t}\log p_t(x_t\mid x_0).
+$$
+
+    <p>Substitute this and use Bayes' rule \(p_0(x_0)p_t(x_t\mid x_0)=p_0(x_0\mid x_t)p_t(x_t)\):</p>
+
+$$
+\begin{aligned}
+\nabla_{x_t}\log p_t(x_t)
+&=
+\frac{1}{p_t(x_t)}
+\int
+p_0(x_0)p_t(x_t\mid x_0)
+\nabla_{x_t}\log p_t(x_t\mid x_0)\,dx_0 \\
+&=
+\int
+p_0(x_0\mid x_t)
+\nabla_{x_t}\log p_t(x_t\mid x_0)\,dx_0.
+\end{aligned}
+$$
+
+    <p>For the Gaussian conditional</p>
+
+$$
+p_t(x_t\mid x_0)
+=
+\mathcal{N}(\alpha_t x_0,\sigma_t^2I),
+$$
+
+    <p>we have</p>
+
+$$
+\nabla_{x_t}\log p_t(x_t\mid x_0)
+=
+\frac{\alpha_t x_0-x_t}{\sigma_t^2}.
+$$
+
+    <p>Plug this into the posterior expectation:</p>
+
+$$
+\begin{aligned}
+\nabla_{x_t}\log p_t(x_t)
+&=
+\int
+\frac{\alpha_t x_0-x_t}{\sigma_t^2}
+p_0(x_0\mid x_t)\,dx_0 \\
+&=
+\frac{\alpha_t\mathbb{E}[x_0\mid x_t]-x_t}{\sigma_t^2}.
+\end{aligned}
+$$
+
+    <p>Rearranging gives Tweedie's formula for this linear Gaussian corruption:</p>
+
+$$
+\mathbb{E}[x_0\mid x_t]
+=
+\frac{x_t+\sigma_t^2\nabla_{x_t}\log p_t(x_t)}
+{\alpha_t}.
+$$
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>5.</strong> Why we can use denoising score matching (from Tweedie's formula)</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Tweedie's formula gives another route from denoising to score estimation. For the Gaussian corruption</p>
+
+$$
+x_\sigma
+=
+x_0+\sigma\epsilon,
+\qquad
+\epsilon\sim\mathcal{N}(0,I),
+$$
+
+    <p>the posterior mean of the clean sample satisfies</p>
+
+$$
+\mathbb{E}[x_0\mid x_\sigma]
+=
+x_\sigma
++
+\sigma^2\nabla_{x_\sigma}\log p_\sigma(x_\sigma).
+$$
+
+    <p>Rearranging gives the score in terms of the optimal denoiser:</p>
+
+$$
+\nabla_{x_\sigma}\log p_\sigma(x_\sigma)
+=
+\frac{\mathbb{E}[x_0\mid x_\sigma]-x_\sigma}{\sigma^2}.
+$$
+
+    <p>If a neural denoiser \(D_\theta(x_\sigma,\sigma)\) is trained to predict \(x_0\), then it gives a score estimator</p>
+
+$$
+s_\theta(x_\sigma,\sigma)
+=
+\frac{D_\theta(x_\sigma,\sigma)-x_\sigma}{\sigma^2}.
+$$
+
+    <p>Training the denoiser with reconstruction loss</p>
+
+$$
+\mathcal{L}_{\mathrm{denoise}}
+=
+\mathbb{E}_{x_0,\epsilon,\sigma}
+\left[
+\left\|
+D_\theta(x_0+\sigma\epsilon,\sigma)-x_0
+\right\|_2^2
+\right]
+$$
+
+    <p>therefore also trains the score, because the optimal denoiser is the posterior mean \(\mathbb{E}[x_0\mid x_\sigma]\).</p>
+
+    <p>For the VP/DDPM form \(x_t=\alpha_t x_0+\sigma_t\epsilon\), Tweedie's formula becomes</p>
+
+$$
+\mathbb{E}[x_0\mid x_t]
+=
+\frac{x_t+\sigma_t^2\nabla_{x_t}\log p_t(x_t)}
+{\alpha_t},
+$$
+
+    <p>so the score can be recovered from a clean-sample predictor:</p>
+
+$$
+\nabla_{x_t}\log p_t(x_t)
+=
+\frac{\alpha_t D_\theta(x_t,t)-x_t}{\sigma_t^2}.
+$$
+  </div>
+</details>
 
 ### Flow Matching
 
@@ -1257,16 +2202,163 @@ $$
   </div>
 </details>
 
-## Deep dive in diffusion models
-> Math related properties.
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>Q3.</strong> Why does a denoiser trained with MSE learn the conditional mean?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Suppose a denoiser \(h_\theta\) observes \(x_t\) and is trained to predict the clean sample \(x_0\) with squared error:</p>
 
-### Itô integral
+$$
+J(\theta)
+=
+\mathbb{E}_{x_0,x_t}
+\left[
+\left\|
+h_\theta(x_t)-x_0
+\right\|_2^2
+\right].
+$$
 
-### Fokker-Planck equations
+    <p>Condition on \(x_t\) and expand the square:</p>
 
-### Tweedie's formula
+$$
+J(\theta)
+=
+\mathbb{E}_{x_t}\mathbb{E}_{x_0\mid x_t}
+\|h_\theta(x_t)-x_0\|_2^2.
+$$
 
-### Denosing score matching
+$$
+J(\theta)
+=
+\mathbb{E}_{x_t}
+\big[
+\|h_\theta(x_t)\|_2^2
+-
+2h_\theta(x_t)^T\mathbb{E}[x_0\mid x_t]
++
+\mathbb{E}[\|x_0\|_2^2\mid x_t]
+\big].
+$$
+
+    <p>For any fixed \(x_t\), the term that depends on \(h_\theta(x_t)\) is</p>
+
+$$
+\|h_\theta(x_t)\|_2^2
+-
+2h_\theta(x_t)^T\mathbb{E}[x_0\mid x_t].
+$$
+
+    <p>Set \(h=h_\theta(x_t)\). Minimizing this is equivalent to</p>
+
+$$
+\arg\min_h
+\left(
+h^Th
+-
+2h^T\mathbb{E}[x_0\mid x_t]
+\right).
+$$
+
+    <p>Take the derivative and set it to zero:</p>
+
+$$
+2h-2\mathbb{E}[x_0\mid x_t]=0.
+$$
+
+    <p>Therefore the optimal denoiser is</p>
+
+$$
+h_{\theta^*}(x_t)
+=
+\mathbb{E}[x_0\mid x_t].
+$$
+
+    <p>So under MSE, the optimal denoiser is not necessarily the original clean sample for each noisy input. It is the posterior average of all clean samples that could have produced that noisy input.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>Q4.</strong> Solving a stochastic differential equation</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>A natural way to solve the Ornstein-Uhlenbeck process is to treat it like a first-order linear ODE, except that the forcing term is stochastic:</p>
+
+$$
+dX_t=-X_t\,dt+\sqrt{2}\,dW_t,
+$$
+
+    <p>where \(W_t\) is Brownian motion. Move the drift term to the left:</p>
+
+$$
+dX_t+X_t\,dt=\sqrt{2}\,dW_t.
+$$
+
+    <p>Now multiply by the integrating factor \(e^t\):</p>
+
+$$
+e^t\,dX_t+e^tX_t\,dt=\sqrt{2}\,e^t\,dW_t.
+$$
+
+    <p>The left side is exactly</p>
+
+$$
+d(e^tX_t)
+=
+e^t\,dX_t+e^tX_t\,dt,
+$$
+
+    <p>so the SDE becomes</p>
+
+$$
+d(e^tX_t)=\sqrt{2}\,e^t\,dW_t.
+$$
+
+    <p>Integrating from \(0\) to \(t\),</p>
+
+$$
+e^tX_t
+=
+X_0
++
+\sqrt{2}\int_0^t e^s\,dW_s,
+$$
+
+    <p>so</p>
+
+$$
+X_t
+=
+e^{-t}X_0
++
+\sqrt{2}\int_0^t e^{-(t-s)}\,dW_s.
+$$
+
+    <p>Now use the fact that the stochastic integral is Gaussian with mean \(0\) and variance</p>
+
+$$
+2\int_0^t e^{-2(t-s)}\,ds
+=
+1-e^{-2t}.
+$$
+
+    <p>Therefore</p>
+
+$$
+X_t
+=
+e^{-t}X_0
++
+\sqrt{1-e^{-2t}}\,Z,
+\qquad
+Z\sim\mathcal{N}(0,I).
+$$
+
+    <p>So the natural story is: solve the linear SDE with an integrating factor first, then compute the distribution of the stochastic integral. This is why OU-like SDEs are useful in diffusion models: the marginal has the familiar form “decayed signal plus Gaussian noise.”</p>
+  </div>
+</details>
 
 ## Samplers
 > How do we sample efficiently from a pretrained denoiser?
@@ -1313,6 +2405,17 @@ $$
 }
 .page__content .ddim-block__content p:first-child {
   margin-top: 0.45rem;
+}
+.page__content .foundation-subblock {
+  margin: 0.8rem 0 0.6rem;
+  padding-left: 1rem;
+  border-top: 1px solid #d9dee4;
+}
+.page__content .foundation-subblock .ddim-block__title {
+  font-size: 0.98rem;
+}
+.page__content .foundation-subblock .ddim-block__content {
+  border-top-color: #d9dee4;
 }
 .page__content .ddim-algorithm__require {
   padding: 0.45rem 0 0.35rem;
@@ -2124,6 +3227,7 @@ $$
         </tr>
       </tbody>
     </table>
+
   </div>
 </details>
 
@@ -2176,8 +3280,7 @@ $$
       <h3>Model</h3>
       <ul>
         <li>Reparameterization</li>
-        <li>Input/output scaling</li>
-        <li>How to do time conditioning</li>
+        <li>Input/output scaling and time conditioning</li>
       </ul>
     </div>
     <div class="design-space-card design-space-card--sampling">
@@ -2229,6 +3332,20 @@ x_t
 \sqrt{1-\bar{\alpha}_t}\epsilon,
 $$
 
+    <p>Here \(\beta_t\) is the step-wise noise variance, while \(\sigma_t\) is the accumulated marginal noise scale up to time \(t\):</p>
+
+$$
+\sigma_t
+=
+\sqrt{1-\bar{\alpha}_t}
+=
+\sqrt{
+1-\prod_{i=1}^{t}(1-\beta_i)
+}.
+$$
+
+    <p>So a schedule can be described either by the per-step noise \(\beta_t\), or by the accumulated noise level \(\sigma_t\). Small \(\beta_t\)'s can still produce a large \(\sigma_t\) after many steps because the noise accumulates.</p>
+
 $$
 \mathrm{SNR}(t)
 =
@@ -2252,7 +3369,21 @@ $$
 \left(\beta_{\max}-\beta_{\min}\right).
 $$
 
-    <p><strong>Cosine scheduler</strong> instead defines the cumulative signal \(\bar{\alpha}_t\) with a cosine-shaped curve, then derives \(\beta_t\) from it:</p>
+    <p>In terms of the marginal noise scale, this means</p>
+
+$$
+\sigma(t)
+=
+\sqrt{1-\bar{\alpha}_t}
+=
+\sqrt{
+1-\prod_{i=1}^{t}(1-\beta_i)
+},
+\qquad
+\beta_{i+1}-\beta_i=c.
+$$
+
+    <p><strong>Cosine scheduler</strong> does not make SNR itself cosine. It defines the cumulative signal \(\bar{\alpha}_t\), equivalently the marginal noise scale \(\sigma(t)\), with a cosine-shaped rule:</p>
 
 $$
 \bar{\alpha}_t
@@ -2267,10 +3398,22 @@ f(t)
 $$
 
 $$
+\sigma(t)
+=
+\sqrt{1-\bar{\alpha}_t}
+\approx
+\sin\!\left(
+\frac{t/T+s}{1+s}\cdot\frac{\pi}{2}
+\right),
+$$
+
+$$
 \beta_t
 =
 1-\frac{\bar{\alpha}_t}{\bar{\alpha}_{t-1}}.
 $$
+
+    <p>So the names refer to different directly designed quantities: linear means \(\beta_t\) is linear in discrete time, while cosine means the cumulative signal/noise path follows a cosine/sine shape. SNR is then derived from \(\bar{\alpha}_t\).</p>
 
     <figure>
       <img src="/images/blog/diffusion/snr-forward-linear-cosine.png" alt="Forward noising comparison for linear and cosine schedules across timesteps" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
@@ -2350,6 +3493,8 @@ x_t
 $$
 
     <p>The key idea is that the model does not only care what noise levels exist; it also cares how often training visits each noise level.</p>
+
+    <p><strong>IDEA:</strong> This could also be a way to make diffusion work better in high-dimensional latent spaces: LangFlow learns an information-uniform noise schedule for continuous language embeddings,<sup class="footnote-ref" id="fnref:langflow"><a href="#fn:langflow">10</a></sup> while RAE-style latent diffusion highlights the challenge of training diffusion transformers in semantically rich, high-dimensional representation spaces.<sup class="footnote-ref" id="fnref:rae"><a href="#fn:rae">11</a></sup></p>
   </div>
 </details>
 
@@ -2447,31 +3592,171 @@ $$
 
 <details class="ddim-block">
   <summary>
-    <span class="ddim-block__title"><strong>5.</strong> Input/output scaling</span>
+    <span class="ddim-block__title"><strong>5.</strong> Input/output scaling and time conditioning</span>
   </summary>
   <div class="ddim-block__content">
-    <p>At different noise levels, \(x_t\) can have different magnitudes. Input/output scaling normalizes the signal seen by the network and rescales the prediction back to the desired target:</p>
+    <p><strong>The design logic.</strong> The denoiser \(D_\theta(x;\sigma)\) predicts the clean data \(x_0\) from a noisy input \(x\) at noise level \(\sigma\).</p>
+
+    <p>At very small noise, the input is already close to clean data, so the model should mostly pass the input through:</p>
 
 $$
-\hat{x}_t
+\sigma \to 0
+\quad\Rightarrow\quad
+x \approx x_0
+\quad\Rightarrow\quad
+D_\theta(x;\sigma)\approx x,
+$$
+
+    <p>At very large noise, the input is mostly noise, so the model should ignore more of the input and rely more on the neural network prediction:</p>
+
+$$
+\sigma \to \infty
+\quad\Rightarrow\quad
+x \text{ is mostly noise}
+\quad\Rightarrow\quad
+D_\theta(x;\sigma) \text{ should rely more on } F_\theta.
+$$
+
+    <p>This suggests a skip-plus-residual form:</p>
+
+$$
+D_\theta(x;\sigma)
 =
-c_{\mathrm{in}}(t)x_t,
+c_{\mathrm{skip}}(\sigma)x
++
+c_{\mathrm{out}}(\sigma)
+F_\theta
+\!\left(
+c_{\mathrm{in}}(\sigma)x;
+c_{\mathrm{noise}}(\sigma)
+\right).
+$$
+
+    <p>Here \(c_{\mathrm{skip}}\) should be large at low noise and small at high noise, while \(c_{\mathrm{out}}\) controls how much residual correction comes from the network.</p>
+
+    <p>We also want the neural network interface to be well-conditioned:</p>
+
+$$
+\mathrm{Var}\!\left[c_{\mathrm{in}}(\sigma)x\right]\approx 1,
 \qquad
-\hat{y}_\theta
-=
-c_{\mathrm{out}}(t)F_\theta(\hat{x}_t,t).
+\mathrm{Var}\!\left[
+\frac{x_0-c_{\mathrm{skip}}(\sigma)x}
+{c_{\mathrm{out}}(\sigma)}
+\right]\approx 1.
 $$
 
-    <p>This is a model design choice: the mathematical diffusion process can be fixed, while the neural network interface is rescaled for easier learning.</p>
-  </div>
-</details>
+    <p>More explicitly, write the noisy input as \(x=y+n\), where \(y\sim p_{\mathrm{data}}\), \(n\sim\mathcal{N}(0,\sigma^2I)\), and \(\mathrm{Var}(y)=\sigma_{\mathrm{data}}^2\). The input scaling should satisfy</p>
 
-<details class="ddim-block">
-  <summary>
-    <span class="ddim-block__title"><strong>6.</strong> How to do time conditioning</span>
-  </summary>
-  <div class="ddim-block__content">
-    <p>The denoiser needs to know the current noise level. Instead of feeding raw \(t\), many models embed either \(t\), \(\sigma_t\), or log-SNR:</p>
+$$
+\mathrm{Var}_{y,n}
+\!\left[
+c_{\mathrm{in}}(\sigma)(y+n)
+\right]
+=
+1
+\quad\Rightarrow\quad
+c_{\mathrm{in}}(\sigma)^2
+\left(
+\sigma_{\mathrm{data}}^2+\sigma^2
+\right)
+=
+1.
+$$
+
+    <p>After substituting the preconditioned denoiser into the weighted denoising loss, the objective can be rewritten as a supervised loss on \(F_\theta\):</p>
+
+$$
+\lambda(\sigma)
+\left\|
+D_\theta(y+n;\sigma)-y
+\right\|_2^2
+=
+\lambda(\sigma)c_{\mathrm{out}}(\sigma)^2
+\left\|
+F_\theta(c_{\mathrm{in}}(\sigma)(y+n);c_{\mathrm{noise}}(\sigma))
+-
+F_{\mathrm{target}}(y,n;\sigma)
+\right\|_2^2.
+$$
+
+    <p>So \(c_{\mathrm{out}}\) is tied to the effective loss weighting:</p>
+
+$$
+w(\sigma)
+=
+\lambda(\sigma)c_{\mathrm{out}}(\sigma)^2.
+$$
+
+    <p>The effective target of \(F_\theta\) is</p>
+
+$$
+F_{\mathrm{target}}(y,n;\sigma)
+=
+\frac{1}{c_{\mathrm{out}}(\sigma)}
+\left(
+y
+-
+c_{\mathrm{skip}}(\sigma)(y+n)
+\right),
+$$
+
+    <p>EDM chooses \(c_{\mathrm{out}}\) so this target has unit variance:</p>
+
+$$
+\mathrm{Var}_{y,n}
+\!\left[
+F_{\mathrm{target}}(y,n;\sigma)
+\right]
+=
+1
+\quad\Rightarrow\quad
+c_{\mathrm{out}}(\sigma)^2
+=
+\left(1-c_{\mathrm{skip}}(\sigma)\right)^2
+\sigma_{\mathrm{data}}^2
++
+c_{\mathrm{skip}}(\sigma)^2\sigma^2.
+$$
+
+    <p>Finally, choose the skip weight to make the required network correction as small as possible:</p>
+
+$$
+c_{\mathrm{skip}}(\sigma)
+=
+\arg\min_{c}
+\left[
+\left(1-c\right)^2\sigma_{\mathrm{data}}^2
++
+c^2\sigma^2
+\right].
+$$
+
+    <p><strong>What EDM uses.</strong> If the data has standard deviation \(\sigma_{\mathrm{data}}\), EDM chooses the following preconditioning coefficients:</p>
+
+$$
+c_{\mathrm{skip}}(\sigma)
+=
+\frac{\sigma_{\mathrm{data}}^2}
+{\sigma^2+\sigma_{\mathrm{data}}^2},
+\qquad
+c_{\mathrm{out}}(\sigma)
+=
+\frac{\sigma\sigma_{\mathrm{data}}}
+{\sqrt{\sigma^2+\sigma_{\mathrm{data}}^2}},
+$$
+
+$$
+c_{\mathrm{in}}(\sigma)
+=
+\frac{1}
+{\sqrt{\sigma^2+\sigma_{\mathrm{data}}^2}},
+\qquad
+c_{\mathrm{noise}}(\sigma)
+=
+\frac{1}{4}\log\sigma.
+$$
+
+    <p>Here \(c_{\mathrm{in}}\) rescales the input before it enters the network, \(c_{\mathrm{out}}\) rescales the network output, \(c_{\mathrm{skip}}\) reuses information already present in the noisy input, and \(c_{\mathrm{noise}}\) is the time/noise conditioning signal.</p>
 
 $$
 \lambda_t
@@ -2485,13 +3770,44 @@ e_t
 \mathrm{Embed}(\lambda_t).
 $$
 
-    <p>The embedding can be injected through additive bias, adaptive normalization, or attention conditioning.</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 0.9rem 0; font-size: 0.95rem;">
+      <thead>
+        <tr>
+          <th style="border-bottom: 1px solid #d6dde3; padding: 0.45rem; text-align: left;">Method</th>
+          <th style="border-bottom: 1px solid #d6dde3; padding: 0.45rem; text-align: left;">Where it acts</th>
+          <th style="border-bottom: 1px solid #d6dde3; padding: 0.45rem; text-align: left;">Math form</th>
+          <th style="border-bottom: 1px solid #d6dde3; padding: 0.45rem; text-align: left;">Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">additive bias</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">residual stream</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">\(h+b(e_t)\)</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">shift</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">adaptive norm</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">normalization layer</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">\(\gamma(e_t)h+\beta(e_t)\)</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">scale + shift</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.45rem;">attention conditioning</td>
+          <td style="padding: 0.45rem;">attention matrix</td>
+          <td style="padding: 0.45rem;">modify \(Q,K,V\)</td>
+          <td style="padding: 0.45rem;">interaction</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><strong>IDEA:</strong> This is closely related to JiT, which also emphasizes making denoising models directly predict clean data rather than noised quantities.<sup class="footnote-ref" id="fnref:jit"><a href="#fn:jit">9</a></sup></p>
   </div>
 </details>
 
 <details class="ddim-block">
   <summary>
-    <span class="ddim-block__title"><strong>7.</strong> Solver</span>
+    <span class="ddim-block__title"><strong>6.</strong> Solver</span>
   </summary>
   <div class="ddim-block__content">
     <p>See sampler section.</p>
@@ -2500,7 +3816,7 @@ $$
 
 <details class="ddim-block">
   <summary>
-    <span class="ddim-block__title"><strong>8.</strong> Sampling-time noise schedule</span>
+    <span class="ddim-block__title"><strong>7.</strong> Sampling-time noise schedule</span>
   </summary>
   <div class="ddim-block__content">
     <p>The schedule used during sampling does not have to visit every training timestep. In EDM, Karras et al.<sup class="footnote-ref" id="fnref:edm"><a href="#fn:edm">7</a></sup> study this as a discretization problem: for a fixed number of sampling steps, choose the noise levels \(\{\sigma_i\}\) so the numerical solver has smaller truncation error. A more detailed analysis can be found in Appendix D.1 of EDM.</p>
@@ -2549,7 +3865,7 @@ $$
 
 <details class="ddim-block">
   <summary>
-    <span class="ddim-block__title"><strong>9.</strong> Number of time steps</span>
+    <span class="ddim-block__title"><strong>8.</strong> Number of time steps</span>
   </summary>
   <div class="ddim-block__content">
     <table style="width: 100%; border-collapse: collapse; margin: 0.9rem 0; font-size: 0.95rem;">
@@ -2567,7 +3883,7 @@ $$
           <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">slow reference sampling</td>
         </tr>
         <tr>
-          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">DDIM / PLMS / classic Stable Diffusion samplers</td>
+          <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">DDIM / classic Stable Diffusion samplers</td>
           <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">\(20\)-\(50\)</td>
           <td style="padding: 0.45rem; border-bottom: 1px solid #edf1f4;">standard image generation</td>
         </tr>
@@ -2602,10 +3918,133 @@ $$
 ## Guidance
 > Guidance, a cheat code for diffusion models.<sup class="footnote-ref" id="fnref:guidance-cheat-code"><a href="#fn:guidance-cheat-code">4</a></sup>
 
+### Training based guidance
+
+### Training free guidance
+
 ## Distillation
 > How to train one-step and few-step diffusion models.
 
 ### Distribution matching distillation
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> ADD and LADD</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p><strong>ADD</strong> stands for Adversarial Diffusion Distillation.<sup class="footnote-ref" id="fnref:add"><a href="#fn:add">13</a></sup> It trains a few-step student with two signals: a diffusion teacher gives a score-distillation direction, and an adversarial loss pushes the samples to look realistic in the very low-step regime.</p>
+
+$$
+\mathcal{L}_{\mathrm{ADD}}
+=
+\mathcal{L}_{\mathrm{score}}
++
+\lambda_{\mathrm{adv}}\mathcal{L}_{\mathrm{adv}}.
+$$
+
+    <p>The score term keeps the student close to the teacher distribution. The adversarial term fixes the visual sharpness problem that often appears when a many-step diffusion model is compressed to one or a few steps.</p>
+
+    <p><strong>LADD</strong> stands for Latent Adversarial Diffusion Distillation.<sup class="footnote-ref" id="fnref:ladd"><a href="#fn:ladd">14</a></sup> It keeps the same distribution-matching spirit, but moves the adversarial comparison into the latent or feature space of a pretrained latent diffusion model.</p>
+
+$$
+\mathcal{L}_{\mathrm{LADD}}
+=
+\mathcal{L}_{\mathrm{score}}
++
+\lambda_{\mathrm{adv}}
+\sum_{\ell}
+\mathcal{L}_{\mathrm{adv}}^{(\ell)}.
+$$
+
+    <p><strong>Key idea:</strong> ADD uses adversarial feedback to make few-step samples realistic; LADD makes that feedback cheaper and more scalable by using latent/generative features instead of only pixel-space discrimination.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> Interval KL divergence</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Distribution matching distillation tries to train a fast student generator so that its output distribution matches the distribution produced by a stronger teacher sampler. Instead of matching every teacher trajectory step by step, compare the distributions over a time interval. Diff-Instruct formalizes this as an Integral KL divergence.<sup class="footnote-ref" id="fnref:diff-instruct"><a href="#fn:diff-instruct">15</a></sup></p>
+
+$$
+p_\theta(x_t)
+\quad\text{student distribution at time }t,
+\qquad
+p_{\mathrm{teach}}(x_t)
+\quad\text{teacher distribution at time }t.
+$$
+
+    <p>A natural objective is the KL divergence between the student and teacher marginals:</p>
+
+$$
+\mathcal{L}_{\mathrm{KL}}(t)
+=
+D_{\mathrm{KL}}
+\left(
+p_\theta(x_t)
+\;\|\;
+p_{\mathrm{teach}}(x_t)
+\right).
+$$
+
+    <p>For an interval \([t_a,t_b]\), the distribution matching objective can be written as</p>
+
+$$
+\mathcal{L}_{\mathrm{interval}}
+=
+\int_{t_a}^{t_b}
+w(t)
+D_{\mathrm{KL}}
+\left(
+p_\theta(x_t)
+\;\|\;
+p_{\mathrm{teach}}(x_t)
+\right)
+dt.
+$$
+
+    <p><strong>Key idea:</strong> the student does not need to imitate the teacher's exact path. It only needs to make its generated distribution close to the teacher distribution at the chosen times.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Score divergence</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>The KL objective is conceptually clean, but the density \(p_\theta(x_t)\) is usually unavailable. A more practical route is to compare scores, because diffusion models already learn score or denoising fields. Score identity Distillation uses this kind of score-identity view for one-step distillation.<sup class="footnote-ref" id="fnref:sid"><a href="#fn:sid">16</a></sup></p>
+
+$$
+s_\theta(x_t,t)
+=
+\nabla_{x_t}\log p_\theta(x_t),
+\qquad
+s_{\mathrm{teach}}(x_t,t)
+=
+\nabla_{x_t}\log p_{\mathrm{teach}}(x_t).
+$$
+
+    <p>The score divergence compares these vector fields under samples from the student:</p>
+
+$$
+\mathcal{L}_{\mathrm{score}}(t)
+=
+\mathbb{E}_{x_t\sim p_\theta}
+\left[
+\left\|
+s_\theta(x_t,t)
+-
+s_{\mathrm{teach}}(x_t,t)
+\right\|_2^2
+\right].
+$$
+
+    <p>In practice, the teacher score can be obtained from a pretrained diffusion teacher or from its denoiser through Tweedie's formula. The student is updated so its samples receive the same denoising direction as the teacher.</p>
+
+    <p><strong>Key idea:</strong> matching scores is a local way to match distributions. If two distributions have the same score field, then they are the same distribution up to normalization.</p>
+  </div>
+</details>
 
 ### Trajectory distillation
 
@@ -2614,45 +4053,8 @@ $$
 
 ## A industry level video diffusion pipeline
 
-## Reading list
-
-### Foundations
-- [A Connection Between Score Matching and Denoising Autoencoders](https://ieeexplore.ieee.org/abstract/document/6795935)
-- [Interpretation and generalization of score matching](https://arxiv.org/pdf/1205.2629)
-- [Understanding Diffusion Models: A Unified Perspective](https://arxiv.org/abs/2208.11970)
-- [Maximum Likelihood Training of Score-Based Diffusion Models](https://arxiv.org/abs/2101.09258)
-
-### DDPM, DDIM, and score-based models
-- [Denoising Diffusion Probabilistic Models](https://arxiv.org/abs/2006.11239)
-- [Denoising Diffusion Implicit Models](https://arxiv.org/abs/2010.02502)
-- [Score-Based Generative Modeling through Stochastic Differential Equations](https://arxiv.org/abs/2011.13456)
-- [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364)
-
-### Samplers
-- [DPM-Solver: A Fast ODE Solver for Diffusion Probabilistic Model Sampling in Around 10 Steps](https://arxiv.org/abs/2206.00927)
-
-### Flow matching
-- [Flow Matching for Generative Modeling](https://arxiv.org/abs/2210.02747)
-- [Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow](https://arxiv.org/abs/2209.03003)
-
-### One-step and few-step models
-- [Consistency Models](https://arxiv.org/abs/2303.01469)
-- [Improved Techniques for Training Consistency Models](https://arxiv.org/abs/2310.14189)
-- [Simplifying, Stabilizing and Scaling Continuous-Time Consistency Models](https://arxiv.org/abs/2410.11081)
-- [Mean Flows for One-step Generative Modeling](https://arxiv.org/abs/2505.13447)
-
-## Coding list
-
-### Warmup
-- [Tensor Puzzles](https://colab.research.google.com/github/srush/Tensor-Puzzles/blob/main/Tensor%20Puzzlers.ipynb): practice tensor indexing, broadcasting, and vectorization.
-
-- https://github.com/KellyYutongHe/cmu-10799-diffusion
-
 ## Study Checklist
 
-### Core Diffusion Questions
-
-#### Foundations
 - Write down the forward SDE and the reverse SDE.
 - Write down the Fokker-Planck equation.
 - Derive the probability flow ODE from the reverse SDE using the Fokker-Planck equation.
@@ -2665,18 +4067,10 @@ $$
 - Derive the optimal denoiser.
 - Explain how DDIM accelerates the sampling procedure.
 - Explain how DPM-Solver accelerates the sampling procedure. Why is DDIM a special case of DPM-Solver?
-
-#### Sampling
-- In diffusion models, more sampling steps do not necessarily mean better results.
-- Training and sampling of diffusion models doesn't require the same noise schedule.
-
-### Schrödinger Bridges
+- Why do more sampling steps not necessarily mean better results in diffusion models?
+- Why do training and sampling not require the same noise schedule?
 - What is Doob's h-transform?
-
-### Flow Matching Questions
-- Write down the close form formula of velosity.
-
-### One-Step/Few-Step Questions
+- Write down the closed-form formula of velocity in flow matching.
 - Explain the idea of consistency models (CM).
 - Explain the idea of MeanFlow (MF) and how to calculate the mean velocity during training.
 - What is the relationship between MF and CM?
@@ -2768,11 +4162,67 @@ $$
       <a href="https://www.krea.ai/blog/krea-2-technical-report">krea.ai</a>.
       <a href="#fnref:krea2" class="footnote-back" title="back to text">↩︎</a>
     </li>
+    <li id="fn:jit">
+      Li &amp; He.
+      <em>Back to Basics: Let Denoising Generative Models Denoise.</em>
+      arXiv, 2025.
+      <a href="https://arxiv.org/abs/2511.13720">arXiv:2511.13720</a>.
+      <a href="#fnref:jit" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:langflow">
+      Chen et al.
+      <em>LangFlow: Language as Continuous Interpolants for Autoregressive Generation.</em>
+      arXiv, 2026.
+      <a href="https://arxiv.org/abs/2604.11748">arXiv:2604.11748</a>.
+      <a href="#fnref:langflow" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:rae">
+      Zheng et al.
+      <em>Diffusion Transformers with Representation Autoencoders.</em>
+      arXiv, 2025.
+      <a href="https://arxiv.org/abs/2510.11690">arXiv:2510.11690</a>.
+      <a href="#fnref:rae" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:smdae">
+      Vincent.
+      <em>A Connection Between Score Matching and Denoising Autoencoders.</em>
+      Technical report, 2010.
+      <a href="https://www.iro.umontreal.ca/~vincentp/Publications/smdae_techreport.pdf">PDF</a>.
+      <a href="#fnref:smdae" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:add">
+      Sauer et al.
+      <em>Adversarial Diffusion Distillation.</em>
+      arXiv, 2023.
+      <a href="https://arxiv.org/abs/2311.17042">arXiv:2311.17042</a>.
+      <a href="#fnref:add" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:ladd">
+      Sauer et al.
+      <em>Fast High-Resolution Image Synthesis with Latent Adversarial Diffusion Distillation.</em>
+      arXiv, 2024.
+      <a href="https://arxiv.org/abs/2403.12015">arXiv:2403.12015</a>.
+      <a href="#fnref:ladd" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:diff-instruct">
+      Luo et al.
+      <em>Diff-Instruct: A Universal Approach for Transferring Knowledge From Pre-trained Diffusion Models.</em>
+      arXiv, 2023.
+      <a href="https://arxiv.org/abs/2305.18455">arXiv:2305.18455</a>.
+      <a href="#fnref:diff-instruct" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:sid">
+      Zhou et al.
+      <em>Score identity Distillation: Exponentially Fast Distillation of Pretrained Diffusion Models for One-Step Generation.</em>
+      arXiv, 2024.
+      <a href="https://arxiv.org/abs/2404.04057">arXiv:2404.04057</a>.
+      <a href="#fnref:sid" class="footnote-back" title="back to text">↩︎</a>
+    </li>
   </ol>
 </section>
 
 <script>
-/* Auto-build a Contents list from h2 sections, matching the EMA post behavior. */
+/* Auto-build a Contents list from h2 and h3 sections. */
 (function () {
   function ready(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -2782,37 +4232,50 @@ $$
     var article = document.querySelector('.page__content');
     var toc = document.querySelector('#draft-toc');
     if (!article || !toc) return;
-    var headings = Array.from(article.querySelectorAll('h2')).filter(function (h) {
-      return h.closest('.references-section') === null && h.dataset.tocSkip !== 'true';
+    var items = Array.from(article.querySelectorAll('h2, h3')).filter(function (el) {
+      return el.closest('.references-section') === null && el.dataset.tocSkip !== 'true';
     });
-    if (headings.length === 0) {
+    if (items.length === 0) {
       toc.style.display = 'none';
       return;
     }
     function slugify(s) {
       return s.toLowerCase().replace(/[^a-z0-9 \-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60);
     }
-    var linkByHeading = new Map();
-    headings.forEach(function (h, i) {
-      if (!h.id) h.id = slugify(h.textContent) || ('sec-' + (i + 1));
+    function uniqueId(base, i) {
+      var id = base || ('sec-' + (i + 1));
+      var candidate = id;
+      var suffix = 2;
+      while (document.getElementById(candidate)) {
+        candidate = id + '-' + suffix;
+        suffix += 1;
+      }
+      return candidate;
+    }
+    var linkByItem = new Map();
+    items.forEach(function (h, i) {
+      if (!h.id) h.id = uniqueId(slugify(h.textContent), i);
       var a = document.createElement('a');
       a.href = '#' + h.id;
-      a.textContent = h.textContent;
+      var title = h.cloneNode(true);
+      title.querySelectorAll('.footnote-ref').forEach(function (note) { note.remove(); });
+      a.textContent = title.textContent.trim();
+      a.className = h.tagName.toLowerCase() === 'h3' ? 'toc-subsection' : 'toc-section';
       a.addEventListener('click', function () {
         document.querySelectorAll('#draft-toc a').forEach(function (l) { l.classList.remove('toc-active'); });
         a.classList.add('toc-active');
       });
       toc.appendChild(a);
-      linkByHeading.set(h, a);
+      linkByItem.set(h, a);
     });
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
         document.querySelectorAll('#draft-toc a').forEach(function (l) { l.classList.remove('toc-active'); });
-        linkByHeading.get(entry.target).classList.add('toc-active');
+        linkByItem.get(entry.target).classList.add('toc-active');
       });
     }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
-    headings.forEach(function (h) { observer.observe(h); });
+    items.forEach(function (h) { observer.observe(h); });
   });
 })();
 </script>
