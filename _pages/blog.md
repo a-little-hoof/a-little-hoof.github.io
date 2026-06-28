@@ -1,7 +1,7 @@
 ---
 permalink: /blog/
 title: "Blog"
-excerpt: "Notes, paper digests, and the occasional running log."
+excerpt: "Research notes, project writeups, and diffusion-model study guides."
 author_profile: true
 redirect_from:
   - /posts/
@@ -108,7 +108,7 @@ redirect_from:
 
 <div class="blog-hero">
   <h1>Blog</h1>
-  <p>Notes, paper digests, and the occasional running log.</p>
+  <p>Research notes, project writeups, and diffusion-model study guides.</p>
 </div>
 
 {% assign visible_posts = site.posts | where_exp: "post", "post.hidden != true" %}

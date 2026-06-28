@@ -7,9 +7,9 @@ author_profile: true
 
 {% include base_path %}
 ## Research statement
-My research is driven by the goal of building generative models that can truely understand the physical world. To achieve the goal, I seek statistical machine learning methods to model the underlying data distribution. My experience thus far has focused on deep generative models, such as diffusion models and normalizing flows, in solving inverse problems.
+My research focuses on generative models, especially diffusion models, flow matching, and efficient image generation. I am interested in how modeling choices such as architectures, training objectives, noise schedules, samplers, and distillation shape sample quality, likelihood, and deployment cost.
 
-Looking ahead, I am excited to explore cutting-edge developments in generative models such as flow matching, rectified flows, and stochastic interpolants. I am eager to contribute to their theoretical and practical advancements.
+Recently, I have been working on representation-space diffusion, one-step and few-step generation, and practical design choices behind high-quality text-to-image systems. My goal is to connect the theory of generative modeling with methods that are reliable and efficient in real applications.
 
 ## List of publications
 
@@ -28,4 +28,3 @@ Looking ahead, I am excited to explore cutting-edge developments in generative m
 - (Arxiv preprint) **Integrating Amortized Inference with Diffusion Models for Learning Clean Distribution from Corrupted Images**
 *Yifei Wang, Weimin Bai, Weijian Luo, Wenzheng Chen and He Sun*.
 [paper](https://arxiv.org/abs/2407.11162)
-

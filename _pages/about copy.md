@@ -1,7 +1,7 @@
 ---
 permalink: /
 title: "Yifei Wang"
-excerpt: "Yifei Wang — second-year PhD student at Rice University, working on generative models."
+excerpt: "Yifei Wang — first-year PhD student at Rice University, working on generative models."
 author_profile: true
 redirect_from: 
   - /About/
@@ -166,7 +166,7 @@ redirect_from:
 
 <div class="home-hero">
   <h1>Hi, I'm Yifei Wang</h1>
-  <p class="role">Second-year PhD student · Rice University</p>
+  <p class="role">First-year PhD student · Rice University</p>
   <p class="lead">
     I work on generative models — diffusion, flow matching, and the building blocks that make them more
     efficient and more controllable.
@@ -258,7 +258,7 @@ redirect_from:
 <div class="home-section home-about">
   <h2>About</h2>
   <p>
-    I'm a second-year PhD student at Rice University, where I am working with
+    I'm a first-year PhD student at Rice University, where I am working with
     <a href="https://weichen582.github.io/">Chen Wei</a>. In May 2026 I'll be visiting
     <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at Johns Hopkins University.
     Before Rice I received my B.S. from Peking University, advised by

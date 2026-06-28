@@ -1,5 +1,6 @@
 ---
 title: "Notes on Diffusion Models"
+layout: ema-note
 permalink: /blog/notes-on-diffusion-models/
 excerpt: "A working note collecting the core definitions, training objectives, sampler choices, and practical questions around diffusion models."
 tags:
@@ -9,7 +10,7 @@ tags:
 hidden: false
 ---
 
-> Working draft. The goal is to connect the main views of diffusion models: generative modeling basics, diffusion formulations, samplers, guidance, and few-step generation.
+> Cheatsheet for diffusion-related interview questions. It covers the core principles of diffusion models and the practical details behind industry-level text-to-image systems, kept simple and short.
 
 <style>
 .page__content #draft-toc {
@@ -1155,94 +1156,12 @@ $$
 
 <details class="ddim-block">
   <summary>
-    <span class="ddim-block__title"><strong>1.</strong> What are score-based diffusion models?</span>
+    <span class="ddim-block__title"><strong>1.</strong> Mathematical foundation</span>
   </summary>
   <div class="ddim-block__content">
-    <p>Score-based diffusion models describe diffusion as a continuous-time stochastic process. The <strong>forward process</strong> gradually turns data into noise, and the <strong>reverse process</strong> uses a learned score function to denoise samples back into data.</p>
+    <p>This part is <strong>not important</strong> in understanding score-based diffusion models, but it explains where the reverse SDE comes from.</p>
 
-    <figure>
-      <img src="/images/blog/diffusion/score-sde-forward-reverse.png" alt="Forward diffusion process and reverse denoising process" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
-      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
-        The fixed <strong>forward process</strong> maps data to noise. The generative <strong>reverse process</strong> maps noise back to data.
-      </figcaption>
-    </figure>
-
-    <p>The <strong>forward process</strong> is controlled by a forward SDE:</p>
-
-$$
-d x
-=
-f(x,t)\,dt
-+
-g(t)\,dw,
-$$
-
-    <p>where \(f(x,t)\) is the drift, \(g(t)\) is the diffusion coefficient, and \(w\) is standard Brownian motion. This SDE defines the noisy marginal distribution \(p_t(x)\) at every time \(t\).</p>
-
-    <p>The <strong>reverse process</strong> is also an SDE. Its drift depends on the score function \(\nabla_x\log p_t(x)\):</p>
-
-$$
-d x
-=
-\left[
-f(x,t)
--
-g(t)^2\nabla_x\log p_t(x)
-\right]dt
-+
-g(t)\,d\bar{w}.
-$$
-
-    <p>So the model's central job is to learn the score function</p>
-
-$$
-s_\theta(x,t)
-\approx
-\nabla_x\log p_t(x).
-$$
-
-    <p>In principle, this can be trained with score matching on the noisy marginal:</p>
-
-$$
-J_{\mathrm{SM}}(\theta)
-=
-\mathbb{E}_{q_t(x_t)}
-\left[
-\frac{1}{2}
-\left\|
-s_\theta(x_t,t)
--
-\nabla_{x_t}\log q_t(x_t)
-\right\|_2^2
-\right].
-$$
-
-    <p>In practice, people usually use denoising score matching: sample a clean data point, add known Gaussian noise, and train the model to match the known conditional score of that noising process.</p>
-
-$$
-J_{\mathrm{DSM}}(\theta)
-=
-\mathbb{E}_{q_t(x_0,x_t)}
-\left[
-\frac{1}{2}
-\left\|
-s_\theta(x_t,t)
--
-\nabla_{x_t}\log q_t(x_t\mid x_0)
-\right\|_2^2
-\right].
-$$
-  </div>
-</details>
-
-<details class="ddim-block">
-  <summary>
-    <span class="ddim-block__title"><strong>2.</strong> Mathematical foundation</span>
-  </summary>
-  <div class="ddim-block__content">
-    <p>This part is <strong>not important</strong> in understanding score-based diffusion models, but it explains where the reverse SDE and probability flow ODE come from.</p>
-
-    <p>The current storyline is: Brownian motion gives the continuous-time noise source; Itô calculus tells us how functions of stochastic paths evolve; Fokker-Planck describes the evolution of densities; and time reversal explains why the reverse sampler needs the score.</p>
+    <p>Brownian motion gives the continuous-time noise source; Itô calculus tells us how functions of stochastic paths evolve; Fokker-Planck describes the evolution of densities; and time reversal explains why the reverse sampler needs the score.</p>
 
     <details class="ddim-block foundation-subblock">
       <summary>
@@ -1279,8 +1198,6 @@ f(x_t,t)\,dt=O(dt),
 \qquad
 g(t)\,dw_t=O(\sqrt{dt}).
 $$
-
-    <p><strong>Key intuition:</strong> because \((dw_t)^2\) is order \(dt\), the quadratic Brownian term survives in Itô's formula.</p>
 
     <p>So Brownian motion is not differentiable in the ordinary sense. Instead of writing a classical derivative \(dw_t/dt\), we define integrals with respect to Brownian motion.</p>
 
@@ -1353,6 +1270,8 @@ d\,f(t,x_t)
 +
 g(t)\nabla_x f^\top dw_t.
 $$
+
+    <p><strong>Key intuition:</strong> because \((dw_t)^2\) is order \(dt\), the quadratic Brownian term survives in Itô's formula.</p>
 
     <p>One quick way to see where this comes from is to Taylor expand \(f(t,x_t)\):</p>
 
@@ -1557,7 +1476,67 @@ $$
       </summary>
       <div class="ddim-block__content">
 
-    <p><strong>Fokker-Planck equation.</strong> To understand the distribution rather than one sample path, apply Itô's formula to a test function \(\varphi(x_t)\), take expectation, and use integration by parts. This gives the density PDE:</p>
+    <p><strong>Fokker-Planck equation.</strong> Start from the diffusion SDE</p>
+
+$$
+dx_t=b(x_t,t)\,dt+g(t)\,dw_t,
+$$
+
+    <p>where \(p_t(x)\) is the density of \(x_t\). To derive how \(p_t\) evolves, take any smooth test function \(\varphi(x)\). Itô's formula gives</p>
+
+$$
+d\varphi(x_t)
+=
+\left[
+\nabla_x\varphi(x_t)^\top b(x_t,t)
++
+\frac{1}{2}g(t)^2\Delta_x\varphi(x_t)
+\right]dt
++
+g(t)\nabla_x\varphi(x_t)^\top dw_t.
+$$
+
+    <p>Now take expectation. The stochastic integral has zero mean, so</p>
+
+$$
+\frac{d}{dt}\mathbb{E}[\varphi(x_t)]
+=
+\mathbb{E}\left[
+\nabla_x\varphi(x_t)^\top b(x_t,t)
++
+\frac{1}{2}g(t)^2\Delta_x\varphi(x_t)
+\right].
+$$
+
+    <p>Write the expectation using the density:</p>
+
+$$
+\frac{d}{dt}\int \varphi(x)p_t(x)\,dx
+=
+\int
+\left[
+\nabla_x\varphi(x)^\top b(x,t)
++
+\frac{1}{2}g(t)^2\Delta_x\varphi(x)
+\right]
+p_t(x)\,dx.
+$$
+
+    <p>Integration by parts moves the derivatives from \(\varphi\) onto \(p_t\):</p>
+
+$$
+\int \nabla_x\varphi(x)^\top b(x,t)p_t(x)\,dx
+=
+-\int \varphi(x)\nabla_x\cdot\left(b(x,t)p_t(x)\right)\,dx,
+$$
+
+$$
+\int \Delta_x\varphi(x)p_t(x)\,dx
+=
+\int \varphi(x)\Delta_x p_t(x)\,dx.
+$$
+
+    <p>Since \(\varphi\) was arbitrary, the density must satisfy</p>
 
 $$
 \frac{\partial p_t(x)}{\partial t}
@@ -1567,11 +1546,11 @@ $$
 \frac{1}{2}g(t)^2\Delta_x p_t(x).
 $$
 
-    <p>The first term transports probability mass according to the drift. The second term spreads probability mass because of noise. <strong>Fokker-Planck is the bridge from sample dynamics to distribution dynamics.</strong></p>
+    <p>The first term transports probability mass according to the drift. The second term spreads probability mass because of Brownian noise. <strong>Fokker-Planck is the bridge from sample dynamics to distribution dynamics.</strong></p>
 
     <p><strong>Time reversal.</strong> In diffusion models, the forward process starts from data and ends near noise. Generation needs the opposite direction. If the forward SDE produces marginals \(p_t(x)\), then the reverse-time process must have marginals \(p_{T-t}(x)\).</p>
 
-    <p>The lecture derives the reverse process by forcing the reverse density to satisfy the correct Fokker-Planck equation. The drift that makes the equations match contains the score:</p>
+    <p>The reverse process is obtained by using the Fokker-Planck equation again. Write the Fokker-Planck equation for the forward SDE, then write the Fokker-Planck equation for a candidate reverse SDE. The reverse drift is chosen so that the reverse density evolves as \(p_{T-t}(x)\). Matching these two density equations gives a drift containing the score:</p>
 
 $$
 d x_t
@@ -1595,13 +1574,150 @@ $$
       </div>
     </details>
 
-    <details class="ddim-block foundation-subblock">
-      <summary>
-        <span class="ddim-block__title">Probability flow ODE</span>
-      </summary>
-      <div class="ddim-block__content">
+  </div>
+</details>
 
-    <p><strong>Probability flow ODE.</strong> The lecture then asks whether sampling must be stochastic. Surprisingly, there is a deterministic ODE with the same one-time marginal densities:</p>
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> What are score-based diffusion models?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Score-based diffusion models describe diffusion as a continuous-time stochastic process. The <strong>forward process</strong> gradually turns data into noise, and the <strong>reverse process</strong> uses a learned score function to denoise samples back into data.</p>
+
+    <figure>
+      <img src="/images/blog/diffusion/score-sde-forward-reverse.png" alt="Forward diffusion process and reverse denoising process" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        The fixed <strong>forward process</strong> maps data to noise. The generative <strong>reverse process</strong> maps noise back to data.
+      </figcaption>
+    </figure>
+
+    <p>The <strong>forward process</strong> is controlled by a forward SDE:</p>
+
+$$
+d x
+=
+f(x,t)\,dt
++
+g(t)\,dw,
+$$
+
+    <p>where \(f(x,t)\) is the drift, \(g(t)\) is the diffusion coefficient, and \(w\) is standard Brownian motion. This SDE defines the noisy marginal distribution \(p_t(x)\) at every time \(t\).</p>
+
+    <p>The <strong>reverse process</strong> is also an SDE. Its drift depends on the score function \(\nabla_x\log p_t(x)\):</p>
+
+$$
+d x
+=
+\left[
+f(x,t)
+-
+g(t)^2\nabla_x\log p_t(x)
+\right]dt
++
+g(t)\,d\bar{w}.
+$$
+
+    <p>So the model's central job is to learn the score function</p>
+
+$$
+s_\theta(x,t)
+\approx
+\nabla_x\log p_t(x).
+$$
+
+    <p>In principle, this can be trained with score matching on the noisy marginal:</p>
+
+$$
+J_{\mathrm{SM}}(\theta)
+=
+\mathbb{E}_{q_t(x_t)}
+\left[
+\frac{1}{2}
+\left\|
+s_\theta(x_t,t)
+-
+\nabla_{x_t}\log q_t(x_t)
+\right\|_2^2
+\right].
+$$
+
+    <p>In practice, people usually use denoising score matching: sample a clean data point, add known Gaussian noise, and train the model to match the known conditional score of that noising process.</p>
+
+$$
+J_{\mathrm{DSM}}(\theta)
+=
+\mathbb{E}_{q_t(x_0,x_t)}
+\left[
+\frac{1}{2}
+\left\|
+s_\theta(x_t,t)
+-
+\nabla_{x_t}\log q_t(x_t\mid x_0)
+\right\|_2^2
+\right].
+$$
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Probability flow ODE</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Start from the diffusion SDE</p>
+
+$$
+d x_t = b(x_t,t)\,dt + g(t)\,dw_t,
+$$
+
+    <p>where \(b(x,t)\) is the drift and \(g(t)\) controls the noise scale. Since \(g(t)\) is scalar and does not depend on \(x\), the density \(p_t(x)\) evolves by the <strong>Fokker-Planck equation</strong></p>
+
+$$
+\frac{\partial p_t(x)}{\partial t}
+=
+-\nabla_x\cdot\bigl(b(x,t)p_t(x)\bigr)
++
+\frac{1}{2}g(t)^2\Delta_x p_t(x).
+$$
+
+    <p>Now use the score identity</p>
+
+$$
+\Delta_x p_t(x)
+=
+\nabla_x\cdot\nabla_x p_t(x)
+=
+\nabla_x\cdot\bigl(p_t(x)\nabla_x\log p_t(x)\bigr).
+$$
+
+    <p>Substitute it back:</p>
+
+$$
+\frac{\partial p_t(x)}{\partial t}
+=
+-\nabla_x\cdot\bigl(b(x,t)p_t(x)\bigr)
++
+\frac{1}{2}g(t)^2
+\nabla_x\cdot\bigl(p_t(x)\nabla_x\log p_t(x)\bigr).
+$$
+
+    <p>Because \(g(t)\) does not depend on \(x\), this can be grouped into one continuity equation:</p>
+
+$$
+\frac{\partial p_t(x)}{\partial t}
+=
+-\nabla_x\cdot
+\left(
+\left[
+b(x,t)
+-
+\frac{1}{2}g(t)^2\nabla_x\log p_t(x)
+\right]
+p_t(x)
+\right).
+$$
+
+    <p>This is exactly the density evolution of the deterministic ODE</p>
 
 $$
 d x_t
@@ -1613,33 +1729,14 @@ b(x_t,t)
 \right]dt.
 $$
 
-    <p><strong>The reverse SDE and probability flow ODE can have the same marginal distributions, but they do not have the same paths.</strong> The SDE path is random and non-smooth; the ODE path is deterministic and smooth once the initial noise sample is fixed.</p>
+    <p><strong>Conclusion:</strong> the probability flow ODE has the same marginal densities as the diffusion SDE, but it removes the Brownian noise term. The SDE path is random and non-smooth; the ODE path is deterministic and smooth once the initial noise sample is fixed.</p>
 
-    <p>For the variance-exploding case</p>
-
-$$
-d x_t
-=
-g(t)\,dw_t,
-$$
-
-    <p>the probability flow ODE becomes</p>
-
-$$
-d x_t
-=
--\frac{1}{2}g(t)^2\nabla_x\log p_t(x_t)\,dt.
-$$
-
-        <p>Running this ODE backward gives a deterministic sampler. <strong>This is the conceptual bridge from score-based SDEs to ODE samplers such as probability-flow sampling and many modern diffusion solvers.</strong></p>
-      </div>
-    </details>
   </div>
 </details>
 
 <details class="ddim-block">
   <summary>
-    <span class="ddim-block__title"><strong>3.</strong> Why we can use denoising score matching (Gradient perspective)</span>
+    <span class="ddim-block__title"><strong>4.</strong> Why we can use denoising score matching (Gradient perspective)</span>
   </summary>
   <div class="ddim-block__content">
     <p>This derivation follows Vincent's denoising score matching view: instead of estimating the unknown marginal score directly, train against the conditional score of a known noising process.<sup class="footnote-ref" id="fnref:smdae"><a href="#fn:smdae">12</a></sup></p>
@@ -1891,7 +1988,7 @@ $$
 
 <details class="ddim-block">
   <summary>
-    <span class="ddim-block__title"><strong>4.</strong> Deriving Tweedie's formula</span>
+    <span class="ddim-block__title"><strong>5.</strong> Deriving Tweedie's formula</span>
   </summary>
   <div class="ddim-block__content">
     <p>Use the general linear Gaussian corruption</p>
@@ -2013,7 +2110,7 @@ $$
 
 <details class="ddim-block">
   <summary>
-    <span class="ddim-block__title"><strong>5.</strong> Why we can use denoising score matching (from Tweedie's formula)</span>
+    <span class="ddim-block__title"><strong>6.</strong> Why we can use denoising score matching (from Tweedie's formula)</span>
   </summary>
   <div class="ddim-block__content">
     <p>Tweedie's formula gives another route from denoising to score estimation. For the Gaussian corruption</p>
@@ -2087,6 +2184,243 @@ $$
 </details>
 
 ### Flow Matching
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> Continuous normalizing flows</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>A continuous normalizing flow (CNF) transports samples from an initial distribution \(p_0\) to a target distribution \(p_1\) by integrating an ODE:</p>
+
+$$
+\frac{d x_t}{dt}
+=
+v(x_t,t),
+\qquad
+x_t
+=
+x_0+\int_0^t v(x_\tau,\tau)\,d\tau.
+$$
+
+    <p>Here \(v(x,t)\) is the velocity field. It tells each sample where to move and how fast to move. If \(x_0\sim p_0\), then the ODE flow pushes \(p_0\) forward into a time-indexed density \(p_t\).</p>
+
+    <p>To connect this sample motion to probability densities, we use two assumptions:</p>
+
+    <ul>
+      <li><strong>Conservation of mass:</strong> probability is not created or destroyed, so the total probability always stays \(1\).</li>
+      <li><strong>Continuity:</strong> probability cannot teleport. It can only move continuously through space according to the velocity field.</li>
+    </ul>
+
+    <p>The probability flux is velocity times density:</p>
+
+$$
+\text{flux}(x,t)
+=
+p_t(x)v(x,t).
+$$
+
+    <p>Conservation plus continuity gives the continuity equation:</p>
+
+$$
+\frac{\partial p_t(x)}{\partial t}
+=
+-
+\nabla_x\cdot
+\left(
+p_t(x)v(x,t)
+\right).
+$$
+
+    <p>The divergence measures how much probability flows out of a point per unit time:</p>
+
+$$
+\nabla_x\cdot v(x,t)
+=
+\sum_{d=1}^D
+\frac{\partial v_d(x,t)}{\partial x^{(d)}}.
+$$
+
+    <p>Along an ODE trajectory \(x_t\), the log-density changes by</p>
+
+$$
+\frac{d}{dt}\log p_t(x_t)
+=
+-
+\nabla_x\cdot v(x_t,t).
+$$
+
+    <p><strong>Key idea:</strong> a CNF is a deterministic generative model whose samples follow an ODE, while its density follows the continuity equation. Flow matching can be viewed as learning the velocity field \(v(x,t)\) of such a flow.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> What is flow matching?</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Flow matching learns a deterministic transport from a simple noise distribution to the data distribution. Instead of learning a reverse stochastic denoising chain, it learns the velocity field of an ODE.</p>
+
+    <figure>
+      <img src="/images/blog/diffusion/flow-matching-straight-path.png" alt="Flow matching linearly transforms noise into data" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        Flow matching trains on points along a path from noise to data. Along a straight path, the same noise sample gradually gives way to the same data sample.
+      </figcaption>
+    </figure>
+
+    <p>The generative process is an ODE:</p>
+
+$$
+\frac{d x_t}{dt}
+=
+v_\theta(x_t,t),
+\qquad
+t\in[0,1].
+$$
+
+    <p>The model \(v_\theta(x_t,t)\) is a neural network that predicts the velocity of the sample at time \(t\). Starting from noise \(x_0\sim p_0\), sampling integrates this ODE forward until \(t=1\), where \(x_1\) should look like data.</p>
+
+    <p>For the simple straight-line path, pair a noise sample \(z\sim\mathcal{N}(0,I)\) with a data sample \(x_1\sim p_{\mathrm{data}}\), and define</p>
+
+$$
+x_t=(1-t)z+t x_1.
+$$
+
+    <p>The target velocity is the derivative of this path:</p>
+
+$$
+u_t
+=
+\frac{d x_t}{dt}
+=
+x_1-z.
+$$
+
+    <p>So the flow matching loss is just a supervised velocity regression loss:</p>
+
+$$
+\mathcal{L}_{\mathrm{FM}}(\theta)
+=
+\mathbb{E}_{t,z,x_1}
+\left[
+\left\|
+v_\theta((1-t)z+t x_1,t)
+-
+(x_1-z)
+\right\|_2^2
+\right],
+$$
+
+    <p>where \(t\sim\mathrm{Uniform}(0,1)\), \(z\sim\mathcal{N}(0,I)\), and \(x_1\sim p_{\mathrm{data}}\).</p>
+
+    <p><strong>Key idea:</strong> diffusion models often learn how to denoise. Flow matching learns the vector field that moves samples from noise to data.</p>
+  </div>
+</details>
+
+<details class="ddim-block ddim-algorithm">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Pseudocode: Flow Matching Training and Sampling</span>
+  </summary>
+  <div class="ddim-block__content">
+    <div class="ddim-algorithm-grid">
+      <div class="ddim-algorithm-panel">
+        <div class="ddim-algorithm__require"><strong>Algorithm 1</strong> Training</div>
+        <div class="ddim-algorithm__body">
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">1:</div>
+            <div class="ddim-algorithm__code"><strong>repeat</strong></div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">2:</div>
+            <div class="ddim-algorithm__code">\(\quad z \sim \mathcal{N}(0,I)\)</div>
+            <div class="ddim-algorithm__comment">&#9657; sample noise</div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">3:</div>
+            <div class="ddim-algorithm__code">\(\quad x_1 \sim p_{\mathrm{data}}(x)\)</div>
+            <div class="ddim-algorithm__comment">&#9657; sample data</div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">4:</div>
+            <div class="ddim-algorithm__code">\(\quad t \sim \mathrm{Uniform}(0,1)\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">5:</div>
+            <div class="ddim-algorithm__code">\(\quad x_t \leftarrow (1-t)z+t x_1\)</div>
+            <div class="ddim-algorithm__comment">&#9657; point on the path</div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">6:</div>
+            <div class="ddim-algorithm__code">\(\quad u_t \leftarrow x_1-z\)</div>
+            <div class="ddim-algorithm__comment">&#9657; target velocity</div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">7:</div>
+            <div class="ddim-algorithm__code">\(\quad\)Take gradient descent step on</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num"></div>
+            <div class="ddim-algorithm__code">\(\quad\nabla_\theta \left\|v_\theta(x_t,t)-u_t\right\|_2^2\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">8:</div>
+            <div class="ddim-algorithm__code"><strong>until</strong> converged</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ddim-algorithm-panel">
+        <div class="ddim-algorithm__require"><strong>Algorithm 2</strong> Sampling</div>
+        <div class="ddim-algorithm__body">
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">1:</div>
+            <div class="ddim-algorithm__code">Sample \(x_0 \sim \mathcal{N}(0,I)\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">2:</div>
+            <div class="ddim-algorithm__code">Set \(t\leftarrow 0\), choose step size \(\Delta t\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">3:</div>
+            <div class="ddim-algorithm__code"><strong>while</strong> \(t<1\) <strong>do</strong></div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">4:</div>
+            <div class="ddim-algorithm__code">\(\quad \Delta x \leftarrow v_\theta(x_t,t)\Delta t\)</div>
+            <div class="ddim-algorithm__comment">&#9657; Euler step</div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">5:</div>
+            <div class="ddim-algorithm__code">\(\quad x_{t+\Delta t}\leftarrow x_t+\Delta x\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">6:</div>
+            <div class="ddim-algorithm__code">\(\quad t\leftarrow t+\Delta t\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">7:</div>
+            <div class="ddim-algorithm__code"><strong>end while</strong></div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+          <div class="ddim-algorithm__row">
+            <div class="ddim-algorithm__num">8:</div>
+            <div class="ddim-algorithm__code"><strong>return</strong> \(x_1\)</div>
+            <div class="ddim-algorithm__comment"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</details>
 
 ### Q&A
 
@@ -3262,6 +3596,114 @@ $$
   </div>
 </details>
 
+## Likelihood computation
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> Likelihood from the probability flow ODE</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Start from the diffusion SDE</p>
+
+$$
+d x_t
+=
+b(x_t,t)\,dt
++
+g(t)\,dw_t.
+$$
+
+    <p>The probability flow ODE replaces the stochastic Brownian term with a deterministic score term. In practice, the true score \(\nabla_x\log p_t(x)\) is replaced by the learned score model \(s_\theta(x,t)\):</p>
+
+$$
+\frac{d x_t}{dt}
+=
+\tilde{b}_\theta(x_t,t)
+:=
+b(x_t,t)
+-
+\frac{1}{2}g(t)^2s_\theta(x_t,t).
+$$
+
+    <p>Once we have an ODE, we can track how the log-density changes along the trajectory. For any ODE \(dx_t/dt=v(x_t,t)\), the instantaneous change of variables formula says</p>
+
+$$
+\frac{d}{dt}\log p_t(x_t)
+=
+-
+\nabla_x\cdot v(x_t,t).
+$$
+
+    <p>Apply this to the probability flow ODE with \(v=\tilde{b}_\theta\). If \(x(0)\) is a data point and \(x(T)\) is the corresponding high-noise point obtained by solving the ODE forward, then</p>
+
+$$
+\log p_0(x(0))
+=
+\log p_T(x(T))
++
+\int_0^T
+\nabla_x\cdot
+\tilde{b}_\theta(x(t),t)
+\,dt.
+$$
+
+    <p>The terminal density \(p_T\) is usually chosen to be simple, such as a standard Gaussian:</p>
+
+$$
+\log p_T(x(T))
+=
+-
+\frac{d}{2}\log(2\pi)
+-
+\frac{1}{2}\|x(T)\|_2^2.
+$$
+
+    <p>The expensive part is the divergence term</p>
+
+$$
+\nabla_x\cdot
+\tilde{b}_\theta(x,t)
+=
+\operatorname{tr}
+\left(
+\nabla_x\tilde{b}_\theta(x,t)
+\right).
+$$
+
+    <p>Instead of forming the full Jacobian, use the Skilling-Hutchinson trace estimator. For a random vector \(\epsilon\) with \(\mathbb{E}[\epsilon]=0\) and \(\operatorname{Cov}(\epsilon)=I\),</p>
+
+$$
+\nabla_x\cdot
+\tilde{b}_\theta(x,t)
+=
+\mathbb{E}_{\epsilon}
+\left[
+\epsilon^\top
+\nabla_x\tilde{b}_\theta(x,t)
+\epsilon
+\right].
+$$
+
+    <p>So the practical likelihood computation is: solve the probability flow ODE from data to noise, accumulate the divergence integral along the way, and add the prior log-density at the final noise point.</p>
+
+$$
+\boxed{
+\log p_0(x(0))
+\approx
+\log p_T(x(T))
++
+\int_0^T
+\epsilon^\top
+\nabla_x\tilde{b}_\theta(x(t),t)
+\epsilon
+\,dt
+}
+$$
+
+    <p><strong>Conclusion:</strong> probability flow ODE sampling is deterministic, and because it is an ODE, it also gives a path for likelihood evaluation through continuous change of variables.</p>
+  </div>
+</details>
+
 ## Design Space
 > How to define a diffusion model?
 
@@ -3357,6 +3799,15 @@ $$
 =
 10\log_{10}\!\left(\frac{\bar{\alpha}_t}{1-\bar{\alpha}_t}\right).
 $$
+
+    <figure>
+      <img src="/images/blog/diffusion/snr-intuition.svg" alt="SNR intuition: signal variance, noise variance, and log-SNR over time" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
+      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
+        SNR tracks the balance between the remaining signal and accumulated noise. High SNR means the sample is still data-like; low SNR means it is mostly noise.
+      </figcaption>
+    </figure>
+
+    <p>So SNR is not an extra random variable. It is a diagnostic of the current noising level. When \(\bar{\alpha}_t\) is large, the signal term dominates. When \(1-\bar{\alpha}_t\) is large, the noise term dominates. The point \(\mathrm{SNR}=1\) means the signal and noise variances are equal.</p>
 
     <p><strong>Linear scheduler</strong> chooses the noise rates \(\beta_t\) by linear interpolation:</p>
 
@@ -3907,13 +4358,262 @@ $$
   </div>
 </details>
 
-## Architecture
+## Training a DiT
 > Coding part.
 
 ### Transformers
 
-- Diffusion transformers
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> Diffusion transformers</span>
+  </summary>
+  <div class="ddim-block__content">
+    <figure>
+      <img src="/images/blog/diffusion/diffusion-transformer-block.png" alt="Latent Diffusion Transformer and DiT block variants">
+      <figcaption>Latent Diffusion Transformer structure and common DiT block designs.</figcaption>
+    </figure>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> DiT improvements</span>
+  </summary>
+  <div class="ddim-block__content">
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">SwiGLU FFN</span>
+      </summary>
+      <div class="ddim-block__content">
+      </div>
+    </details>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">RMS Norm</span>
+      </summary>
+      <div class="ddim-block__content">
+      </div>
+    </details>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">Rotary Pos Embed</span>
+      </summary>
+      <div class="ddim-block__content">
+      </div>
+    </details>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">qk-norm</span>
+      </summary>
+      <div class="ddim-block__content">
+      </div>
+    </details>
+
+    <details class="ddim-block foundation-subblock">
+      <summary>
+        <span class="ddim-block__title">in context conditioning</span>
+      </summary>
+      <div class="ddim-block__content">
+      </div>
+    </details>
+  </div>
+</details>
+
 - Multimodel diffusion transformers
+
+### EMA
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> EMA</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>EMA is usually used as a shadow copy of the model: train the online weights \(\theta_t\), update the averaged weights \(\hat{\theta}_{\mathrm{EMA},t}\), and return the EMA model at the end.</p>
+
+$$
+\hat{\theta}_{\mathrm{EMA},t}
+\leftarrow
+\gamma\hat{\theta}_{\mathrm{EMA},t-1}
++
+(1-\gamma)\theta_t.
+$$
+
+    <p>Here \(\gamma\) is close to \(1\), so the EMA weights move slowly. This filters out noisy step-to-step updates and usually gives a more stable model for sampling or evaluation.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> Post-hoc EMA in EDM2</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>EDM2 treats the EMA length as something we may want to tune after training, not something we must fix perfectly before training.<sup class="footnote-ref" id="fnref:edm2"><a href="#fn:edm2">17</a></sup> The reason this is possible is that EMA is linear in the training trajectory:</p>
+
+$$
+\bar{\theta}_{\gamma}(T)
+=
+\sum_{t=0}^{T}w_{\gamma}(T,t)\theta_t,
+\qquad
+w_{\gamma}(T,t)\propto \gamma^{T-t}.
+$$
+
+    <p>If we save several EMA models during training, each with a different averaging profile \(w_{\gamma_j}\), we can approximate a new target profile \(w_{\gamma^\star}\) after training:</p>
+
+$$
+w_{\gamma^\star}(T,t)
+\approx
+\sum_j a_j w_{\gamma_j}(T,t).
+$$
+
+    <p>Then the corresponding post-hoc EMA weights are reconstructed by the same linear combination:</p>
+
+$$
+\bar{\theta}_{\gamma^\star}^{\mathrm{posthoc}}
+\approx
+\sum_j a_j\bar{\theta}_{\gamma_j}.
+$$
+
+    <p><strong>Key idea:</strong> because EMA is a weighted average of parameters, EDM2 can reconstruct a new EMA length by mixing saved EMA checkpoints. This lets us tune the EMA length after training instead of rerunning training many times.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> PACE</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>PACE changes EMA in a different direction: it lets the EMA weights also influence the online optimization trajectory.<sup class="footnote-ref" id="fnref:pace"><a href="#fn:pace">18</a></sup></p>
+
+    <div class="ddim-algorithm-panel">
+      <div class="ddim-algorithm__require"><strong>Algorithm</strong> PACE: Pullback Averaging Control for Efficient Optimization</div>
+      <div class="ddim-algorithm__body">
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">Require:</div>
+          <div class="ddim-algorithm__code">learning rate \(\eta\), pullback strength \(c\), EMA power \(\kappa\), scale \(\epsilon\), update frequency \(\mathrm{uf}\)</div>
+          <div class="ddim-algorithm__comment"></div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">1:</div>
+          <div class="ddim-algorithm__code">\(\hat{\theta}_{\mathrm{EMA},0}\leftarrow\theta_0\)</div>
+          <div class="ddim-algorithm__comment">initialize EMA</div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">2:</div>
+          <div class="ddim-algorithm__code"><strong>for</strong> \(t=1,2,\ldots,T\) <strong>do</strong></div>
+          <div class="ddim-algorithm__comment"></div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">3:</div>
+          <div class="ddim-algorithm__code">\(\quad \theta_t\leftarrow\mathrm{AdamW.step}(\theta_{t-1};\eta)\)</div>
+          <div class="ddim-algorithm__comment">online update</div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">4:</div>
+          <div class="ddim-algorithm__code">\(\quad \hat{v}_t\leftarrow\mathrm{AdamW.preconditioner}(\theta_t)\)</div>
+          <div class="ddim-algorithm__comment"></div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">5:</div>
+          <div class="ddim-algorithm__code">\(\quad\)<strong>if</strong> \(t \bmod \mathrm{uf}=0\) <strong>then</strong></div>
+          <div class="ddim-algorithm__comment"></div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">6:</div>
+          <div class="ddim-algorithm__code">\(\quad\quad \lambda_{t,i}\leftarrow\min\left(\dfrac{\eta c(1+t)^{-\kappa}}{\sqrt{\hat{v}_{t,i}}+\epsilon},1\right)\)</div>
+          <div class="ddim-algorithm__comment">clipped pullback gain</div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">7:</div>
+          <div class="ddim-algorithm__code">\(\quad\quad \theta_t\leftarrow\theta_t+\lambda_t\odot(\hat{\theta}_{\mathrm{EMA},t-1}-\theta_{t-1})\)</div>
+          <div class="ddim-algorithm__comment">pull back online weights</div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">8:</div>
+          <div class="ddim-algorithm__code">\(\quad\quad \beta_t\leftarrow(1+t)^{-\kappa}\)</div>
+          <div class="ddim-algorithm__comment"></div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">9:</div>
+          <div class="ddim-algorithm__code">\(\quad\quad \hat{\theta}_{\mathrm{EMA},t}\leftarrow(1-\beta_t)\hat{\theta}_{\mathrm{EMA},t-1}+\beta_t\theta_t\)</div>
+          <div class="ddim-algorithm__comment">EMA update</div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">10:</div>
+          <div class="ddim-algorithm__code">\(\quad\)<strong>end if</strong></div>
+          <div class="ddim-algorithm__comment"></div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">11:</div>
+          <div class="ddim-algorithm__code"><strong>end for</strong></div>
+          <div class="ddim-algorithm__comment"></div>
+        </div>
+        <div class="ddim-algorithm__row">
+          <div class="ddim-algorithm__num">12:</div>
+          <div class="ddim-algorithm__code"><strong>return</strong> \(\hat{\theta}_{\mathrm{EMA},T}\)</div>
+          <div class="ddim-algorithm__comment">returned model</div>
+        </div>
+      </div>
+    </div>
+
+    <p>The algorithm keeps two models:</p>
+    <ul>
+      <li>\(\theta_t\): the online model updated by AdamW.</li>
+      <li>\(\hat{\theta}_{\mathrm{EMA},t}\): the averaged model that will be returned.</li>
+    </ul>
+
+    <p>At each training step, AdamW first updates the online parameters:</p>
+
+$$
+\theta_t \leftarrow \mathrm{AdamW.step}(\theta_{t-1};\eta).
+$$
+
+    <p>PACE then computes a per-coordinate pullback gain</p>
+
+$$
+\lambda_{t,i}
+=
+\min\left(
+\frac{\eta c(1+t)^{-\kappa}}
+{\sqrt{\hat{v}_{t,i}}+\epsilon},
+1
+\right),
+$$
+
+    <p>where \(\hat{v}_{t,i}\) is AdamW's preconditioner. Coordinates with smaller preconditioned scale can be pulled back more; the \(\min(\cdot,1)\) clip prevents the pullback from overshooting.</p>
+
+    <p>The online weights are then nudged toward the previous EMA weights:</p>
+
+$$
+\theta_t
+\leftarrow
+\theta_t
++
+\lambda_t\odot
+\left(
+\hat{\theta}_{\mathrm{EMA},t-1}
+-
+\theta_{t-1}
+\right).
+$$
+
+    <p>Finally, the EMA model is updated with a power-law averaging weight:</p>
+
+$$
+\hat{\theta}_{\mathrm{EMA},t}
+\leftarrow
+(1-\beta_t)\hat{\theta}_{\mathrm{EMA},t-1}
++
+\beta_t\theta_t,
+\qquad
+\beta_t=(1+t)^{-\kappa}.
+$$
+
+    <p><strong>Key idea:</strong> ordinary EMA only smooths the model after training, while PACE also uses the EMA model as a stabilizing anchor during training. The optimizer still moves with AdamW, but every few steps it is softly pulled back toward the averaged trajectory.</p>
+  </div>
+</details>
 
 ## Guidance
 > Guidance, a cheat code for diffusion models.<sup class="footnote-ref" id="fnref:guidance-cheat-code"><a href="#fn:guidance-cheat-code">4</a></sup>
@@ -4048,10 +4748,10 @@ $$
 
 ### Trajectory distillation
 
-## A industry level text-to-image diffusion pipeline
+## Text-to-image diffusion pipeline
 > Study notes on Krea 2 Technical Report<sup class="footnote-ref" id="fnref:krea2"><a href="#fn:krea2">8</a></sup>
 
-## A industry level video diffusion pipeline
+## Video diffusion pipeline
 
 ## Study Checklist
 
@@ -4218,11 +4918,25 @@ $$
       <a href="https://arxiv.org/abs/2404.04057">arXiv:2404.04057</a>.
       <a href="#fnref:sid" class="footnote-back" title="back to text">↩︎</a>
     </li>
+    <li id="fn:edm2">
+      Karras, Aittala, Lehtinen, Hellsten, Aila, &amp; Laine.
+      <em>Analyzing and Improving the Training Dynamics of Diffusion Models.</em>
+      arXiv, 2023.
+      <a href="https://arxiv.org/abs/2312.02696">arXiv:2312.02696</a>.
+      <a href="#fnref:edm2" class="footnote-back" title="back to text">↩︎</a>
+    </li>
+    <li id="fn:pace">
+      Au &amp; Block.
+      <em>Training for the Model You Return: Improving Optimization for Iterate-Averaged Language Models.</em>
+      arXiv, 2026.
+      <a href="https://arxiv.org/abs/2606.25086">arXiv:2606.25086</a>.
+      <a href="#fnref:pace" class="footnote-back" title="back to text">↩︎</a>
+    </li>
   </ol>
 </section>
 
 <script>
-/* Auto-build a Contents list from h2 and h3 sections. */
+/* Auto-build a Contents list from top-level sections. */
 (function () {
   function ready(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -4232,7 +4946,7 @@ $$
     var article = document.querySelector('.page__content');
     var toc = document.querySelector('#draft-toc');
     if (!article || !toc) return;
-    var items = Array.from(article.querySelectorAll('h2, h3')).filter(function (el) {
+    var items = Array.from(article.querySelectorAll('h2')).filter(function (el) {
       return el.closest('.references-section') === null && el.dataset.tocSkip !== 'true';
     });
     if (items.length === 0) {
@@ -4260,7 +4974,7 @@ $$
       var title = h.cloneNode(true);
       title.querySelectorAll('.footnote-ref').forEach(function (note) { note.remove(); });
       a.textContent = title.textContent.trim();
-      a.className = h.tagName.toLowerCase() === 'h3' ? 'toc-subsection' : 'toc-section';
+      a.className = 'toc-section';
       a.addEventListener('click', function () {
         document.querySelectorAll('#draft-toc a').forEach(function (l) { l.classList.remove('toc-active'); });
         a.classList.add('toc-active');
