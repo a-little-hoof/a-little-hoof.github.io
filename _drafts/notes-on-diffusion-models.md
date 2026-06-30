@@ -3786,8 +3786,6 @@ $$
 }.
 $$
 
-    <p>So a schedule can be described either by the per-step noise \(\beta_t\), or by the accumulated noise level \(\sigma_t\). Small \(\beta_t\)'s can still produce a large \(\sigma_t\) after many steps because the noise accumulates.</p>
-
 $$
 \mathrm{SNR}(t)
 =
@@ -3802,12 +3800,7 @@ $$
 
     <figure>
       <img src="/images/blog/diffusion/snr-intuition.svg" alt="SNR intuition: signal variance, noise variance, and log-SNR over time" style="width: 100%; max-width: 920px; display: block; margin: 0.75rem auto 0.35rem;">
-      <figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center;">
-        SNR tracks the balance between the remaining signal and accumulated noise. High SNR means the sample is still data-like; low SNR means it is mostly noise.
-      </figcaption>
     </figure>
-
-    <p>So SNR is not an extra random variable. It is a diagnostic of the current noising level. When \(\bar{\alpha}_t\) is large, the signal term dominates. When \(1-\bar{\alpha}_t\) is large, the noise term dominates. The point \(\mathrm{SNR}=1\) means the signal and noise variances are equal.</p>
 
     <p><strong>Linear scheduler</strong> chooses the noise rates \(\beta_t\) by linear interpolation:</p>
 
@@ -4615,6 +4608,103 @@ $$
   </div>
 </details>
 
+## Evaluation
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title">definition</span>
+  </summary>
+  <div class="ddim-block__content">
+
+### Inception
+
+Inception-based evaluation uses a pretrained Inception network as a feature extractor or classifier. The idea is not that Inception is special for generation, but that it gives a fixed representation where generated images can be compared.
+
+For generated image \(x\), Inception gives a class distribution
+
+$$
+p(y\mid x).
+$$
+
+If a generator produces diverse and recognizable images, then each image should have a confident prediction \(p(y\mid x)\), while the marginal label distribution should cover many classes:
+
+$$
+p(y)
+=
+\mathbb{E}_{x\sim p_g}\left[p(y\mid x)\right].
+$$
+
+This intuition leads to the Inception Score:
+
+$$
+\mathrm{IS}
+=
+\exp\left(
+\mathbb{E}_{x\sim p_g}
+\left[
+D_{\mathrm{KL}}\left(p(y\mid x)\,\|\,p(y)\right)
+\right]
+\right).
+$$
+
+### precision/recall
+
+Precision and recall separate image quality from diversity.
+
+$$
+\text{precision}
+\approx
+\Pr_{x\sim p_g}
+\left[
+x \text{ lies near the real data manifold}
+\right],
+$$
+
+$$
+\text{recall}
+\approx
+\Pr_{x\sim p_{\mathrm{data}}}
+\left[
+x \text{ is covered by the generated manifold}
+\right].
+$$
+
+High precision means generated samples look realistic. High recall means the generator covers many modes of the real distribution. A model can have high precision but low recall if it only generates a narrow set of beautiful images.
+
+### FID
+
+FID compares real and generated images in an Inception feature space. Let the real features be approximated by
+
+$$
+\mathcal{N}(\mu_r,\Sigma_r),
+$$
+
+and generated features by
+
+$$
+\mathcal{N}(\mu_g,\Sigma_g).
+$$
+
+Then
+
+$$
+\mathrm{FID}
+=
+\|\mu_r-\mu_g\|_2^2
++
+\mathrm{Tr}
+\left(
+\Sigma_r+\Sigma_g
+-
+2(\Sigma_r\Sigma_g)^{1/2}
+\right).
+$$
+
+Lower FID means the generated feature distribution is closer to the real feature distribution. It is useful as a broad distribution-level metric, but it does not guarantee that every individual image is good.
+
+  </div>
+</details>
+
 ## Guidance
 > Guidance, a cheat code for diffusion models.<sup class="footnote-ref" id="fnref:guidance-cheat-code"><a href="#fn:guidance-cheat-code">4</a></sup>
 
@@ -4750,6 +4840,165 @@ $$
 
 ## Text-to-image diffusion pipeline
 > Study notes on Krea 2 Technical Report<sup class="footnote-ref" id="fnref:krea2"><a href="#fn:krea2">8</a></sup>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>1.</strong> Data</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Data decides what the model can know, what visual styles it can express, and what failure modes it inherits. A text-to-image pipeline usually starts with large-scale image-text data, then repeatedly filters, deduplicates, captions, and resamples it.</p>
+
+    <p>The important parts are:</p>
+    <ul>
+      <li><strong>Filtering:</strong> remove duplicates, broken images, unsafe content, bad alignment, and recurring artifacts.</li>
+      <li><strong>Captioning:</strong> turn images into dense visual descriptions so the model receives useful conditioning supervision.</li>
+      <li><strong>Resolution curriculum:</strong> train first at lower resolution to learn broad structure, then move to higher resolution for details.</li>
+      <li><strong>Data mixture:</strong> balance world knowledge, style diversity, aesthetics, text rendering, and long-tail concepts.</li>
+    </ul>
+
+    <p><strong>Interview version:</strong> a strong diffusion model is not only a better denoiser. It is also a better data engine.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>2.</strong> Architecture</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>The modern text-to-image backbone is usually a latent diffusion transformer. The image is first compressed by a VAE into latent tokens, then a DiT/MMDiT-style transformer predicts the denoising target or flow velocity conditioned on text and time.</p>
+
+$$
+z_0 = \mathrm{VAEEnc}(x),
+\qquad
+v_\theta(z_t,t,c)
+\quad\text{or}\quad
+\epsilon_\theta(z_t,t,c),
+$$
+
+    <p>Typical architectural choices include:</p>
+    <ul>
+      <li><strong>Latent autoencoder:</strong> trades image-space cost for a smaller latent-space generation problem.</li>
+      <li><strong>Transformer denoiser:</strong> models image tokens jointly with text conditioning.</li>
+      <li><strong>Text encoder:</strong> maps user prompts into semantic conditioning features.</li>
+      <li><strong>Time/noise conditioning:</strong> tells the model which part of the denoising trajectory it is solving.</li>
+      <li><strong>Stability modules:</strong> normalization, QK-norm, RoPE, gated attention, and EMA help large-scale training behave.</li>
+    </ul>
+
+    <p><strong>Core idea:</strong> the architecture is a conditional vector-field predictor over latent image tokens.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>3.</strong> Training</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Training teaches the model how to move a noisy latent toward a clean latent under text conditioning. For diffusion, this is often noise prediction or clean-data prediction. For flow matching, it is usually velocity prediction.</p>
+
+$$
+\mathcal{L}_{\mathrm{diff}}
+=
+\mathbb{E}_{z_0,\epsilon,t,c}
+\left[
+\left\|
+\epsilon - \epsilon_\theta(z_t,t,c)
+\right\|_2^2
+\right],
+$$
+
+$$
+\mathcal{L}_{\mathrm{FM}}
+=
+\mathbb{E}_{z_0,z_1,t,c}
+\left[
+\left\|
+v_\theta(z_t,t,c) - (z_1-z_0)
+\right\|_2^2
+\right].
+$$
+
+    <p>Large systems usually train in stages: low-resolution pretraining, higher-resolution continuation, and targeted data stages for better aesthetics, text rendering, or domain coverage.</p>
+
+    <p><strong>Core idea:</strong> training is not one run. It is a curriculum over data, resolution, objective details, and conditioning quality.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>4.</strong> Post-training</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Post-training adapts the base model from “knows the distribution” to “behaves well for users.” The base model learns broad image generation; post-training improves prompt following, preference alignment, controllability, and default aesthetics.</p>
+
+    <p>Common post-training pieces are:</p>
+    <ul>
+      <li><strong>SFT:</strong> finetune on curated prompt-image pairs or preferred generations.</li>
+      <li><strong>Preference optimization:</strong> use human or model preferences to rank outputs and push the model toward better generations.</li>
+      <li><strong>RL-style tuning:</strong> optimize reward signals such as prompt alignment, aesthetics, or text rendering.</li>
+      <li><strong>Distillation:</strong> compress a slow sampler into a faster model for production latency.</li>
+    </ul>
+
+    <p><strong>Core idea:</strong> pretraining gives capability; post-training shapes the interface between model behavior and user intent.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>5.</strong> Inference controls</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Inference controls decide how users steer the model after training. In practice, prompt quality, guidance, seeds, reference images, style strength, aspect ratio, and sampler settings can matter as much as the base checkpoint.</p>
+
+    <p>The common control surface is:</p>
+    <ul>
+      <li><strong>Prompt expansion:</strong> convert short user prompts into richer conditioning without changing the user's intent.</li>
+      <li><strong>Classifier-free guidance:</strong> trade diversity for prompt adherence.</li>
+      <li><strong>Reference conditioning:</strong> use images to control style, identity, layout, or visual mood.</li>
+      <li><strong>Sampler controls:</strong> choose step count, noise schedule, solver, seed, and guidance schedule.</li>
+    </ul>
+
+    <p><strong>Core idea:</strong> a production image model is not just a checkpoint. It is a checkpoint plus a controllable inference system.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>6.</strong> Infrastructure</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>Infrastructure is what makes the pipeline scalable and repeatable. It includes data processing, distributed training, evaluation, inference serving, monitoring, and experiment tracking.</p>
+
+    <p>For text-to-image diffusion, infrastructure usually has to support:</p>
+    <ul>
+      <li><strong>Data infrastructure:</strong> crawling, filtering, captioning, deduplication, indexing, and dataset versioning.</li>
+      <li><strong>Training infrastructure:</strong> distributed training, checkpointing, EMA checkpoints, fault tolerance, and ablation tracking.</li>
+      <li><strong>Evaluation infrastructure:</strong> automatic metrics, human preference tests, prompt suites, safety checks, and regression dashboards.</li>
+      <li><strong>Serving infrastructure:</strong> optimized samplers, batching, caching, autoscaling, and latency/cost monitoring.</li>
+    </ul>
+
+    <p><strong>Core idea:</strong> model quality depends on systems quality. Without infrastructure, the model cannot be improved reliably.</p>
+  </div>
+</details>
+
+<details class="ddim-block">
+  <summary>
+    <span class="ddim-block__title"><strong>7.</strong> Future directions</span>
+  </summary>
+  <div class="ddim-block__content">
+    <p>The next improvements are likely to come from better data, better controllability, faster sampling, stronger multimodal conditioning, and more reliable evaluation.</p>
+
+    <p>Useful directions to watch:</p>
+    <ul>
+      <li><strong>Better latent spaces:</strong> train VAEs/RAEs that preserve semantic and visual detail while staying efficient.</li>
+      <li><strong>Few-step generation:</strong> distillation, consistency training, and rectified/mean-flow style objectives.</li>
+      <li><strong>Multimodal control:</strong> text, image references, masks, layout, depth, sketch, identity, and style all as first-class inputs.</li>
+      <li><strong>Evaluation:</strong> metrics that better reflect prompt following, aesthetics, diversity, and user preference.</li>
+      <li><strong>Personalization:</strong> controllable adaptation without overfitting or identity/style leakage.</li>
+    </ul>
+
+    <p><strong>Core idea:</strong> the frontier is moving from “can generate good images” to “can generate the right image, quickly, controllably, and reliably.”</p>
+  </div>
+</details>
 
 ## Video diffusion pipeline
 
