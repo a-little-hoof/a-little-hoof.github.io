@@ -35,7 +35,7 @@
     </h2>
     
     {% if post.read_time %}
-      <p class="page__meta"><i class="fa fa-clock-o" aria-hidden="true"></i> {% include read-time.html %}{% if post.collection == 'posts' %} <span class="archive-kind">Blogpost</span>{% endif %}</p>
+      <p class="page__meta">{% if post.collection == 'posts' and post.date %}<time datetime="{{ post.date | default: "1900-01-01" | date_to_xmlschema }}">{{ post.date | date: "%b %Y" }}</time> <span class="sep">·</span> {% endif %}<i class="fa fa-clock-o" aria-hidden="true"></i> {% include read-time.html %}{% if post.collection == 'posts' %} <span class="archive-kind">Blogpost</span>{% endif %}</p>
     {% endif %}
 
         {% if post.collection == 'teaching' %}
