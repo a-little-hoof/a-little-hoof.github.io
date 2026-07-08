@@ -117,14 +117,11 @@ redirect_from:
 </div>
 
 {% assign visible_posts = site.posts | where_exp: "post", "post.hidden != true" %}
-{% assign cutoff_dsr = "2026-06-01" | date: "%s" %}
-{% assign cutoff_uni = "2025-09-01" | date: "%s" %}
 
 <ul class="post-list">
 
   {% for post in visible_posts %}
-  {% assign post_ts = post.date | date: "%s" %}
-  {% if post_ts >= cutoff_dsr %}
+  {% if post.url contains "how-to-evaluate-your-generative-model" %}
   <li class="post-item">
     <div class="post-meta">
       <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %Y" }}</time>
@@ -163,8 +160,7 @@ redirect_from:
   </li>
 
   {% for post in visible_posts %}
-  {% assign post_ts = post.date | date: "%s" %}
-  {% if post_ts < cutoff_dsr and post_ts >= cutoff_uni %}
+  {% if post.url contains "ema-in-diffusion-training" %}
   <li class="post-item">
     <div class="post-meta">
       <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %Y" }}</time>
@@ -203,8 +199,7 @@ redirect_from:
   </li>
 
   {% for post in visible_posts %}
-  {% assign post_ts = post.date | date: "%s" %}
-  {% if post_ts < cutoff_uni %}
+  {% unless post.url contains "how-to-evaluate-your-generative-model" or post.url contains "ema-in-diffusion-training" %}
   <li class="post-item">
     <div class="post-meta">
       <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %Y" }}</time>
@@ -221,7 +216,7 @@ redirect_from:
       </div>
     {% endif %}
   </li>
-  {% endif %}
+  {% endunless %}
   {% endfor %}
 
 </ul>
