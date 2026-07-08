@@ -66,6 +66,20 @@
   }
 }
 
+.archive-kind {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.55em;
+  padding: 0.08em 0.6em;
+  border: 1px solid #dbe7ff;
+  border-radius: 999px;
+  background: #eff5ff;
+  color: #1d4ed8;
+  font-size: 0.86em;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .archive__item-teaser {
   border-radius: $border-radius;
   overflow: hidden;
