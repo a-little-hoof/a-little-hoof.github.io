@@ -65,6 +65,11 @@ redirect_from:
     content: "";
     margin: 0;
   }
+  .post-item .post-meta .kind.blogpost {
+    color: #047857;
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+  }
   .post-item h2 {
     margin: 0 0 6px;
     font-size: 1.25rem;
@@ -112,8 +117,32 @@ redirect_from:
 </div>
 
 {% assign visible_posts = site.posts | where_exp: "post", "post.hidden != true" %}
+{% assign cutoff_dsr = "2026-06-01" | date: "%s" %}
+{% assign cutoff_uni = "2025-09-01" | date: "%s" %}
 
 <ul class="post-list">
+
+  {% for post in visible_posts %}
+  {% assign post_ts = post.date | date: "%s" %}
+  {% if post_ts >= cutoff_dsr %}
+  <li class="post-item">
+    <div class="post-meta">
+      <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %Y" }}</time>
+      {% if post.read_time != false %}<span class="read-time">{% include read-time.html %}</span>{% endif %}
+      <span class="kind blogpost">Blogpost</span>
+    </div>
+    <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+    {% if post.excerpt %}
+      <p class="post-excerpt">{{ post.excerpt | strip_html | truncate: 220 }}</p>
+    {% endif %}
+    {% if post.tags and post.tags.size > 0 %}
+      <div class="tags">
+        {% for tag in post.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+      </div>
+    {% endif %}
+  </li>
+  {% endif %}
+  {% endfor %}
 
   <!-- Project page: DSR -->
   <li class="post-item">
@@ -132,6 +161,28 @@ redirect_from:
       <span class="tag">registers</span>
     </div>
   </li>
+
+  {% for post in visible_posts %}
+  {% assign post_ts = post.date | date: "%s" %}
+  {% if post_ts < cutoff_dsr and post_ts >= cutoff_uni %}
+  <li class="post-item">
+    <div class="post-meta">
+      <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %Y" }}</time>
+      {% if post.read_time != false %}<span class="read-time">{% include read-time.html %}</span>{% endif %}
+      <span class="kind blogpost">Blogpost</span>
+    </div>
+    <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+    {% if post.excerpt %}
+      <p class="post-excerpt">{{ post.excerpt | strip_html | truncate: 220 }}</p>
+    {% endif %}
+    {% if post.tags and post.tags.size > 0 %}
+      <div class="tags">
+        {% for tag in post.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+      </div>
+    {% endif %}
+  </li>
+  {% endif %}
+  {% endfor %}
 
   <!-- Project page: Uni-Instruct -->
   <li class="post-item">
@@ -152,11 +203,13 @@ redirect_from:
   </li>
 
   {% for post in visible_posts %}
+  {% assign post_ts = post.date | date: "%s" %}
+  {% if post_ts < cutoff_uni %}
   <li class="post-item">
     <div class="post-meta">
       <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %Y" }}</time>
       {% if post.read_time != false %}<span class="read-time">{% include read-time.html %}</span>{% endif %}
-      <span class="kind">Blogpost</span>
+      <span class="kind blogpost">Blogpost</span>
     </div>
     <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
     {% if post.excerpt %}
@@ -168,6 +221,7 @@ redirect_from:
       </div>
     {% endif %}
   </li>
+  {% endif %}
   {% endfor %}
 
 </ul>
