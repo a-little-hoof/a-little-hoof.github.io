@@ -1,7 +1,7 @@
 ---
 permalink: /blog/
 title: "Blog"
-excerpt: "Research notes, project writeups, and diffusion-model study guides."
+excerpt: "Research notes, project writeups, and blogpost on interesting findings."
 author_profile: true
 redirect_from:
   - /posts/
@@ -108,7 +108,7 @@ redirect_from:
 
 <div class="blog-hero">
   <h1>Blog</h1>
-  <p>Research notes, project writeups, and diffusion-model study guides.</p>
+  <p>Research notes, project writeups, and blogpost on interesting findings.</p>
 </div>
 
 {% assign visible_posts = site.posts | where_exp: "post", "post.hidden != true" %}
@@ -156,6 +156,7 @@ redirect_from:
     <div class="post-meta">
       <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %-d, %Y" }}</time>
       {% if post.read_time != false %}<span class="read-time">{% include read-time.html %}</span>{% endif %}
+      <span class="kind">Blogpost</span>
     </div>
     <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
     {% if post.excerpt %}
