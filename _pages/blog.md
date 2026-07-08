@@ -118,7 +118,6 @@ redirect_from:
   <!-- Project page: DSR -->
   <li class="post-item">
     <div class="post-meta">
-      <time datetime="2026-05-01">May 2026</time>
       <span class="kind">Project page</span>
     </div>
     <h2><a href="/dit-register/">Taming Outlier Tokens in Diffusion Transformers</a></h2>
@@ -136,7 +135,6 @@ redirect_from:
   <!-- Project page: Uni-Instruct -->
   <li class="post-item">
     <div class="post-meta">
-      <time datetime="2025-09-01">Sep 2025</time>
       <span class="kind">Project page</span>
     </div>
     <h2><a href="/uni-instruct/">Uni-Instruct: One-step Diffusion through Unified Divergence Instruction</a></h2>
@@ -154,7 +152,6 @@ redirect_from:
   {% for post in visible_posts %}
   <li class="post-item">
     <div class="post-meta">
-      <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %-d, %Y" }}</time>
       {% if post.read_time != false %}<span class="read-time">{% include read-time.html %}</span>{% endif %}
       <span class="kind">Blogpost</span>
     </div>
