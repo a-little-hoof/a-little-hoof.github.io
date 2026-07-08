@@ -1,3 +1,8 @@
+{% if post.reading_time_minutes %}
+  {{ post.reading_time_minutes }} {{ site.data.ui-text[site.locale].minute_read | default: "minute read" }}
+{% elsif page.reading_time_minutes %}
+  {{ page.reading_time_minutes }} {{ site.data.ui-text[site.locale].minute_read | default: "minute read" }}
+{% else %}
 {% if post.read_time %}
   {% assign words = post.content | strip_html | number_of_words %}
 {% elsif page.read_time %}
@@ -14,4 +19,5 @@
 	{% endif %}
 {% else %}
   {{ site.data.ui-text[site.locale].undefined_wpm | "Undefined parameter words_per_minute at _config.yml" }}
+{% endif %}
 {% endif %}
