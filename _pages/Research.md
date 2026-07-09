@@ -13,6 +13,14 @@ Recently, I have been working on representation-space diffusion, one-step and fe
 
 ## List of publications
 
+- (CVPR 2026) **Masked Auto-Regressive Variational Acceleration: Fast Inference Makes Practical Reinforcement Learning**
+*Yuxuan Gu, Weimin Bai, Yifei Wang, Weijian Luo and He Sun*.
+[paper](https://arxiv.org/abs/2511.15190) | [project page](https://ai4scientificimaging.org/MARVAL-RL/)
+
+- (Preprint 2026) **Unbiased Diffusion Variational Inversion via Principled Posterior Matching**
+*Weimin Bai, Yuxuan Gu, Yifei Wang, Weijian Luo and He Sun*.
+[paper](https://arxiv.org/abs/2605.25042)
+
 - (Preprint 2026) **Taming Outlier Tokens in Diffusion Transformers**
 *Xiaoyu Wu\*, Yifei Wang\*, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan and Chen Wei*.
 [paper](https://arxiv.org/abs/2605.05206) | [project page](/dit-register/) | [code](https://github.com/a-little-hoof/DSR)
