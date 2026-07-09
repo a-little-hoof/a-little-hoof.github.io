@@ -548,77 +548,77 @@ The following table summarizes representative benchmarks and the capabilities th
       <tr>
         <td rowspan="5" class="area-cell">Text-to-image</td>
         <td>GenEval<sup class="footnote-ref"><a href="#fn:geneval">20</a></sup></td>
-        <td>553</td>
+        <td>553 prompts over six object-centric tasks</td>
         <td>Mask2Former instance segmentation; CLIP ViT-L/14 color classifier</td>
         <td>Object presence, counting, relative position, color, and attribute binding</td>
       </tr>
       <tr>
         <td>DPG-Bench<sup class="footnote-ref"><a href="#fn:dpg-bench">21</a></sup></td>
-        <td>1,065 / 4</td>
+        <td>1,065 long dense prompts; four images per prompt</td>
         <td>mPLUG-large MLLM judge over DSG-style questions and graphs</td>
         <td>Dense prompt following with multiple objects, attributes, and relationships</td>
       </tr>
       <tr>
         <td>GenEval 2<sup class="footnote-ref"><a href="#fn:geneval2">22</a></sup></td>
-        <td>800</td>
+        <td>800 prompts with varying compositionality</td>
         <td>Soft-TIFA, a VQA-based atom-level evaluator</td>
         <td>Primitive concepts, counts, relations, compositionality, and benchmark drift</td>
       </tr>
       <tr>
         <td>GenAI-Bench<sup class="footnote-ref"><a href="#fn:genai-bench">23</a></sup></td>
-        <td>1,600 / 800</td>
+        <td>1,600 real-world prompts; 800-prompt video coreset</td>
         <td>VQAScore and human ratings</td>
         <td>Text-to-visual alignment for basic and advanced compositional reasoning</td>
       </tr>
       <tr>
         <td>T2I-CompBench<sup class="footnote-ref"><a href="#fn:t2i-compbench">24</a></sup></td>
-        <td>6,000</td>
+        <td>6,000 prompts across three categories and six subcategories</td>
         <td>BLIP-VQA, UniDet, CLIPScore, 3-in-1 metric, MiniGPT-4-CoT</td>
         <td>Attribute binding, spatial/non-spatial relations, and complex compositions</td>
       </tr>
       <tr>
         <td rowspan="2" class="area-cell">Video</td>
         <td>VBench<sup class="footnote-ref"><a href="#fn:vbench">25</a></sup></td>
-        <td>946 / 800 / 5</td>
+        <td>946 dimension prompts, plus 800 category prompts; typically five videos per prompt</td>
         <td>DINO, CLIP, RAFT, LAION aesthetic predictor, MUSIQ, GRiT, UMT, Tag2Text, ViCLIP</td>
         <td>Fine-grained video quality and video-condition consistency across 16 dimensions</td>
       </tr>
       <tr>
         <td>T2V-CompBench<sup class="footnote-ref"><a href="#fn:t2v-compbench">26</a></sup></td>
-        <td>1,400</td>
+        <td>1,400 prompts across seven compositional categories</td>
         <td>MLLM-based, detection-based, and tracking-based metrics</td>
         <td>Attribute binding, motion binding, action binding, interactions, and numeracy in video</td>
       </tr>
       <tr>
         <td rowspan="2" class="area-cell">Editing</td>
         <td>I2EBench<sup class="footnote-ref"><a href="#fn:i2ebench">27</a></sup></td>
-        <td>2,000+ / 4,000+</td>
+        <td>2,000+ images and 4,000+ original/diverse instructions</td>
         <td>GPT-4V for high-level edits; CLIP/SSIM for style and low-level edits</td>
         <td>Instruction-based image editing across 16 high- and low-level dimensions</td>
       </tr>
       <tr>
         <td>GIE-Bench<sup class="footnote-ref"><a href="#fn:gie-bench">28</a></sup></td>
-        <td>1,000+ / 800+ / 20</td>
+        <td>1,000+ editing tasks from 800+ images across 20 categories</td>
         <td>VQA-style multiple-choice questions; Grounded SAM masks; object-aware preservation score</td>
         <td>Functional correctness and content preservation in non-edited regions</td>
       </tr>
       <tr>
         <td rowspan="2" class="area-cell">3D</td>
         <td>T3Bench<sup class="footnote-ref"><a href="#fn:t3bench">29</a></sup></td>
-        <td>300</td>
+        <td>300 prompts across single object, surroundings, and multi-object scenes</td>
         <td>Multi-view rendering with CLIP/ImageReward quality scoring; captioning plus GPT-4 alignment scoring</td>
         <td>Text-to-3D quality, text alignment, and view consistency</td>
       </tr>
       <tr>
         <td>3DGen-Bench<sup class="footnote-ref"><a href="#fn:3dgen-bench">30</a></sup></td>
-        <td>1,020 / 11,220</td>
+        <td>1,020 text/image prompts; 11,220 generated 3D assets</td>
         <td>3DGen-Score and 3DGen-Eval trained from human preferences</td>
         <td>Geometry plausibility, geometry detail, texture quality, geometry-texture coherence, prompt-asset alignment</td>
       </tr>
       <tr>
         <td class="area-cell">Multimodal</td>
         <td>MMMU<sup class="footnote-ref"><a href="#fn:mmmu">31</a></sup></td>
-        <td>11.5K / 6 / 30</td>
+        <td>11.5K multimodal questions across six disciplines and 30 subjects</td>
         <td>Multiple-choice / open-ended answer accuracy over expert problems</td>
         <td>Reasoning across images, charts, diagrams, tables, text, and domain knowledge</td>
       </tr>
