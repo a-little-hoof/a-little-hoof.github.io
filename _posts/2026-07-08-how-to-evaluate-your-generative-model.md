@@ -77,6 +77,23 @@ reading_time_minutes: 34
   font-weight: 700;
   color: #2b313a;
 }
+.ref-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  margin-left: 0.35em;
+  border-radius: 999px;
+  color: #24788d;
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1;
+}
+.ref-back:hover {
+  background: #e9f4f6;
+  text-decoration: none;
+}
 @media (max-width: 640px) {
   .post-wrap h2 {
     font-size: 1.42rem;
@@ -97,7 +114,7 @@ reading_time_minutes: 34
 }
 </style>
 
-> Generative models have become unusually good at producing things that look convincing: images, videos, speech, music, molecules, layouts, 3D scenes, and text. But the better these models become, the harder evaluation gets. When outputs are obviously broken, evaluation is easy. When outputs are plausible, diverse, and sometimes beautiful, the question shifts from "does it work?" to "what exactly improved?"
+> Evaluating generative models is difficult not because current models fail obviously, but because many failures become subtle as generation quality improves. A model may produce realistic samples while still suffering from problems such as poor diversity, weak prompt adherence, or memorization. Therefore, the central challenge is not only determining whether a model works, but understanding which aspects of generation have actually improved.
 
 This blog post traces the development of generative model evaluation: from the basic difficulty, to representation-based metrics, to FID and its many descendants, to benchmark-driven evaluation, and finally to the uncomfortable fact that no single number gets to be the truth.
 
@@ -110,7 +127,7 @@ Below is a clickable table of contents. Click any item to jump directly to that 
       <li><a href="#why-is-evaluation-hard">Why is evaluation hard?</a></li>
     </ol>
   </li>
-  <li><a href="#discriminative-models">Discriminative models as a natural thought</a>
+  <li><a href="#discriminative-models">Discriminative Models as Evaluators</a>
     <ol>
       <li><a href="#inception-score">Inception Score</a></li>
       <li><a href="#precision-and-recall">Precision and recall</a></li>
@@ -194,14 +211,14 @@ The correlations are small. Even in the statistically positive setting, the effe
 
 Therefore, likelihood is useful as a density diagnostic, but it should not be treated as an automatic evaluation metric for prompt following or perceptual quality.
 
-On the other hand, although human evaluation is closest to the ultimate objective, large-scale, reproducible, and statistically reliable human studies are costly and difficult to use as a routine evaluation protocol. Therefore, designing automatic, reproducible evaluation metrics that align well with human perception has become one of the central problems in generative model research.
+Human evaluation remains the most direct way to assess perceptual quality, but large-scale studies are expensive and difficult to reproduce. This motivates the development of automatic metrics that are scalable while still correlating well with human judgments.
 
-## 2. Discriminative models as a natural thought
+## 2. Discriminative Models as Evaluators
 {: #discriminative-models}
 
-The natural escape from pixel space is representation space. Directly comparing generated and real images in pixel space is usually not meaningful: a small translation, crop, lighting change, or texture variation can produce a large pixel difference, even when two images look similar to humans. More importantly, the goal of generative model evaluation is not to check whether one generated image exactly matches one reference image, but to ask whether the model produces samples that are realistic, diverse, and semantically close to the real data distribution.
+A common approach is to evaluate generative models in a learned representation space rather than directly in pixel space. Pixel-level distances are often poorly aligned with human perception: small changes in translation, cropping, lighting, or texture can produce large pixel differences even when the images remain perceptually similar. Moreover, generation is not a reconstruction problem. The goal is not to reproduce a specific target image, but to measure whether generated samples match the statistics and semantics of the real data distribution.
 
-A pretrained discriminative model gives us a practical proxy for this question. Instead of comparing images as raw arrays, we pass them through a feature extractor and compare their embeddings. If the feature extractor has learned useful visual concepts, then nearby points in feature space should share higher-level properties such as object category, shape, texture, composition, or image-text alignment. In this view, the feature extractor becomes the measuring instrument: it decides which differences are important and which differences can be ignored.
+Pretrained discriminative models provide a practical way to construct such representation spaces. Instead of comparing raw pixels, generated and real images are mapped into feature embeddings, where distances are expected to reflect higher-level visual properties. However, the resulting evaluation is inherently dependent on the chosen representation: the feature extractor determines which aspects of similarity are captured and which are ignored.
 
 <figure>
   <img src="/images/blog/evaluation/inception-v3-fid-is-pipeline.svg?v=1" alt="Schematic of the Inception-v3 architecture used as a feature extractor for generative model evaluation" style="width: 100%; max-width: 860px; display: block; margin: 1.2rem auto 0.4rem;">
@@ -303,7 +320,7 @@ So high precision means most generated samples fall inside the real-data manifol
 ## 3. One score that rules them all
 {: #one-score}
 
-Then came FID, which was introduced in the TTUR paper<sup class="footnote-ref"><a href="#fn:fid">7</a></sup> and has since become a default metric for generative model evaluation.
+FID, introduced in the TTUR paper<sup class="footnote-ref"><a href="#fn:fid">7</a></sup>, later became the de facto standard metric for evaluating image generative models.
 
 ### 3.1 What is FID?
 {: #what-is-fid}
@@ -407,7 +424,7 @@ Here the means and covariances are computed from video features rather than imag
 ## 4. The problem with FID
 {: #problem-with-fid}
 
-FID is useful, but it is not perfect. For a long time, FID dominated generative model evaluation: train a model, generate samples, compute FID, and use the number to compare methods. As generative models become more powerful, the problems of FID have become harder to ignore: the score is useful, influential, and still only a proxy.
+Despite its success, FID has important limitations. For years, generative model evaluation often followed a simple pipeline: train a model, generate samples, compute FID, and use the score as the primary basis for comparison. As generative models have improved, these limitations have become increasingly apparent: a single distribution-level metric cannot fully capture the different dimensions of generation quality.
 
 ### 4.1 How stable is FID?
 {: #fid-stability}
@@ -472,7 +489,7 @@ FID is a feature-space metric. If the feature extractor cannot see a failure, FI
 
 The conclusion is not that ImageNet FID is useless. It is that ImageNet FID is local evidence. A method can improve class-conditional ImageNet generation without improving prompt-following, compositionality, or the behavior users actually care about in text-to-image systems. If the claim is broad progress in generative modeling, ImageNet FID alone is too narrow a witness.
 
-#### 4.2.2 Small FID absolute value loss its meaning
+#### 4.2.2 When Small FID Gaps Stop Meaning Much
 
 The FID Lottery already shows one reason small gaps are dangerous: retraining the same recipe with different random seeds can move FID more than the improvement claimed by many papers.<sup class="footnote-ref"><a href="#fn:fid-lottery">13</a></sup> Even before asking whether the metric reflects human preference, we have to ask whether the reported gap is larger than the noise induced by training randomness, sampling randomness, and evaluation details.
 
@@ -486,7 +503,7 @@ Even if the model and reference distribution are fixed, a finite 50k reference h
 
 The variance is small, but not zero. Around model FIDs of 3 to 5, this corresponds to fluctuations on the order of a few hundredths. Combined with the FID Lottery result, this makes tiny FID gaps hard to interpret. A difference of 0.05, 0.1, or even 0.2 may reflect the seed, the reference set, preprocessing, or sample count more than a meaningful change in generative behavior. In this regime, a small FID gap cannot suggest much by itself.
 
-#### 4.2.3 FID score on other domains is even worse
+#### 4.2.3 FID Is Weaker in Conditional Domains
 
 The problem becomes sharper once generation becomes conditional. Text-to-image is the simplest example. In class-conditional ImageNet generation, the condition is a single label, and FID can at least ask whether the generated image distribution looks like the ImageNet distribution. In text-to-image, the condition is open-ended language. The model has to follow arbitrary prompts faithfully and produce visually convincing images at the same time. <a href="https://peppaking8.github.io/#/post/minit2i">MiniT2I</a> makes this distinction explicit: it reports MSCOCO-30K FID as a distribution-level realism metric, but notes that this metric does not ask whether the generated image actually followed the prompt.<sup class="footnote-ref"><a href="#fn:minit2i">36</a></sup>
 
@@ -609,9 +626,9 @@ The table below is not exhaustive, but it shows how the evaluator changes with t
   </table>
 </div>
 
-This is progress. Benchmarks make failure modes visible. They turn vague complaints into testable categories. They also help evaluation move closer to actual use cases.
+Benchmarks represent an important shift toward more diagnostic evaluation. Rather than relying only on global distribution metrics, they define specific tasks that expose concrete failure modes and better reflect practical requirements.
 
-But benchmarks are not perfect. GenEval is a useful example: it made text-to-image failures concrete by checking object presence, count, position, color, and attribute binding with a fixed detector-and-classifier pipeline, but that also means it can be easy to hack. For example, a model trained on BLIP-3o data can reach a GenEval score of 0.67, surpassing SD3.5-M with a GenEval score of 0.63. A higher GenEval score can therefore mean better prompt following, but it can also mean better adaptation to GenEval itself.
+However, benchmark-based evaluation introduces its own biases. GenEval provides a useful example: by measuring object presence, counting, spatial relationships, color, and attribute binding through a fixed detector-and-classifier pipeline, it makes text-to-image failures more explicit. At the same time, this fixed evaluation protocol creates opportunities for benchmark-specific optimization. For example, a model trained on BLIP-3o data achieves a GenEval score of 0.67, higher than SD3.5-M's score of 0.63. This improvement may indicate better prompt following, but it may also partially reflect adaptation to GenEval's prompt distribution and evaluator.
 
 ### 5.2 Pass@k reveals distribution coverage
 {: #pass-k-coverage}
@@ -659,9 +676,9 @@ The history of generative model evaluation is a history of proxies. Pixels were 
 
 Each step fixes something and exposes something else.
 
-None of these metrics is perfect. A useful evaluation should therefore look at a model from multiple angles: distribution distance, precision and recall, benchmark scores, pass@k behavior, and qualitative failures.
+No single metric captures all aspects of generative model quality. Different evaluation methods measure different properties: distribution-level metrics assess similarity to the data distribution, precision and recall diagnose fidelity and coverage, benchmarks test specific capabilities, and qualitative analysis reveals failure modes that automatic metrics may miss.
 
-As the old saying goes, beauty is in the eye of the beholders. No automatic metric can truly replace human evaluation. Evaluating generative models still has a long way to go. Metrics can make evaluation cheaper, faster, and more reproducible, but the final question is still whether people find the generated output good, faithful, useful, or meaningful.
+Future evaluation will likely require a combination of complementary metrics rather than a single universal score. Automatic metrics can improve scalability and reproducibility, but they remain proxies for the properties we ultimately care about. The challenge is not to find one perfect metric, but to design evaluation protocols that reveal why one model performs better than another.
 
 <section class="references-section" id="references">
   <h4>References</h4>
@@ -883,12 +900,39 @@ As the old saying goes, beauty is in the eye of the beholders. No automatic metr
   </ol>
 </section>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var firstRefs = {};
+  document.querySelectorAll(".footnote-ref a[href^='#fn:']").forEach(function (link) {
+    var key = link.getAttribute("href").slice(1);
+    if (!firstRefs[key]) {
+      var backId = "back-" + key;
+      link.id = backId;
+      firstRefs[key] = backId;
+    }
+  });
+
+  Object.keys(firstRefs).forEach(function (key) {
+    var item = document.getElementById(key);
+    if (!item || item.querySelector(".ref-back")) return;
+
+    var back = document.createElement("a");
+    back.className = "ref-back";
+    back.href = "#" + firstRefs[key];
+    back.setAttribute("aria-label", "Back to citation");
+    back.textContent = "↩";
+    item.appendChild(document.createTextNode(" "));
+    item.appendChild(back);
+  });
+});
+</script>
+
 <section class="end-section cite-section">
   <h4>Please Cite</h4>
   <p>If this post is useful for your work, please cite it as:</p>
   <pre class="bibtex"><code>@misc{wang2026struggling,
   title = {Struggling Toward Generative Model Evaluation},
-  author = {Wang, Yifei},
+  author = {Wang, Yifei and Wu, Xiaoyu and Wei, Chen},
   year = {2026},
   url = {https://a-little-hoof.github.io/blog/how-to-evaluate-your-generative-model/},
   note = {Blog post}
