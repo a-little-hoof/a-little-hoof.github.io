@@ -1,7 +1,7 @@
 ---
 permalink: /
 title: "Yifei Wang"
-excerpt: "Yifei Wang — first-year PhD student at Rice University, working on generative models."
+excerpt: "Yifei Wang — second-year PhD student at Rice University, working on generative models."
 author_profile: true
 redirect_from: 
   - /About/
@@ -166,7 +166,7 @@ redirect_from:
 
 <div class="home-hero">
   <h1>Hi, I'm Yifei Wang</h1>
-  <p class="role">First-year PhD student · Rice University</p>
+  <p class="role">Second-year PhD student · Rice University</p>
   <p class="lead">
     I work on generative models — diffusion, flow matching, and the building blocks that make them more
     efficient and more controllable.
@@ -182,7 +182,7 @@ redirect_from:
     </li>
     <li>
       <time>May 2026</time>
-      <span><span class="badge">new</span> Joining <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at JHU as a visiting student for the summer.</span>
+      <span><span class="badge">new</span> Joining Prof. <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at JHU as a visiting student for the summer.</span>
     </li>
     <li>
       <time>May 2026</time>
@@ -194,7 +194,7 @@ redirect_from:
     </li>
     <li>
       <time>Aug 2025</time>
-      <span>Started PhD at Rice University, working with <a href="https://weichen582.github.io/">Chen Wei</a>.</span>
+      <span>Started PhD at Rice University, working with Prof. <a href="https://weichen582.github.io/">Chen Wei</a>.</span>
     </li>
     <li>
       <time>Sep 2024</time>
@@ -258,19 +258,14 @@ redirect_from:
 <div class="home-section home-about">
   <h2>About</h2>
   <p>
-    I'm a first-year PhD student at Rice University, where I am working with
-    <a href="https://weichen582.github.io/">Chen Wei</a>. In May 2026 I'll be visiting
-    <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at Johns Hopkins University.
+    I'm a second-year PhD student at Rice University, where I am working with
+    Prof. <a href="https://weichen582.github.io/">Chen Wei</a>. In May 2026 I'll be visiting
+    Prof. <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at Johns Hopkins University.
     Before Rice I received my B.S. from Peking University, advised by
-    <a href="https://ai4imaging.github.io/">He Sun</a> and
-    <a href="https://pkulwj1994.github.io/">Weijian Luo</a>. My research focuses on generative modeling —
+    Prof. <a href="https://ai4imaging.github.io/">He Sun</a> and
+    Dr. <a href="https://pkulwj1994.github.io/">Weijian Luo</a>. My research focuses on generative modeling —
     primarily diffusion models — with an emphasis on the theory and the practical bottlenecks that govern
     their training.
-  </p>
-  <p>
-    Outside the lab, I run and hike a lot. I've finished several half marathons, and once spent a summer doing
-    ecological field research in Saihanba and Xihaigu. I also write Chinese-language blogs on
-    <a href="https://www.zhihu.com/people/cameron-78-28">Zhihu</a>.
   </p>
 </div>
 
