@@ -9,7 +9,9 @@ author_profile: true
 ## Research statement
 My research focuses on generative models, especially diffusion models, flow matching, and efficient image generation. I am interested in how modeling choices such as architectures, training objectives, noise schedules, samplers, and distillation shape sample quality, likelihood, and deployment cost.
 
-Recently, I have been working on representation-space diffusion, one-step and few-step generation, and practical design choices behind high-quality text-to-image systems. My goal is to connect the theory of generative modeling with methods that are reliable and efficient in real applications.
+During the first year of my PhD, I worked on representation-space diffusion, one-step and few-step generation, and practical design choices behind high-quality text-to-image systems. My goal is to connect the theory of generative modeling with methods that are reliable and efficient in real applications.
+
+Looking ahead, I plan to explore long-form video generation and world action models (WAMs), with a particular interest in long-horizon consistency, controllability, and efficient generation.
 
 ## List of publications
 

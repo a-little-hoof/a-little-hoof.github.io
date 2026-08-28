@@ -168,8 +168,8 @@ redirect_from:
   <h1>Hi, I'm Yifei Wang</h1>
   <p class="role">Second-year PhD student · Rice University</p>
   <p class="lead">
-    I work on generative models — diffusion, flow matching, and the building blocks that make them more
-    efficient and more controllable.
+    I work on generative models, including diffusion, flow matching, and the building blocks that make them
+    more efficient and controllable.
   </p>
 </div>
 
@@ -259,12 +259,12 @@ redirect_from:
   <h2>About</h2>
   <p>
     I'm a second-year PhD student at Rice University, where I am working with
-    Prof. <a href="https://weichen582.github.io/">Chen Wei</a>. In May 2026 I'll be visiting
+    Prof. <a href="https://weichen582.github.io/">Chen Wei</a>. In May 2026 I visited
     Prof. <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at Johns Hopkins University.
     Before Rice I received my B.S. from Peking University, advised by
     Prof. <a href="https://ai4imaging.github.io/">He Sun</a> and
-    Dr. <a href="https://pkulwj1994.github.io/">Weijian Luo</a>. My research focuses on generative modeling —
-    primarily diffusion models — with an emphasis on the theory and the practical bottlenecks that govern
+    Dr. <a href="https://pkulwj1994.github.io/">Weijian Luo</a>. My research focuses on generative modeling,
+    with an emphasis on the theory and the practical bottlenecks that govern
     their training.
   </p>
 </div>
