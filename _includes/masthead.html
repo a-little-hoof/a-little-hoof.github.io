@@ -1,5 +1,17 @@
 {% include base_path %}
 
+{% if page.layout == 'profile' %}
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-name" href="{{ '/' | relative_url }}">{{ site.name }}</a>
+    <nav class="site-navigation" aria-label="Main navigation">
+      {% for link in site.data.navigation.main %}
+      <a href="{{ link.url | relative_url }}"{% if page.url == link.url %} aria-current="page"{% endif %}>{{ link.title }}</a>
+      {% endfor %}
+    </nav>
+  </div>
+</header>
+{% else %}
 <div class="masthead">
   <div class="masthead__inner-wrap">
     <div class="masthead__menu">
@@ -21,3 +33,4 @@
     </div>
   </div>
 </div>
+{% endif %}

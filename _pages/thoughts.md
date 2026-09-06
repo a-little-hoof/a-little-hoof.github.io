@@ -3,8 +3,6 @@ layout: archive
 title: "Thoughts"
 permalink: /thoughts/
 author_profile: true
-redirect_from:
-  - /resume
 ---
 
 {% include base_path %}

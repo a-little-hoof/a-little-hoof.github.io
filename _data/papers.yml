@@ -1,0 +1,58 @@
+- id: marval
+  title: "Masked Auto-Regressive Variational Acceleration: Fast Inference Makes Practical Reinforcement Learning"
+  year: 2026
+  venue: CVPR 2026
+  authors: "Yuxuan Gu, Weimin Bai, <strong>Yifei Wang</strong>, Weijian Luo, and He Sun"
+  paper: https://arxiv.org/abs/2511.15190
+  project: https://ai4scientificimaging.org/MARVAL-RL/
+
+- id: posterior-matching
+  title: "Unbiased Diffusion Variational Inversion via Principled Posterior Matching"
+  year: 2026
+  venue: Preprint · 2026
+  authors: "Weimin Bai, Yuxuan Gu, <strong>Yifei Wang</strong>, Weijian Luo, and He Sun"
+  paper: https://arxiv.org/abs/2605.25042
+
+- id: dsr
+  title: "Taming Outlier Tokens in Diffusion Transformers"
+  year: 2026
+  venue: Preprint · 2026
+  authors: "Xiaoyu Wu*, <strong>Yifei Wang*</strong>, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan, and Chen Wei"
+  paper: https://arxiv.org/abs/2605.05206
+  project: /dit-register/
+  code: https://github.com/a-little-hoof/DSR
+  selected: true
+  image: /dit-register/static/images/pca_map_2.jpg
+  image_width: 1535
+  image_height: 726
+  image_alt: "PCA visualization of patch-token features in diffusion transformers"
+  summary: "Dual-Stage Registers address outlier tokens in both the encoder and diffusion transformer, improving ImageNet-256 FID from 5.89 to 4.58 at 80 epochs."
+
+- id: uni-instruct
+  title: "Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction"
+  year: 2025
+  venue: NeurIPS 2025
+  authors: "<strong>Yifei Wang</strong>, Weimin Bai, Colin Zhang, Debing Zhang, Weijian Luo, and He Sun"
+  paper: https://arxiv.org/abs/2505.20755
+  project: /uni-instruct/
+  code: https://github.com/a-little-hoof/Uni_Instruct
+  selected: true
+  image: /uni-instruct/static/images/uni_instruct_overview.png
+  image_width: 1800
+  image_height: 866
+  image_alt: "Overview of the unified divergence framework for one-step diffusion distillation"
+  summary: "A unified f-divergence framework connecting more than 10 one-step diffusion distillation methods, with a one-step FID of 1.02 on ImageNet 64 × 64."
+
+- id: em-diffusion
+  title: "An Expectation-Maximization Algorithm for Training Clean Diffusion Models from Corrupted Observations"
+  year: 2024
+  venue: NeurIPS 2024
+  authors: "Weimin Bai, <strong>Yifei Wang</strong>, Wenzheng Chen, and He Sun"
+  paper: https://arxiv.org/abs/2407.01014
+
+- id: amortized-inference
+  title: "Integrating Amortized Inference with Diffusion Models for Learning Clean Distribution from Corrupted Images"
+  year: 2024
+  venue: Preprint · 2024
+  authors: "<strong>Yifei Wang</strong>, Weimin Bai, Weijian Luo, Wenzheng Chen, and He Sun"
+  paper: https://arxiv.org/abs/2407.11162

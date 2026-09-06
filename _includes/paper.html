@@ -1,0 +1,19 @@
+{% assign paper = include.paper %}
+<article class="publication{% if include.featured %} publication--featured{% endif %}">
+  {% if include.featured and paper.image %}
+  <a class="publication-image" href="{{ paper.project | relative_url }}" tabindex="-1" aria-hidden="true">
+    <img src="{{ paper.image | relative_url }}" alt="{{ paper.image_alt }}" width="{{ paper.image_width }}" height="{{ paper.image_height }}" loading="lazy" decoding="async">
+  </a>
+  {% endif %}
+  <div class="publication-body">
+    <p class="publication-venue">{{ paper.venue }}</p>
+    <h3><a href="{{ paper.paper }}">{{ paper.title }}</a></h3>
+    <p class="publication-authors">{{ paper.authors }}</p>
+    {% if include.featured %}<p class="publication-summary">{{ paper.summary }}</p>{% endif %}
+    <div class="publication-links">
+      <a href="{{ paper.paper }}">Paper<span class="visually-hidden">: {{ paper.title }}</span></a>
+      {% if paper.project %}<a href="{% if paper.project contains '://' %}{{ paper.project }}{% else %}{{ paper.project | relative_url }}{% endif %}">Project<span class="visually-hidden">: {{ paper.title }}</span></a>{% endif %}
+      {% if paper.code %}<a href="{{ paper.code }}">Code<span class="visually-hidden">: {{ paper.title }}</span></a>{% endif %}
+    </div>
+  </div>
+</article>

@@ -1,0 +1,30 @@
+---
+layout: profile
+title: "Research"
+permalink: /Research/
+excerpt: "Publications and research on diffusion models, flow matching, and efficient generative modeling by Yifei Wang."
+---
+
+<header class="profile-intro">
+  <h1>Research</h1>
+  <p class="lead">Generative models that are efficient, controllable, and grounded in theory.</p>
+  <p>I study how architectures, training objectives, noise schedules, samplers, and distillation shape sample quality, likelihood, and deployment cost.</p>
+  <p>My work spans representation-space diffusion, one-step and few-step generation, and practical design choices behind text-to-image systems. Looking ahead, I plan to explore long-form video generation and world action models, especially long-horizon consistency and controllability.</p>
+</header>
+
+<section aria-labelledby="publications">
+  <div class="section-heading">
+    <h2 id="publications">Publications</h2>
+    <a href="{{ site.author.googlescholar }}">Google Scholar <span aria-hidden="true">↗</span></a>
+  </div>
+  {% assign publication_years = site.data.papers | group_by: 'year' | sort: 'name' | reverse %}
+  {% for year in publication_years %}
+  <section aria-labelledby="year-{{ year.name }}">
+    <h2 class="publication-year" id="year-{{ year.name }}">{{ year.name }}</h2>
+    {% for paper in year.items %}
+      {% include paper.html paper=paper %}
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <p class="contribution-note">* Equal contribution.</p>
+</section>

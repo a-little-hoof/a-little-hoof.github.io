@@ -1,0 +1,64 @@
+---
+layout: profile
+permalink: /
+title: "Yifei Wang"
+excerpt: "Yifei Wang — second-year PhD student at Rice University, working on generative models."
+redirect_from:
+  - /About/
+  - /About.html
+  - /about/
+---
+
+<header class="profile-intro">
+  <h1>Hi, I'm Yifei Wang.</h1>
+  <p class="profile-role">Second-year PhD student · Rice University</p>
+  <p class="lead">I work on generative models, including diffusion, flow matching, and the building blocks that make them more efficient and controllable.</p>
+  <p>At Rice, I am advised by Prof. <a href="https://weichen582.github.io/">Chen Wei</a>. My research connects the theory of generative modeling with the practical challenges of training and inference.</p>
+</header>
+
+<section class="profile-section" aria-labelledby="selected-work">
+  <div class="section-heading">
+    <h2 id="selected-work">Selected work</h2>
+    <a href="{{ '/Research/' | relative_url }}">All publications <span aria-hidden="true">→</span></a>
+  </div>
+  {% assign selected_papers = site.data.papers | where: 'selected', true %}
+  {% for paper in selected_papers %}
+    {% include paper.html paper=paper featured=true %}
+  {% endfor %}
+  <p class="contribution-note">* Equal contribution.</p>
+</section>
+
+<section class="profile-section" aria-labelledby="news">
+  <div class="section-heading"><h2 id="news">News</h2></div>
+  <ul class="news-list">
+    <li>
+      <time datetime="2026-07">Jul 2026</time>
+      <span>New essay: <a href="{{ '/blog/how-to-evaluate-your-generative-model/' | relative_url }}">Struggling Toward Generative Model Evaluation</a>.</span>
+    </li>
+    <li>
+      <time datetime="2026-05">May 2026</time>
+      <span>New post: <a href="{{ '/blog/2026/05/ema-in-diffusion-training/' | relative_url }}">EMA: A Quiet Hyperparameter That Moves Diffusion Leaderboards</a>.</span>
+    </li>
+    <li>
+      <time datetime="2026-05">May 2026</time>
+      <span>Visited Prof. <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at Johns Hopkins University.</span>
+    </li>
+    <li>
+      <time datetime="2026-05">May 2026</time>
+      <span>Released <a href="{{ '/dit-register/' | relative_url }}">DSR</a> in collaboration with Apple.</span>
+    </li>
+  </ul>
+  <details class="news-archive">
+    <summary>Earlier updates</summary>
+    <ul class="news-list">
+      <li><time datetime="2025-09">Sep 2025</time><span><a href="{{ '/uni-instruct/' | relative_url }}">Uni-Instruct</a>, with Xiaohongshu Inc., accepted to <strong>NeurIPS 2025</strong>.</span></li>
+      <li><time datetime="2025-08">Aug 2025</time><span>Started my PhD at Rice University with Prof. <a href="https://weichen582.github.io/">Chen Wei</a>.</span></li>
+      <li><time datetime="2024-09">Sep 2024</time><span><a href="https://arxiv.org/abs/2407.01014">EM-Diffusion</a> accepted to <strong>NeurIPS 2024</strong>.</span></li>
+    </ul>
+  </details>
+</section>
+
+<section class="profile-section" aria-labelledby="background">
+  <div class="section-heading"><h2 id="background">Background</h2></div>
+  <p>Before Rice, I received my B.S. from Peking University, advised by Prof. <a href="https://ai4imaging.github.io/">He Sun</a> and Dr. <a href="https://pkulwj1994.github.io/">Weijian Luo</a>. In May 2026, I visited Prof. <a href="https://www.cs.jhu.edu/~ayuille/">Alan Yuille</a>'s lab at Johns Hopkins University.</p>
+</section>

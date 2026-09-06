@@ -7,10 +7,10 @@
 
 # Site Settings
 locale                   : "en-US"
-title                    : ""
+title                    : "Yifei Wang"
 title_separator          : "-"
 name                     : &name "Yifei Wang"
-description              : &description "Second-year PhD student at Rice University, Houston, Texas."
+description              : &description "Yifei Wang is a PhD student at Rice University researching diffusion models, flow matching, and efficient generative modeling."
 url                      : https://a-little-hoof.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "a-little-hoof.github.io"
@@ -89,7 +89,7 @@ author:
   employer         :
   pubmed           : #"https://www.ncbi.nlm.nih.gov/pubmed/?term=john+snow"
   googlescholar    : "https://scholar.google.com/citations?user=WdXKzv8AAAAJ&hl=en"
-  email            : mailto:yw251@rice.edu
+  email            : yw251@rice.edu
   researchgate     :  # example: "https://www.researchgate.net/profile/yourprofile"
   uri              :
   bitbucket        :

@@ -1,0 +1,22 @@
+---
+layout: default
+---
+
+<main id="main" class="profile-shell" tabindex="-1">
+  <aside class="profile-rail" aria-label="Profile and contact">
+    <img class="profile-portrait" src="{{ '/images/profile.png' | relative_url }}" alt="Yifei Wang" width="900" height="900" fetchpriority="high">
+    <div class="profile-details">
+      <p class="profile-affiliation">Rice University</p>
+      <p class="profile-location">{{ site.author.location }}</p>
+      <nav class="profile-links" aria-label="Contact and profiles">
+        <a href="mailto:{{ site.author.email }}"><i class="fas fa-envelope" aria-hidden="true"></i>Email</a>
+        <a href="{{ site.author.googlescholar }}"><i class="fas fa-graduation-cap" aria-hidden="true"></i>Google Scholar</a>
+        <a href="https://github.com/{{ site.author.github }}"><i class="fab fa-github" aria-hidden="true"></i>GitHub</a>
+        <a href="https://x.com/{{ site.author.twitter }}"><i class="fab fa-twitter" aria-hidden="true"></i>X / Twitter</a>
+      </nav>
+    </div>
+  </aside>
+  <div class="profile-content">
+    {{ content }}
+  </div>
+</main>

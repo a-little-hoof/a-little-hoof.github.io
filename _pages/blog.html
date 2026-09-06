@@ -1,0 +1,36 @@
+---
+layout: profile
+permalink: /blog/
+title: "Blog"
+excerpt: "Research notes, project writeups, and observations on generative modeling."
+redirect_from:
+  - /posts/
+---
+
+<header class="profile-intro">
+  <h1>Blog</h1>
+  <p class="lead">Research notes, project writeups, and observations on generative modeling.</p>
+</header>
+
+{% assign visible_posts = site.posts | where_exp: 'post', 'post.hidden != true' %}
+{% assign entries = visible_posts | concat: site.data.project_posts | sort: 'date' | reverse %}
+<ul class="writing-list">
+  {% for post in entries %}
+  <li class="writing-item">
+    <article>
+      <div class="writing-meta">
+        <span class="writing-kind">{{ post.kind | default: 'Essay' }}</span>
+        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %Y' }}</time>
+        {% unless post.kind == 'Project' or post.read_time == false %}<span>{% include read-time.html %}</span>{% endunless %}
+      </div>
+      <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+      {% if post.excerpt %}<p>{{ post.excerpt | strip_html | truncate: 240 }}</p>{% endif %}
+      {% if post.tags.size > 0 %}
+      <div class="writing-tags" aria-label="Topics">
+        {% for tag in post.tags %}{% unless tag == 'blog' %}<span>{{ tag }}</span>{% endunless %}{% endfor %}
+      </div>
+      {% endif %}
+    </article>
+  </li>
+  {% endfor %}
+</ul>

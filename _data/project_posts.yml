@@ -1,0 +1,13 @@
+- title: "Taming Outlier Tokens in Diffusion Transformers"
+  date: 2026-05-01 00:00:00 -0500
+  url: /dit-register/
+  kind: Project
+  excerpt: "Dual-Stage Registers address outlier tokens in both the encoder and diffusion transformer, improving ImageNet-256 FID from 5.89 to 4.58 at 80 epochs."
+  tags: [diffusion, DiT, registers]
+
+- title: "Uni-Instruct: One-step Diffusion through Unified Divergence Instruction"
+  date: 2025-09-01 00:00:00 -0500
+  url: /uni-instruct/
+  kind: Project
+  excerpt: "A unified f-divergence framework connecting more than 10 one-step diffusion distillation methods, with a one-step FID of 1.02 on ImageNet 64 × 64. NeurIPS 2025."
+  tags: [diffusion, distillation, NeurIPS 2025]
