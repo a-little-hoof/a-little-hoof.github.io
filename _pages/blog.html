@@ -19,7 +19,7 @@ redirect_from:
   <li class="writing-item">
     <article>
       <div class="writing-meta">
-        <span class="writing-kind">{{ post.kind | default: 'Essay' }}</span>
+        <span class="writing-kind">{{ post.kind | default: 'Blogpost' }}</span>
         <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %Y' }}</time>
         {% unless post.kind == 'Project' or post.read_time == false %}<span>{% include read-time.html %}</span>{% endunless %}
       </div>
