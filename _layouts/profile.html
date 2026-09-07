@@ -4,7 +4,7 @@ layout: default
 
 <main id="main" class="profile-shell" tabindex="-1">
   <aside class="profile-rail" aria-label="Profile and contact">
-    <img class="profile-portrait" src="{{ '/images/profile.png' | relative_url }}" alt="Yifei Wang" width="900" height="900" fetchpriority="high">
+    <img class="profile-portrait" src="{{ page.profile_image.src | default: '/images/profile.png' | relative_url }}" alt="{{ page.profile_image.alt | default: site.author.name | escape }}" width="{{ page.profile_image.width | default: 900 }}" height="{{ page.profile_image.height | default: 900 }}" fetchpriority="high">
     <div class="profile-details">
       <p class="profile-affiliation">Rice University</p>
       <p class="profile-location">{{ site.author.location }}</p>
