@@ -444,6 +444,10 @@ The FID Lottery makes this problem explicit.<sup class="footnote-ref"><a href="#
 | Vary initialization | 25 | 0.294 | 0.150 | 0.85% | 1.09 | 67.1% |
 | Vary data order | 24 | 0.221 | 0.150 | 0.64% | 0.82 | 50.5% |
 
+<figcaption style="color: #66707a; font-size: 0.9rem; line-height: 1.5; text-align: center; margin-top: 0.3rem;">
+  FID variance decomposition by source of training randomness on class-conditional ImageNet 256×256. Table adapted from the FID Lottery.<sup class="footnote-ref"><a href="#fn:fid-lottery">13</a></sup>
+</figcaption>
+
 The between-seed standard deviation is about three times larger than the within-seed sampling noise, so evaluating more samples from one checkpoint cannot remove the dominant uncertainty. The model itself has to be retrained under multiple seeds.
 
 #### 4.1.2 Differences in evaluation pipeline
