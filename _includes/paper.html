@@ -1,8 +1,9 @@
 {% assign paper = include.paper %}
 {% assign preview_url = paper.project | default: paper.paper %}
-<article class="publication{% if include.featured and paper.image %} publication--featured{% endif %}">
+{% if paper.image_layout == 'wide' %}{% assign preview_url = paper.image %}{% endif %}
+<article class="publication{% if include.featured and paper.image %} publication--featured{% if paper.image_layout == 'wide' %} publication--wide{% endif %}{% endif %}">
   {% if include.featured and paper.image %}
-  <a class="publication-image" href="{% if preview_url contains '://' %}{{ preview_url }}{% else %}{{ preview_url | relative_url }}{% endif %}" tabindex="-1" aria-hidden="true">
+  <a class="publication-image" href="{% if preview_url contains '://' %}{{ preview_url }}{% else %}{{ preview_url | relative_url }}{% endif %}"{% if paper.image_layout == 'wide' %} aria-label="View full-size figure: {{ paper.title | escape }}"{% else %} tabindex="-1" aria-hidden="true"{% endif %}>
     <picture>
       {% if paper.image_static %}<source media="(prefers-reduced-motion: reduce)" srcset="{{ paper.image_static | relative_url }}">{% endif %}
       <img src="{{ paper.image | relative_url }}" alt="{{ paper.image_alt }}" width="{{ paper.image_width }}" height="{{ paper.image_height }}" loading="lazy" decoding="async">
