@@ -7,7 +7,6 @@
   selected: true
   # Figure 1 from https://arxiv.org/html/2609.38853v1/fig_cfg.svg
   image: /images/publications/distribution-coverage.svg
-  image_layout: wide
   image_width: 542
   image_height: 193
   image_alt: "Sampling-budget curves and per-prompt success distributions illustrating the quality–coverage tradeoff"
@@ -22,7 +21,6 @@
   selected: true
   # Figure 1 from https://arxiv.org/html/2609.36348v1/variant_B_between_lanes.png
   image: /images/publications/representation-by-design.png
-  image_layout: wide
   image_width: 2000
   image_height: 867
   image_alt: "Training diagram showing class-token alignment between independently noised student and teacher views"
