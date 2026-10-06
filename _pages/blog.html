@@ -2,7 +2,6 @@
 layout: profile
 permalink: /blog/
 title: "Blog"
-excerpt: "Research notes, project writeups, and observations on generative modeling."
 profile_image:
   src: /images/profile/blog.jpg
   alt: "A black-and-white cat in the foreground of an indoor selfie"
@@ -14,7 +13,6 @@ redirect_from:
 
 <header class="profile-intro">
   <h1>Blog</h1>
-  <p class="lead">Research notes, project writeups, and observations on generative modeling.</p>
 </header>
 
 {% assign visible_posts = site.posts | where_exp: 'post', 'post.hidden != true' %}
