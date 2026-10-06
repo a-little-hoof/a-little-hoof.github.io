@@ -26,7 +26,7 @@ redirect_from:
       <div class="writing-meta">
         <span class="writing-kind">{{ post.kind | default: 'Blogpost' }}</span>
         <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %Y' }}</time>
-        {% unless post.kind == 'Project' or post.read_time == false %}<span>{% include read-time.html %}</span>{% endunless %}
+        {% unless post.kind == 'Project page' or post.read_time == false %}<span>{% include read-time.html %}</span>{% endunless %}
       </div>
       <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
       {% if post.excerpt %}<p>{{ post.excerpt | strip_html | truncate: 240 }}</p>{% endif %}

@@ -16,7 +16,7 @@
     {% if include.featured %}<p class="publication-summary">{{ paper.summary }}</p>{% endif %}
     <div class="publication-links">
       <a href="{{ paper.paper }}">Paper<span class="visually-hidden">: {{ paper.title }}</span></a>
-      {% if paper.project %}<a href="{% if paper.project contains '://' %}{{ paper.project }}{% else %}{{ paper.project | relative_url }}{% endif %}">Project<span class="visually-hidden">: {{ paper.title }}</span></a>{% endif %}
+      {% if paper.project %}<a href="{% if paper.project contains '://' %}{{ paper.project }}{% else %}{{ paper.project | relative_url }}{% endif %}">Project page<span class="visually-hidden">: {{ paper.title }}</span></a>{% endif %}
       {% if paper.code %}<a href="{{ paper.code }}">Code<span class="visually-hidden">: {{ paper.title }}</span></a>{% endif %}
     </div>
   </div>
