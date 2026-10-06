@@ -1,5 +1,64 @@
+- id: distribution-coverage
+  title: "Visualizing Distribution Coverage in Generative Diffusion Models"
+  year: 2026
+  venue: Preprint · 2026
+  authors: "<strong>Yifei Wang</strong>, Xiaoyu Wu, Tsu-Jui Fu, Chen Chen, Liang-Chieh Chen, Zhe Gan, and Chen Wei"
+  paper: https://arxiv.org/abs/2609.38853
+  selected: true
+  # Figure 1 from https://arxiv.org/html/2609.38853v1/fig_cfg.svg
+  image: /images/publications/distribution-coverage.svg
+  image_width: 542
+  image_height: 193
+  image_alt: "Sampling-budget curves and per-prompt success distributions illustrating the quality–coverage tradeoff"
+  summary: "Pass@k exposes a quality–coverage tradeoff in diffusion distillation: distribution-matching methods can improve single-draw quality while losing coverage across image and video generation."
+
+- id: representation-by-design
+  title: "Representation by Design in Generation: Cross-View Class-Token Alignment in Diffusion Transformers"
+  year: 2026
+  venue: Preprint · 2026
+  authors: "Xiaoyu Wu, <strong>Yifei Wang</strong>, and Chen Wei"
+  paper: https://arxiv.org/abs/2609.36348
+  selected: true
+  # Figure 1 from https://arxiv.org/html/2609.36348v1/variant_B_between_lanes.png
+  image: /images/publications/representation-by-design.png
+  image_width: 2000
+  image_height: 867
+  image_alt: "Training diagram showing class-token alignment between independently noised student and teacher views"
+  summary: "Cross-view class-token alignment strengthens both global and patch representations in diffusion transformers while preserving generation quality."
+
+- id: scaling-video-reasoning
+  title: "Scaling Video Generation for Reasoning: At What Cost?"
+  year: 2026
+  venue: Preprint · 2026
+  authors: "Weihang Guo, Xiaoyu Wu, <strong>Yifei Wang</strong>, Niloofar Mireshghallah, and Lydia E. Kavraki"
+  paper: https://arxiv.org/abs/2609.36599
+  project: https://weihangguo.github.io/scaling-video-reasoning/
+  selected: true
+  # Coauthor's preview: https://www.whguo.me/images/guo2026scalingvideo.gif
+  image: /images/publications/scaling-video-reasoning.gif
+  image_static: /images/publications/scaling-video-reasoning-poster.png
+  image_width: 240
+  image_height: 240
+  image_alt: "Generated Rubik's Cube sequences from the video reasoning benchmark"
+  summary: "A controlled Rubik's Cube benchmark tests hidden-state reasoning in video models, separating visual plausibility from state accuracy and measuring the compute cost of scaling."
+
+- id: compress-to-remember
+  title: "Compress to Remember: Learning Compact Memory via On-Policy Distillation for Long Video Generation"
+  year: 2026
+  venue: Preprint · 2026
+  authors: "Xiaoyu Wu*, Weihang Guo*, <strong>Yifei Wang*</strong>, Xinze Feng, Lydia E. Kavraki, and Zhiwei Steven Wu"
+  paper: https://arxiv.org/abs/2609.36364
+  selected: true
+  # Coauthor's preview: https://www.whguo.me/images/wu2026pacc.gif
+  image: /images/publications/compress-to-remember.gif
+  image_static: /images/publications/compress-to-remember-poster.png
+  image_width: 224
+  image_height: 129
+  image_alt: "Comparison of long-video generation methods on a cooking sequence"
+  summary: "Prediction-Aligned Context Compaction learns memory tokens through on-policy distillation from a frozen video generator, improving long-video memory without updating the generator."
+
 - id: marval
-  title: "Masked Auto-Regressive Variational Acceleration: Fast Inference Makes Practical Reinforcement Learning"
+  title: "Masked Auto-Regressive Variational Acceleration: Distillation and Reinforcement Learning"
   year: 2026
   venue: CVPR 2026
   authors: "Yuxuan Gu, Weimin Bai, <strong>Yifei Wang</strong>, Weijian Luo, and He Sun"
@@ -10,7 +69,7 @@
   title: "Unbiased Diffusion Variational Inversion via Principled Posterior Matching"
   year: 2026
   venue: Preprint · 2026
-  authors: "Weimin Bai, Yuxuan Gu, <strong>Yifei Wang</strong>, Weijian Luo, and He Sun"
+  authors: "Weimin Bai*, Yuxuan Gu*, <strong>Yifei Wang</strong>, Weijian Luo, and He Sun"
   paper: https://arxiv.org/abs/2605.25042
 
 - id: dsr
