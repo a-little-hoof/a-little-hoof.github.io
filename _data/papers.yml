@@ -2,7 +2,7 @@
   title: "Visualizing Distribution Coverage in Generative Diffusion Models"
   year: 2026
   venue: Preprint · 2026
-  authors: "<strong>Yifei Wang</strong>, Xiaoyu Wu, Tsu-Jui Fu, Chen Chen, Liang-Chieh Chen, Zhe Gan, and Chen Wei"
+  authors: "<strong>Yifei Wang</strong>, <a href='https://nicholas0228.github.io/'>Xiaoyu Wu</a>, <a href='https://tsujuifu.github.io/'>Tsu-Jui Fu</a>, <a href='https://scholar.google.com/citations?user=gAKJLoIAAAAJ'>Chen Chen</a>, <a href='http://liangchiehchen.com/'>Liang-Chieh Chen</a>, <a href='https://zhegan27.github.io/'>Zhe Gan</a>, and <a href='https://weichen582.github.io/'>Chen Wei</a>"
   paper: https://arxiv.org/abs/2609.38853
   selected: true
   # Figure 1 from https://arxiv.org/html/2609.38853v1/fig_cfg.svg
@@ -16,7 +16,7 @@
   title: "Representation by Design in Generation: Cross-View Class-Token Alignment in Diffusion Transformers"
   year: 2026
   venue: Preprint · 2026
-  authors: "Xiaoyu Wu, <strong>Yifei Wang</strong>, and Chen Wei"
+  authors: "<a href='https://nicholas0228.github.io/'>Xiaoyu Wu</a>, <strong>Yifei Wang</strong>, and <a href='https://weichen582.github.io/'>Chen Wei</a>"
   paper: https://arxiv.org/abs/2609.36348
   selected: true
   # Figure 1 from https://arxiv.org/html/2609.36348v1/variant_B_between_lanes.png
@@ -30,7 +30,7 @@
   title: "Scaling Video Generation for Reasoning: At What Cost?"
   year: 2026
   venue: Preprint · 2026
-  authors: "Weihang Guo, Xiaoyu Wu, <strong>Yifei Wang</strong>, Niloofar Mireshghallah, and Lydia E. Kavraki"
+  authors: "<a href='https://www.whguo.me/'>Weihang Guo</a>, <a href='https://nicholas0228.github.io/'>Xiaoyu Wu</a>, <strong>Yifei Wang</strong>, <a href='https://mireshghallah.github.io/'>Niloofar Mireshghallah</a>, and <a href='https://profiles.rice.edu/faculty/lydia-e-kavraki'>Lydia E. Kavraki</a>"
   paper: https://arxiv.org/abs/2609.36599
   project: https://weihangguo.github.io/scaling-video-reasoning/
   selected: true
@@ -46,7 +46,7 @@
   title: "Compress to Remember: Learning Compact Memory via On-Policy Distillation for Long Video Generation"
   year: 2026
   venue: Preprint · 2026
-  authors: "Xiaoyu Wu*, Weihang Guo*, <strong>Yifei Wang*</strong>, Xinze Feng, Lydia E. Kavraki, and Zhiwei Steven Wu"
+  authors: "<a href='https://nicholas0228.github.io/'>Xiaoyu Wu</a>*, <a href='https://www.whguo.me/'>Weihang Guo</a>*, <strong>Yifei Wang*</strong>, <a href='https://www.linkedin.com/in/xinze/'>Xinze Feng</a>, <a href='https://profiles.rice.edu/faculty/lydia-e-kavraki'>Lydia E. Kavraki</a>, and <a href='https://zstevenwu.com/'>Zhiwei Steven Wu</a>"
   paper: https://arxiv.org/abs/2609.36364
   selected: true
   # Coauthor's preview: https://www.whguo.me/images/wu2026pacc.gif
@@ -61,7 +61,7 @@
   title: "Masked Auto-Regressive Variational Acceleration: Distillation and Reinforcement Learning"
   year: 2026
   venue: CVPR 2026
-  authors: "Yuxuan Gu, Weimin Bai, <strong>Yifei Wang</strong>, Weijian Luo, and He Sun"
+  authors: "Yuxuan Gu, <a href='https://weiminbai.github.io/'>Weimin Bai</a>, <strong>Yifei Wang</strong>, <a href='https://pkulwj1994.github.io/'>Weijian Luo</a>, and <a href='https://ai4scientificimaging.org/'>He Sun</a>"
   paper: https://arxiv.org/abs/2511.15190
   project: https://ai4scientificimaging.org/MARVAL-RL/
 
@@ -69,14 +69,14 @@
   title: "Unbiased Diffusion Variational Inversion via Principled Posterior Matching"
   year: 2026
   venue: Preprint · 2026
-  authors: "Weimin Bai*, Yuxuan Gu*, <strong>Yifei Wang</strong>, Weijian Luo, and He Sun"
+  authors: "<a href='https://weiminbai.github.io/'>Weimin Bai</a>*, Yuxuan Gu*, <strong>Yifei Wang</strong>, <a href='https://pkulwj1994.github.io/'>Weijian Luo</a>, and <a href='https://ai4scientificimaging.org/'>He Sun</a>"
   paper: https://arxiv.org/abs/2605.25042
 
 - id: dsr
   title: "Taming Outlier Tokens in Diffusion Transformers"
   year: 2026
   venue: Preprint · 2026
-  authors: "Xiaoyu Wu*, <strong>Yifei Wang*</strong>, Tsu-Jui Fu, Liang-Chieh Chen, Zhe Gan, and Chen Wei"
+  authors: "<a href='https://nicholas0228.github.io/'>Xiaoyu Wu</a>*, <strong>Yifei Wang*</strong>, <a href='https://tsujuifu.github.io/'>Tsu-Jui Fu</a>, <a href='http://liangchiehchen.com/'>Liang-Chieh Chen</a>, <a href='https://zhegan27.github.io/'>Zhe Gan</a>, and <a href='https://weichen582.github.io/'>Chen Wei</a>"
   paper: https://arxiv.org/abs/2605.05206
   project: /dit-register/
   code: https://github.com/a-little-hoof/DSR
@@ -91,7 +91,7 @@
   title: "Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction"
   year: 2025
   venue: NeurIPS 2025
-  authors: "<strong>Yifei Wang</strong>, Weimin Bai, Colin Zhang, Debing Zhang, Weijian Luo, and He Sun"
+  authors: "<strong>Yifei Wang</strong>, <a href='https://weiminbai.github.io/'>Weimin Bai</a>, <a href='https://openreview.net/profile?id=~colin_zhang1'>Colin Zhang</a>, <a href='https://dblp.org/pid/29/11094'>Debing Zhang</a>, <a href='https://pkulwj1994.github.io/'>Weijian Luo</a>, and <a href='https://ai4scientificimaging.org/'>He Sun</a>"
   paper: https://arxiv.org/abs/2505.20755
   project: /uni-instruct/
   code: https://github.com/a-little-hoof/Uni_Instruct
@@ -106,12 +106,12 @@
   title: "An Expectation-Maximization Algorithm for Training Clean Diffusion Models from Corrupted Observations"
   year: 2024
   venue: NeurIPS 2024
-  authors: "Weimin Bai, <strong>Yifei Wang</strong>, Wenzheng Chen, and He Sun"
+  authors: "<a href='https://weiminbai.github.io/'>Weimin Bai</a>, <strong>Yifei Wang</strong>, Wenzheng Chen, and <a href='https://ai4scientificimaging.org/'>He Sun</a>"
   paper: https://arxiv.org/abs/2407.01014
 
 - id: amortized-inference
   title: "Integrating Amortized Inference with Diffusion Models for Learning Clean Distribution from Corrupted Images"
   year: 2024
   venue: Preprint · 2024
-  authors: "<strong>Yifei Wang</strong>, Weimin Bai, Weijian Luo, Wenzheng Chen, and He Sun"
+  authors: "<strong>Yifei Wang</strong>, <a href='https://weiminbai.github.io/'>Weimin Bai</a>, <a href='https://pkulwj1994.github.io/'>Weijian Luo</a>, Wenzheng Chen, and <a href='https://ai4scientificimaging.org/'>He Sun</a>"
   paper: https://arxiv.org/abs/2407.11162
