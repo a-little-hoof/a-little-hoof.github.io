@@ -91,7 +91,7 @@
   title: "Uni-Instruct: One-step Diffusion Model through Unified Diffusion Divergence Instruction"
   year: 2025
   venue: NeurIPS 2025
-  authors: "<strong>Yifei Wang</strong>, <a href='https://weiminbai.github.io/'>Weimin Bai</a>, <a href='https://openreview.net/profile?id=~colin_zhang1'>Colin Zhang</a>, <a href='https://dblp.org/pid/29/11094'>Debing Zhang</a>, <a href='https://pkulwj1994.github.io/'>Weijian Luo</a>, and <a href='https://ai4scientificimaging.org/'>He Sun</a>"
+  authors: "<strong>Yifei Wang</strong>, <a href='https://weiminbai.github.io/'>Weimin Bai</a>, Colin Zhang, Debing Zhang, <a href='https://pkulwj1994.github.io/'>Weijian Luo</a>, and <a href='https://ai4scientificimaging.org/'>He Sun</a>"
   paper: https://arxiv.org/abs/2505.20755
   project: /uni-instruct/
   code: https://github.com/a-little-hoof/Uni_Instruct
