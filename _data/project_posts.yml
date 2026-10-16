@@ -1,3 +1,10 @@
+- title: "Scaling Video Generation for Reasoning: At What Cost?"
+  date: 2026-09-29 00:00:00 -0500
+  url: https://weihangguo.github.io/scaling-video-reasoning/
+  kind: Project page
+  excerpt: "A controlled 2 × 2 × 2 Rubik's Cube study of hidden-state reasoning in video models, with interactive results on training compute, state accuracy, and symbolic guidance."
+  tags: [video generation, reasoning, scaling]
+
 - title: "Taming Outlier Tokens in Diffusion Transformers"
   date: 2026-05-01 00:00:00 -0500
   url: /dit-register/
