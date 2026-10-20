@@ -5,6 +5,13 @@
   excerpt: "A controlled 2 × 2 × 2 Rubik's Cube study of hidden-state reasoning in video models, with interactive results on training compute, state accuracy, and symbolic guidance."
   tags: [video generation, reasoning, scaling]
 
+- title: "Compress to Remember: Learning Compact Memory via On-Policy Distillation for Long Video Generation"
+  date: 2026-09-28 00:00:00 -0500
+  url: https://nicholas0228.github.io/blog/compress-to-remember/
+  kind: Project page
+  excerpt: "PACC learns compact memory for a frozen video generator through on-policy distillation. The project page presents the training method, memory-based generation, and side-by-side video comparisons."
+  tags: [video generation, memory, distillation]
+
 - title: "Taming Outlier Tokens in Diffusion Transformers"
   date: 2026-05-01 00:00:00 -0500
   url: /dit-register/
