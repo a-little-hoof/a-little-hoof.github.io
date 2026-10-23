@@ -21,18 +21,6 @@ redirect_from:
   <p>At Rice, I am advised by Prof. <a href="https://weichen582.github.io/">Chen Wei</a>. My research connects the theory of generative modeling with the practical challenges of training and inference.</p>
 </header>
 
-<section class="profile-section" aria-labelledby="selected-work">
-  <div class="section-heading">
-    <h2 id="selected-work">Selected work</h2>
-    <a href="{{ '/Research/' | relative_url }}">All publications <span aria-hidden="true">→</span></a>
-  </div>
-  {% assign selected_papers = site.data.papers | where: 'selected', true %}
-  {% for paper in selected_papers %}
-    {% include paper.html paper=paper featured=true %}
-  {% endfor %}
-  <p class="contribution-note">* Equal contribution.</p>
-</section>
-
 <section class="profile-section" aria-labelledby="news">
   <div class="section-heading"><h2 id="news">News</h2></div>
   <ul class="news-list">
@@ -65,6 +53,18 @@ redirect_from:
       <li><time datetime="2024-09">Sep 2024</time><span><a href="https://arxiv.org/abs/2407.01014">EM-Diffusion</a> accepted to <strong>NeurIPS 2024</strong>.</span></li>
     </ul>
   </details>
+</section>
+
+<section class="profile-section" aria-labelledby="selected-work">
+  <div class="section-heading">
+    <h2 id="selected-work">Selected work</h2>
+    <a href="{{ '/Research/' | relative_url }}">All publications <span aria-hidden="true">→</span></a>
+  </div>
+  {% assign selected_papers = site.data.papers | where: 'selected', true %}
+  {% for paper in selected_papers %}
+    {% include paper.html paper=paper featured=true %}
+  {% endfor %}
+  <p class="contribution-note">* Equal contribution.</p>
 </section>
 
 <section class="profile-section" aria-labelledby="background">
