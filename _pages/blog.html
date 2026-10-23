@@ -16,7 +16,7 @@ redirect_from:
 </header>
 
 {% assign visible_posts = site.posts | where_exp: 'post', 'post.hidden != true' %}
-{% assign entries = visible_posts | concat: site.data.project_posts | sort: 'date' | reverse %}
+{% assign entries = visible_posts | concat: site.data.project_posts | concat: site.data.external_posts | sort: 'date' | reverse %}
 <ul class="writing-list">
   {% for post in entries %}
   <li class="writing-item">

@@ -1,0 +1,7 @@
+- title: "Guidance is becoming a cheat code for LLMs (with Loooop)"
+  date: 2026-10-22 00:00:00 +0000
+  url: https://nicholas0228.github.io/blog/2026/10/guidance-in-looped-models/
+  kind: Blogpost
+  reading_time_minutes: 15
+  excerpt: "Why token-level guidance differs from guidance over full sequences, and how similar predictions across loops can reduce this normalization mismatch."
+  tags: [guidance, looped models, generative modeling]
